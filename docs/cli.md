@@ -74,6 +74,59 @@ Status des gewählten Bereichs plus `global`. `--json` vor dem Befehl liefert
 maschinenlesbare Ausgaben. `--help` zeigt alle Befehle. `init` darf eine neue Datei
 anlegen; andere Befehle verlangen eine vorhandene Datenbank.
 
+## Prüfbefehle
+
+Ein Prüfbefehl verbindet einen Eintrag mit einem ausführbaren Test. Setzen:
+
+```sh
+vmind check-set vmind.db 1 'Name' /pfad/zum/projekt cargo test -p meinpaket --test api -- --exact neuer_fall
+```
+
+Aufbau: `check-set DB ID AKTEUR ORDNER BEFEHL [ARG...]`. Der Ordner muss existieren und
+wird als absoluter Pfad gespeichert. Alle Wörter nach dem Ordner bilden den Befehl;
+sie werden ohne Shell übergeben, also ohne Platzhalter, Umleitungen oder Verkettungen.
+Wer eine Shell braucht, muss sie ausdrücklich aufrufen (`sh -c '...'`); dann steht
+genau das im Eintrag und ist sichtbar. Ein erneutes `check-set` ersetzt den aktiven
+Prüfbefehl; frühere bleiben mit ihren Läufen in der Datenbank.
+
+Ausführen:
+
+```sh
+vmind check vmind.db 1
+```
+
+```sh
+vmind --scope projekt revalidate vmind.db
+```
+
+Ergebnisse und Folgen:
+
+| Ergebnis | ungeprüfter Eintrag | validierter Eintrag |
+|---|---|---|
+| bestanden (Exit 0) | wird validiert, Prüfer `vmind check` | bleibt validiert |
+| fehlgeschlagen (Exit ≠ 0) | bleibt ungeprüft | wird gemeldet; mit `--invalidate` zurückgezogen |
+| Fehler (nicht startbar, Zeitlimit) | keine Änderung | keine Änderung |
+
+Jeder Lauf wird mit Ergebnis, Exit-Code, Dauer und den letzten 4.000 Zeichen der
+Ausgabe gespeichert; `show DB ID` zeigt Prüfbefehl und die letzten fünf Läufe.
+`check` und `revalidate` enden mit Fehlerstatus, wenn etwas nicht bestanden hat, und
+eignen sich damit für Skripte und CI. `revalidate` prüft alle nicht zurückgezogenen
+Einträge mit Prüfbefehl im gewählten Bereich plus `global`, höchstens 1.000.
+Zeitlimit pro Befehl: `VMIND_CHECK_TIMEOUT` in Sekunden (1 bis 3.600, sonst 300).
+
+Grenzen und Sicherheit:
+
+- Ein bestandener Befehl beweist nur, was er prüft. `cargo test` mit einem
+  vertippten Filter führt null Tests aus und endet trotzdem mit Exit 0. Mit
+  `--exact` und vollständigem Namen arbeiten und die gespeicherte Ausgabe ansehen
+  („1 passed“). `pytest` endet bei null gefundenen Tests dagegen mit Fehler.
+- Prüfbefehle lassen sich nur über die Kommandozeile setzen und ausführen. JSONL
+  und MCP zeigen sie über `get` an, können sie aber weder setzen noch starten.
+- Befehle laufen mit den Rechten und Umgebungsvariablen des aufrufenden Nutzers.
+  Vor `check-set` den Befehl lesen wie jeden anderen Befehl, den man ausführt.
+- Wer Schreibzugriff auf die Datenbankdatei hat, kann Prüfbefehle direkt ändern.
+  `revalidate` nur auf eigenen, vertrauenswürdigen Datenbanken ausführen.
+
 ## Direktes Programm installieren
 
 ```sh
@@ -229,7 +282,8 @@ cargo fmt --all -- --check
 
 Migration 0001 wurde neu entworfen, weil die Migration aus dem alten Chat nicht
 verfügbar war. Migration 0002 ergänzt Volltextsuche, Bereiche, Rückzug und Historie.
-Migration 0003 ergänzt Projekttagebuch und Gespräche.
+Migration 0003 ergänzt Projekttagebuch und Gespräche. Migration 0004 ergänzt
+Prüfbefehle (`memory_checks`) und Prüfläufe (`check_runs`).
 Beim Import alter Einträge wird keine historische Prüfzeit erfunden.
 Vor Migrationen einer bestehenden Datenbank vorher mit der SQLite-Backup-API sichern; keine
 laufende Datenbank blind als Einzeldatei kopieren.

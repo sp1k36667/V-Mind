@@ -288,3 +288,82 @@ fn mcp_server_handshakes_and_writes_journal_in_configured_scope() {
     assert_eq!(resume["tasks"][0]["task_key"], "mcp");
     assert_eq!(resume["tasks"][0]["task_status"], "done");
 }
+fn cli_status(args: &[&str]) -> (bool, Value) {
+    let out = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .arg("--json")
+        .args(args)
+        .output()
+        .unwrap();
+    let value = serde_json::from_slice(&out.stdout).unwrap_or(Value::Null);
+    (out.status.success(), value)
+}
+#[test]
+fn check_commands_drive_the_learning_loop_end_to_end() {
+    let temp = Temp::new();
+    let path = temp.0.join("checks.db");
+    let db = path.to_str().unwrap();
+    let workdir = temp.0.join("projekt");
+    std::fs::create_dir(&workdir).unwrap();
+    let dir = workdir.to_str().unwrap();
+    cli(&["init", db]);
+    let added = cli(&[
+        "--scope",
+        "p",
+        "add",
+        db,
+        "error_solution",
+        "Markerdatei fehlt",
+        "Markerdatei anlegen",
+        "Workflow-Test",
+    ]);
+    let id = added["id"].as_i64().unwrap().to_string();
+    cli(&[
+        "check-set",
+        db,
+        &id,
+        "Testleiter",
+        dir,
+        "sh",
+        "-c",
+        "test -f marker",
+    ]);
+
+    let (passed, failed) = cli_status(&["check", db, &id]);
+    assert!(!passed);
+    assert_eq!(failed["applied"]["status_after"], "pending");
+
+    std::fs::write(workdir.join("marker"), "").unwrap();
+    let ok = cli(&["check", db, &id]);
+    assert_eq!(ok["applied"]["status_before"], "pending");
+    assert_eq!(ok["applied"]["status_after"], "validated");
+    let found = cli(&["--scope", "p", "recall", db, "Markerdatei"]);
+    assert_eq!(found[0]["validated_by"], "vmind check");
+    let shown = cli(&["show", db, &id]);
+    assert_eq!(shown["check"]["argv"][2], "test -f marker");
+    assert_eq!(shown["check_runs"].as_array().unwrap().len(), 2);
+
+    assert!(cli(&["--scope", "p", "revalidate", db])["failed"] == 0);
+    std::fs::remove_file(workdir.join("marker")).unwrap();
+    let (passed, report) = cli_status(&["--scope", "p", "revalidate", db]);
+    assert!(!passed);
+    assert_eq!(report["results"][0]["status_after"], "validated");
+    let (passed, report) = cli_status(&["--scope", "p", "revalidate", db, "--invalidate"]);
+    assert!(!passed);
+    assert_eq!(report["results"][0]["status_after"], "invalidated");
+    assert_eq!(
+        cli(&["--scope", "p", "revalidate", db])["results"],
+        serde_json::json!([])
+    );
+}
+#[test]
+fn check_set_rejects_missing_directory_and_unknown_entry() {
+    let temp = Temp::new();
+    let path = temp.0.join("reject.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    let missing = temp.0.join("fehlt");
+    let (ok, _) = cli_status(&["check-set", db, "1", "T", missing.to_str().unwrap(), "true"]);
+    assert!(!ok);
+    let (ok, _) = cli_status(&["check-set", db, "1", "T", temp.0.to_str().unwrap(), "true"]);
+    assert!(!ok);
+}

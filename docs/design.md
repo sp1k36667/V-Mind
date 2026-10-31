@@ -8,7 +8,7 @@ Herkunft, korrigierbares Wissen und eine gut testbare Abrufschnittstelle.
 
 - `vmind-core`: SQLite-Verbindung, atomare Migrationen, FTS5/BM25, Bereiche und Lebenszyklus.
 - `vmind-cli`: menschliche Kommandozeile, JSON-Ausgabe, JSONL-Protokoll und Ollama-Testclient.
-- `migrations`: unveränderte V1-Basis plus additive V2-Migration.
+- `migrations`: unveränderte V1-Basis plus additive Migrationen bis 0004 (Prüfbefehle).
 
 Der Kern kennt weder Gemma noch Ollama noch GPU-Treiber. Die KI-Schnittstelle ruft
 auch ohne Modell dasselbe Gedächtnis ab. SQLite ist die dauerhafte Datenquelle;
@@ -69,7 +69,9 @@ Erfahrung ab und vermeiden den Fehler von Anfang an.
 Stand: Der E2B-Pilot zeigt die Wiederverwendung geprüften Wissens eines anderen
 Modells (`docs/experiments/e2b-pilot.md`). Die vollständige Schleife mit selbst
 gefundenen und testbasiert bestätigten Erfahrungen ist noch nicht experimentell
-gezeigt; dafür sind Prüfbefehle am Eintrag und ein Lernkurven-Experiment geplant.
+gezeigt. Prüfbefehle am Eintrag (`check-set`, `check`, `revalidate`, Schema 4) sind
+vorhanden: Ein bestandener Test validiert einen Vorschlag mit Befehl, Exit-Code und
+Laufzeit als Nachweis. Es fehlt noch das Lernkurven-Experiment.
 
 ## Abgrenzung zu ähnlichen Ansätzen
 

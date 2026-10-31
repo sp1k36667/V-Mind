@@ -150,7 +150,7 @@ fn migrates_v1_without_losing_data_and_rebuilds_fulltext() {
         assert_eq!(records[0].evidence.as_deref(), Some("Alter Nachweis"));
         assert_eq!(s.history(1).unwrap().len(), 1);
         assert_eq!(s.history(1).unwrap()[0].action, "imported");
-        assert_eq!(s.stats("global").unwrap().schema_version, 3);
+        assert_eq!(s.stats("global").unwrap().schema_version, 4);
     }
 }
 

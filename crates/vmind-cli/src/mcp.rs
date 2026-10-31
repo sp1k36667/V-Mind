@@ -50,7 +50,8 @@ fn tools() -> Vec<Value> {
         ),
         tool(
             "get",
-            "Vollständigen Eintrag samt Historie laden, auch zurückgezogene Einträge.",
+            "Vollständigen Eintrag samt Historie, aktivem Prüfbefehl und letzten Prüfläufen \
+             laden, auch zurückgezogene Einträge.",
             json!({"memory_id":{"type":"integer"}}),
             &["memory_id"],
         ),
@@ -308,6 +309,7 @@ mod tests {
             .collect();
         assert!(names.contains(&"recall") && names.contains(&"log"));
         assert!(!names.contains(&"validate") && !names.contains(&"describe"));
+        assert!(!names.iter().any(|n| n.contains("check")));
         for name in names {
             let probe = json!({"op":name});
             let answer = protocol::dispatch(&s, probe)["error"].to_string();
