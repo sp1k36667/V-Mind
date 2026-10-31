@@ -120,9 +120,11 @@ fn full_history_is_paginated_while_resume_remains_bounded() {
             .unwrap();
     }
     let r = s.resume("p", None).unwrap();
-    assert_eq!(r.tasks.len(), 20);
+    assert_eq!(r.tasks.len(), 5, "nur die zuletzt erledigten Aufgaben");
+    assert_eq!(r.tasks[0].task_key.as_deref(), Some("task-34"));
     assert_eq!(r.task_count, 35);
-    assert_eq!(r.recent_events.len(), 10);
+    assert_eq!(r.recent_events.len(), 5);
+    assert_eq!(r.recent_events.last().unwrap().body, "Schritt 29");
     assert_eq!(r.total_events, 35);
     assert_eq!(r.chat_tail.len(), 10);
     assert_eq!(r.message_count, 35);
@@ -170,4 +172,40 @@ fn v2_upgrade_preserves_knowledge_and_starts_with_empty_project_history() {
     assert_eq!(s.get(1).unwrap().unwrap().problem, "Alt");
     assert_eq!(s.resume("p", None).unwrap().total_events, 0);
     assert_eq!(s.stats("p").unwrap().schema_version, 4);
+}
+#[test]
+fn resume_keeps_all_open_tasks_and_does_not_repeat_shown_events() {
+    let s = MemoryStore::in_memory().unwrap();
+    s.journal("p", "goal", None, None, "Ziel", "Test").unwrap();
+    for n in 0..8 {
+        let key = format!("fertig-{n}");
+        s.journal("p", "task", Some(&key), Some("done"), "Erledigt", "Test")
+            .unwrap();
+    }
+    for n in 0..3 {
+        let key = format!("offen-{n}");
+        s.journal("p", "task", Some(&key), Some("open"), "Offen", "Test")
+            .unwrap();
+    }
+    s.journal("p", "decision", None, None, "Entscheidung", "Test")
+        .unwrap();
+    s.journal("p", "note", None, None, "Notiz", "Test").unwrap();
+    s.journal("p", "next_step", None, None, "Weiter", "Test")
+        .unwrap();
+
+    let r = s.resume("p", None).unwrap();
+
+    let offen = r
+        .tasks
+        .iter()
+        .filter(|t| t.task_status.as_deref() == Some("open"))
+        .count();
+    assert_eq!(offen, 3);
+    assert_eq!(r.tasks.len(), 3 + 5);
+    assert_eq!(r.tasks[0].task_status.as_deref(), Some("open"));
+    let mut gezeigt: Vec<i64> = r.tasks.iter().chain(&r.decisions).map(|e| e.id).collect();
+    gezeigt.extend(r.goal.iter().chain(&r.next_step).map(|e| e.id));
+    assert!(r.recent_events.iter().all(|e| !gezeigt.contains(&e.id)));
+    assert!(r.recent_events.iter().any(|e| e.body == "Notiz"));
+    assert_eq!(r.total_events, 15);
 }

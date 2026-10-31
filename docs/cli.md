@@ -171,9 +171,11 @@ Beim Fortsetzen zuerst:
 vmind --scope v-mind resume vmind.db
 ```
 
-Die Übersicht enthält das aktuelle Ziel, den nächsten Schritt, höchstens 20 aktuelle
-Aufgabenstände (unerledigte zuerst), zehn Entscheidungen, zehn letzte Projektereignisse
-und zehn letzte Chatnachrichten. Gesamtzahlen zeigen, ob weitere Daten vorhanden sind.
+Die Übersicht enthält das aktuelle Ziel, den nächsten Schritt, den aktuellen Stand aller
+unerledigten Aufgaben (höchstens 20) und der fünf zuletzt erledigten, fünf Entscheidungen,
+fünf letzte Projektereignisse, die nicht schon darüber stehen, und zehn letzte
+Chatnachrichten. Texte werden nicht gekürzt. Gesamtzahlen zeigen, ob weitere Daten
+vorhanden sind.
 Die vollständige Historie bleibt seitenweise verfügbar, jeweils maximal 100 Einträge:
 
 ```sh
