@@ -66,11 +66,14 @@ works in the **Code tab of the Claude desktop app** and in **Claude Code in the 
 
 ### 1. Install V-Mind
 
-Requirements: Rust/Cargo, Git and SQLite with FTS5. On Ubuntu:
+**Option A: download** a ready-made program for Linux, macOS or Windows from the
+[Releases page](https://github.com/sp1k36667/V-Mind/releases), unpack it and put `vmind`
+(`vmind.exe` on Windows) somewhere on your `PATH`. SQLite is built in; nothing else is
+needed. `SHA256SUMS.txt` lists the checksums. The programs are not code-signed; on macOS
+you may have to allow it once with `xattr -d com.apple.quarantine vmind`.
 
-```sh
-sudo apt install build-essential pkg-config libsqlite3-dev
-```
+**Option B: build from source.** Requirements: Rust/Cargo, Git and a C compiler (SQLite is
+compiled in). On Ubuntu `sudo apt install build-essential`, then:
 
 ```sh
 git clone https://github.com/sp1k36667/V-Mind.git

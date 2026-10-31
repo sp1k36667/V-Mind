@@ -6,8 +6,8 @@ Prüfnachweise, Projekttrennung und den Ausschluss zurückgezogener Einträge er
 
 ## Lokal prüfen
 
-Voraussetzungen: Rust/Cargo (lokal geprüft mit 1.95.0), Git, pkg-config und SQLite
-mit FTS5 samt Entwicklungsbibliothek. Jeder Befehl wird einzeln ausgeführt.
+Voraussetzungen: Rust/Cargo (lokal geprüft mit 1.95.0), Git und ein C-Compiler; SQLite
+mit FTS5 wird mitgebaut. Jeder Befehl wird einzeln ausgeführt.
 
 ```sh
 cargo fmt --all -- --check

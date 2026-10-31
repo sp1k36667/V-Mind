@@ -8,4 +8,5 @@ edition = "2024"
 license = "MIT"
 
 [workspace.dependencies]
-rusqlite = "0.37"
+# SQLite wird mitgebaut: gleiche Version mit FTS5 auf allen Systemen, kein libsqlite3-dev nötig.
+rusqlite = { version = "0.37", features = ["bundled"] }
