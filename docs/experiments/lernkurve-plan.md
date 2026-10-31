@@ -56,8 +56,9 @@ die Fehlermeldungen fehlgeschlagener Prüfungen.
 ## Bedingungen
 
 Alle Bedingungen nutzen dasselbe Modell, denselben Startprompt, dieselben Einstellungen
-(Kontext 8.192, Temperatur 0, Ausgabe 2.400 Tokens), dieselbe Aufgabenbeschreibung,
-höchstens drei Versuche pro Aufgabe und dasselbe Testfeedback. Unterschied ist nur der
+(Kontext 8.192, Ausgabe 2.400 Tokens; Versuch 1 mit Temperatur 0, Wiederholungen mit
+0,7), dieselbe Aufgabenbeschreibung, höchstens fünf Versuche pro Aufgabe und dasselbe
+Testfeedback. Unterschied ist nur der
 Gedächtnisblock im Prompt und was nach einer Aufgabe gespeichert wird.
 
 | | A: ohne Gedächtnis | B: Lernschleife | C: ungeprüft |
@@ -100,7 +101,7 @@ Pro Aufgabenlauf, ausgewertet nach Position 1 bis 6 in der Folge:
 
 - **Erfolg im ersten Versuch** (alle Abnahmeprüfungen bestanden), Hauptmessgröße
 - bestandene Abnahmeprüfungen im ersten Versuch (Anteil)
-- Versuche bis zum Bestehen (4 = nicht bestanden)
+- Versuche bis zum Bestehen (6 = nicht bestanden)
 - Modellzeit bis zum Bestehen (Ollama-Dauerfelder), Ausgabe-Tokens
 - welche Fallstrick-Kategorien fehlschlugen
 
@@ -144,6 +145,69 @@ dagegen sprechen.
 - Reihenfolgen: mit festem Zufallsstartwert 20261031 gezogen (in `run.py`).
 - Die Abnahmen sind per Selbsttest geprüft (`selbsttest.py`): Referenzlösungen bestehen
   9/9 in allen Aufgaben, sechs gezielt eingebaute Fehler werden in allen Aufgaben erkannt.
+
+## Probelauf 1 und daraus folgende Änderung
+
+Probelauf mit A, B und C, zwei Aufgaben (Aufgabenplaner, Kontakte), Seed 42, höchstens
+drei Versuche, alles bei Temperatur 0. Zählt nicht zur Auswertung.
+
+- Der Host arbeitete korrekt: Fehler waren echte Modellfehler (z. B. nach dem Laden aus
+  JSON Text- statt Zahl-IDs, Kommandozeile lehnt noch nicht vorhandene Datei ab), die
+  Rückmeldung kam an (Prompt ab Versuch 2 rund 2.900 statt 500 Tokens).
+- E2B behob in keinem Fall einen Fehler; beim Aufgabenplaner waren Versuch 2 und 3
+  bytegleich. Dadurch entstand unter B keine einzige bestätigte Lehre, B war nicht
+  von A zu unterscheiden.
+- Unter C wurden sechs Lehren übernommen, darunter nachweislich falsche: „Existenz der
+  Datei vor dem Instanziieren prüfen“ ist genau der gemachte Fehler, „nächste ID =
+  maximale ID + 1, um Wiederverwendung zu verhindern“ bewirkt das Gegenteil, eine Lehre
+  passte nicht zu ihrer Prüfung. Einzelbeobachtung, kein Ergebnis.
+
+Änderung vor dem ersten gezählten Lauf, für alle Bedingungen gleich: Versuch 1 bleibt bei
+Temperatur 0 (Hauptmessgröße unverändert); Wiederholungen nutzen Temperatur 0,7 mit
+eigenem Seed (Seed + Versuchsnummer − 1); höchstens fünf statt drei Versuche.
+
+Bekannte Schwäche von B, die sich im Probelauf zeigte: Der Prüfbefehl bestätigt, dass der
+**Code** die Prüfung besteht, nicht, dass die **Formulierung** der Lehre stimmt. Eine
+falsch formulierte Lehre zu einem behobenen Fehler würde validiert. Das wird bei der
+Auswertung je Lehre von Hand nachgesehen und berichtet.
+
+## Probelauf 2 und daraus folgende Änderung
+
+Wie Probelauf 1, aber mit Streuung bei Wiederholungen und bis zu fünf Versuchen. Zählt
+nicht zur Auswertung. Der Code unterschied sich nun von Versuch zu Versuch, trotzdem
+scheiterten immer dieselben Prüfungen; B erhielt erneut keine Lehre.
+
+Ursache lag im Host: Die Rückmeldung wurde von hinten auf 1.800 Zeichen gekürzt. Dadurch
+fiel die Liste der fehlgeschlagenen Prüfungen weg, und der Platz ging für lange absolute
+Pfade und wiederholte Traceback-Zeilen verloren; die auslösende Eingabe (z. B. eine
+gültige E-Mail, die abgelehnt wurde) war oft nicht zu sehen.
+
+Änderung vor dem ersten gezählten Lauf, für alle Bedingungen gleich: Rückmeldung beginnt
+immer mit der Liste der fehlgeschlagenen Prüfungen; je Prüfung folgen der aufrufende
+Prüfschritt und die Stellen in `app.py` mit der Fehlerzeile, ohne absolute Pfade, je
+höchstens 450 Zeichen, insgesamt höchstens 2.500 Zeichen. An den Daten von Probelauf 2
+offline geprüft (Aufgabenplaner rund 700, Kontakte rund 1.600 Zeichen).
+
+## Probelauf 3
+
+Wie Probelauf 2, mit kompakter Rückmeldung. Zählt nicht zur Auswertung.
+
+- Erstmals behob E2B Fehler selbst: unter B bei den Kontakten 3/9 → 6/9 (Versuch 4).
+  Daraus entstanden drei Lehren, alle drei über `vmind check` von genau der vorher
+  fehlgeschlagenen Prüfung bestätigt. Die Lernschleife lief damit erstmals vollständig.
+- Die Lehren trafen den eigentlichen Fix nicht: Behoben wurde eine zu strenge
+  E-Mail-Prüfung, die Lehren lauteten etwa „Validierungsergebnisse müssen explizit in die
+  Fehlermeldung integriert werden“. Damit ist die vorab benannte Schwäche belegt: Der
+  Prüfbefehl bestätigt den Code, nicht die Formulierung.
+- Unter C wurden erneut falsche Lehren übernommen, z. B. „`str()` verwenden, um die ID
+  zu einem String hinzuzufügen“ (richtig wäre, IDs nach dem Laden als Zahl zu behandeln).
+- Beim Aufgabenplaner behob E2B in keiner Bedingung einen Fehler, auch nicht in fünf
+  Versuchen.
+
+Offene Entscheidung vor dem Hauptlauf: Die Lehre sollte aus dem **Unterschied** zwischen
+fehlgeschlagenem und bestandenem Code formuliert werden, nicht nur aus Fehlermeldung und
+Endstand. Erst dann misst B, ob übertragene Erfahrung hilft, und nicht, ob vage
+Allgemeinplätze helfen.
 
 ## Umsetzung
 

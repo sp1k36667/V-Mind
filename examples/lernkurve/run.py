@@ -26,6 +26,11 @@ REIHENFOLGEN_SEED = 20261031
 MAX_LEHREN_JE_AUFGABE = 3
 MAX_GEDAECHTNIS = 3
 MAX_LEHRE_ZEICHEN = 300
+# Versuch 1 ist deterministisch (Hauptmessgröße). Wiederholungen streuen, weil E2B bei
+# Temperatur 0 im Probelauf identischen Code wiederholte und nie einen Fehler behob.
+WIEDERHOLUNG_TEMPERATUR = 0.7
+MAX_MELDUNG_ZEICHEN = 450
+MAX_RUECKMELDUNG_ZEICHEN = 2500
 CODE_IN_LEHRE = re.compile(r"```|\bdef |\bimport |\bclass |self\.|\breturn\b")
 
 ALLGEMEIN = """Allgemeine Anforderungen: Nur Python-Standardbibliothek, eine Datei app.py.
@@ -49,10 +54,11 @@ Antworte nur mit JSON {"problem": "...", "loesung": "..."}, je höchstens 200 Ze
 nur in Worten, ohne Quelltext und ohne Namen dieser konkreten Aufgabe."""
 
 
-def ollama(system, prompt, seed, num_predict, als_json=False):
+def ollama(system, prompt, seed, num_predict, als_json=False, temperatur=0.0):
     nutzlast = {
         "model": MODELL, "system": system, "prompt": prompt, "stream": False, "think": False,
-        "options": {"num_ctx": 8192, "num_predict": num_predict, "temperature": 0, "seed": seed},
+        "options": {"num_ctx": 8192, "num_predict": num_predict, "temperature": temperatur,
+                    "seed": seed},
     }
     if als_json:
         nutzlast["format"] = "json"
@@ -84,11 +90,26 @@ def speichern(pfad, wert):
     Path(pfad).write_text(json.dumps(wert, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def fehlerblock(ausgabe, test):
-    """Traceback-Block einer Prüfung aus der unittest-Ausgabe."""
+def fehlerblock(ausgabe, test, ordner):
+    """Kurzfassung des Traceback-Blocks einer Prüfung: der aufrufende Prüfschritt und alles ab
+    dort in app.py bzw. die letzten Zeilen, ohne absolute Pfade. Lange Pfade und
+    Wiederholungen verdrängten im Probelauf 2 die eigentliche Fehlerursache."""
     treffer = re.search(rf"^(?:FAIL|ERROR): {test} .*?(?=^={{5,}}|^-{{5,}}\nRan |\Z)", ausgabe,
                         re.MULTILINE | re.DOTALL)
-    return (treffer.group(0) if treffer else "")[-700:]
+    if not treffer:
+        return ""
+    zeilen = treffer.group(0).replace(str(ordner) + "/", "").rstrip().splitlines()
+    app_aufrufe = [i for i, z in enumerate(zeilen) if z.strip().startswith('File "app.py"')]
+    start = max(app_aufrufe[0] - 2, 0) if app_aufrufe else max(len(zeilen) - 4, 0)
+    rest = [z for z in zeilen[start:] if z.strip() and not set(z.strip()) <= set("~^")]
+    return "\n".join(rest)[-MAX_MELDUNG_ZEICHEN:]
+
+
+def rueckmeldung_bauen(meldungen):
+    fehlend = list(meldungen)
+    kopf = "Fehlgeschlagene Prüfungen: " + ", ".join(fehlend)
+    bloecke = "\n\n".join(f"{t}:\n{meldungen[t]}" for t in fehlend)
+    return (kopf + "\n\n" + bloecke)[:MAX_RUECKMELDUNG_ZEICHEN]
 
 
 def gedaechtnis(bedingung, db, aufgabentext):
@@ -100,10 +121,11 @@ def gedaechtnis(bedingung, db, aufgabentext):
              "nachweis": m["evidence"]} for m in treffer]
 
 
-def erzeugen(ordner, aufgabentext, erinnerungen, rueckmeldung, vorher, seed):
+def erzeugen(ordner, aufgabentext, erinnerungen, rueckmeldung, vorher, seed, temperatur):
     inhalt = {"aufgabe": aufgabentext, "zieldatei": "app.py", "gedaechtnis": erinnerungen,
               "testrueckmeldung": rueckmeldung, "vorheriger_code": vorher[-6000:]}
-    nutzlast, antwort = ollama(SYSTEM, json.dumps(inhalt, ensure_ascii=False), seed, 2400)
+    nutzlast, antwort = ollama(SYSTEM, json.dumps(inhalt, ensure_ascii=False), seed, 2400,
+                               temperatur=temperatur)
     speichern(ordner / "generierung.json", {"anfrage": nutzlast, "antwort": antwort})
     info = {"ms": antwort.get("total_duration", 0) // 1_000_000,
             "ausgabe_tokens": antwort.get("eval_count"),
@@ -177,13 +199,16 @@ def aufgabe_loesen(bedingung, db, ordner, aufgabe, seed, max_versuche):
     for nummer in range(1, max_versuche + 1):
         versuch_ordner = ordner / f"versuch-{nummer}"
         versuch_ordner.mkdir()
+        temperatur = 0.0 if nummer == 1 else WIEDERHOLUNG_TEMPERATUR
         code, info = erzeugen(versuch_ordner, aufgabentext, erinnerungen, rueckmeldung, vorher,
-                              seed)
+                              seed + nummer - 1, temperatur)
+        info["temperatur"] = temperatur
         (ordner / "app.py").write_text(code + "\n", encoding="utf-8")
         ergebnis = abnahme_ausfuehren(ordner)
         (versuch_ordner / "abnahme.txt").write_text(ergebnis["ausgabe"], encoding="utf-8")
         status = {t: ergebnis["status"].get(t, "ERROR") for t in erwartet}
-        meldungen = {t: fehlerblock(ergebnis["ausgabe"], t) for t, s in status.items() if s != "ok"}
+        meldungen = {t: fehlerblock(ergebnis["ausgabe"], t, ordner)
+                     for t, s in status.items() if s != "ok"}
         bestanden = all(s == "ok" for s in status.values())
         versuche.append({"versuch": nummer, "status": status, "meldungen": meldungen,
                          "ok": sum(s == "ok" for s in status.values()), "von": len(erwartet),
@@ -193,9 +218,7 @@ def aufgabe_loesen(bedingung, db, ordner, aufgabe, seed, max_versuche):
               f" ({info['ms']} ms)", flush=True)
         if bestanden:
             break
-        fehlend = [t for t, s in status.items() if s != "ok"]
-        rueckmeldung = ("Fehlgeschlagene Prüfungen: " + ", ".join(fehlend) + "\n"
-                        + "\n".join(meldungen[t] for t in fehlend))[-1800:]
+        rueckmeldung = rueckmeldung_bauen(meldungen)
         vorher = code
     lehren = []
     if bedingung in ("B", "C"):
@@ -245,7 +268,7 @@ def main():
     parser.add_argument("--aufgaben", default=",".join(aufgaben()))
     parser.add_argument("--reihenfolgen", type=int, default=3)
     parser.add_argument("--seeds", default="42,7")
-    parser.add_argument("--versuche", type=int, default=3)
+    parser.add_argument("--versuche", type=int, default=5)
     parser.add_argument("--feste-reihenfolge", action="store_true",
                         help="Aufgaben genau in der angegebenen Reihenfolge (Probelauf)")
     opt = parser.parse_args()

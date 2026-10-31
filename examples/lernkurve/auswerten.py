@@ -7,7 +7,7 @@ from collections import defaultdict
 from pathlib import Path
 from statistics import mean
 
-NICHT_BESTANDEN = 4
+NICHT_BESTANDEN = 6  # höchstens 5 Versuche; nicht bestanden zählt als 6
 
 
 def kennzahlen(aufgaben):
