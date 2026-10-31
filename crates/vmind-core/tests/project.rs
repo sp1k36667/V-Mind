@@ -169,5 +169,5 @@ fn v2_upgrade_preserves_knowledge_and_starts_with_empty_project_history() {
     let s = MemoryStore::open_existing(&path.0).unwrap();
     assert_eq!(s.get(1).unwrap().unwrap().problem, "Alt");
     assert_eq!(s.resume("p", None).unwrap().total_events, 0);
-    assert_eq!(s.stats("p").unwrap().schema_version, 4);
+    assert_eq!(s.stats("p").unwrap().schema_version, 5);
 }

@@ -253,7 +253,8 @@ errors as lessons that only count after a passing check?
 
 ## Limits
 
-- Search (SQLite FTS5) finds words, not meanings: no synonyms, translation or stemming.
+- Search (SQLite FTS5) finds whole words and parts of words (e.g. "Filter" in
+  "Testfilter"), but not meanings: no synonyms and no translation.
 - A validation documents a check; V-Mind does not itself prove that a solution is correct.
 - Scopes organize knowledge but are not access control. Data is stored unencrypted in a
   local file.

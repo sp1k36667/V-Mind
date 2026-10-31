@@ -253,8 +253,9 @@ Eine automatische Anbindung an Codex/ChatGPT ist damit noch nicht eingerichtet.
 - Maximal 2.000 Zeichen für die Frage, 8.192 Kontext-Tokens, 512 Antwort-Tokens,
   180 Sekunden Zeitlimit. Zeichenlimits sind keine exakte Tokenzählung.
 - Abgeschnittene, leere, unvollständige und HTTP-Fehlerantworten werden als Fehler gemeldet.
-- FTS5 sucht Wörter, keine Bedeutungen oder beliebigen Wortteile; keine automatische
-  Übersetzung, Wortstammbildung, semantische Suche oder Konflikterkennung.
+- FTS5 sucht zuerst ganze Wörter (BM25), danach füllt eine Teilwortsuche (Trigramme, ab drei
+  Zeichen je Begriff) auf, etwa „Filter“ in „Testfilter“. Keine Bedeutungen, keine automatische
+  Übersetzung, keine semantische Suche oder Konflikterkennung.
 - Bereichstrennung steuert die Relevanz, ist keine Zugriffskontrolle. `show` und
   `get` lesen ausdrücklich angegebene IDs unabhängig vom Bereich.
 - Ein lokales Programm mit Schreibzugriff auf die Datenbank kann die Daten ändern.
@@ -283,7 +284,8 @@ cargo fmt --all -- --check
 Migration 0001 wurde neu entworfen, weil die Migration aus dem alten Chat nicht
 verfügbar war. Migration 0002 ergänzt Volltextsuche, Bereiche, Rückzug und Historie.
 Migration 0003 ergänzt Projekttagebuch und Gespräche. Migration 0004 ergänzt
-Prüfbefehle (`memory_checks`) und Prüfläufe (`check_runs`).
+Prüfbefehle (`memory_checks`) und Prüfläufe (`check_runs`). Migration 0005 ergänzt die
+Teilwortsuche (`memories_trigram`) und baut sie für vorhandene Einträge auf.
 Beim Import alter Einträge wird keine historische Prüfzeit erfunden.
 Vor Migrationen einer bestehenden Datenbank vorher mit der SQLite-Backup-API sichern; keine
 laufende Datenbank blind als Einzeldatei kopieren.
