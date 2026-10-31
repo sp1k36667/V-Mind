@@ -42,6 +42,24 @@ V-Mind trennt dagegen streng zwischen *vermutet* und *geprüft*:
   gilt für alle.
 - **Alles lokal:** eine SQLite-Datei, kein Cloud-Dienst, keine GPU nötig.
 
+**Die Idee dahinter: Lernen über Läufe, ohne Training.** Ein Modell findet über einen
+echten Test einen Fehler, behebt ihn und schlägt die Erfahrung vor. Sobald die Prüfung
+sie bestätigt, nutzen alle späteren Läufe sie und machen den Fehler gar nicht erst.
+
+Ähnliche Ansätze wie Reflexion, Voyager oder mem0 speichern meist, was das Modell
+*glaubt*. V-Mind speichert, was *nachweislich funktioniert hat*.
+[Abgrenzung im Detail](docs/design.md#abgrenzung-zu-ähnlichen-ansätzen).
+
+## Wofür?
+
+- **Programmieren mit KI:** gelöste Fehler und bewährte Lösungen dauerhaft verfügbar,
+  auch für andere Modelle.
+- **Lange Projekte:** Die KI weiß nach jedem Neustart, was erledigt ist und was als
+  Nächstes kommt.
+- **Kleine lokale Modelle zu Spezialisten machen:** ein allgemeines Modell plus
+  geprüftes Fachwissen, z. B. für die Wissenschaft, mit Quellen und ohne Training.
+  Das ist bisher eine Hypothese; [Chancen und Grenzen](docs/design.md#spezialisierung-kleiner-lokaler-modelle).
+
 ## In Claude nutzen (Claude Desktop / Claude Code)
 
 Mit V-Mind als MCP-Server liest Claude beim Start den Projektstand, sucht vor
