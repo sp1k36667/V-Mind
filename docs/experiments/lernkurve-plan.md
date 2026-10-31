@@ -267,6 +267,22 @@ dann vor allem zeigen, dass dieses Modell für Selbstlernen über Fehlerbehebung
 ist, nicht dass geprüfte Lehren nutzlos sind. Die Zahl der behobenen Fehler und der
 validierten Lehren wird deshalb im Bericht an erster Stelle genannt.
 
+## Zusätzlicher explorativer Lauf mit Gemma 4 12B
+
+Festgelegt nach Probelauf 5 und vor dem Hauptlauf. Der Hauptlauf mit E2B bleibt der
+vorab geplante Test; Hypothesen, Messgrößen und Erfolgskriterium gelten nur für ihn.
+
+Zusätzlich läuft derselbe Aufbau (gleiche Aufgaben, Reihenfolgen, Seeds, Bedingungen,
+Rückmeldung, Lehrenbildung) mit `gemma-4-local:latest` (Gemma 4 12B, Q4_0). Frage: Greift
+die Lernschleife, wenn das Modell Fehler mit Rückmeldung überhaupt beheben kann? Dieser
+Lauf ist **explorativ**: Er stand nicht im ursprünglichen Plan und wird im Bericht
+getrennt und so gekennzeichnet ausgewiesen. Das Erfolgskriterium wird auf ihn nur
+beschreibend angewendet. Funktionstest vorab (Kontakte, A, zwei Versuche): 4/9 → 5/9,
+rund 30 s je Antwort.
+
+Reihenfolge der Läufe: erst E2B vollständig, dann 12B, damit sich die Modelle nicht
+denselben Grafikspeicher teilen.
+
 ## Umsetzung
 
 - Testhost: `examples/lernkurve/run.py` (baut auf `gemma_regeneration_test.py` auf),

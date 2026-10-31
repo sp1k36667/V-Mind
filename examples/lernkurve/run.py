@@ -306,6 +306,7 @@ def reihenfolgen(auswahl, anzahl):
 
 
 def main():
+    global MODELL
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ausgabe", required=True, type=Path)
     parser.add_argument("--bedingungen", default="A,B,C")
@@ -315,7 +316,10 @@ def main():
     parser.add_argument("--versuche", type=int, default=5)
     parser.add_argument("--feste-reihenfolge", action="store_true",
                         help="Aufgaben genau in der angegebenen Reihenfolge (Probelauf)")
+    parser.add_argument("--modell", default=MODELL,
+                        help="Ollama-Modell; vorab geplant ist nur E2B, andere sind explorativ")
     opt = parser.parse_args()
+    MODELL = opt.modell
     auswahl = opt.aufgaben.split(",")
     unbekannt = set(auswahl) - set(aufgaben())
     if unbekannt:
