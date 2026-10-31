@@ -28,7 +28,8 @@ Funktionen ab, die dieses konkrete Modell tatsächlich ausführen kann.
 
 Ein Host kann die JSONL-Schnittstelle über einen dauerhaften Unterprozess
 `vmind serve DB` ansteuern. Das Zuordnen seiner Tool-Aufrufe zu diesem Prozess ist
-weiterhin Aufgabe des Hosts. V-Mind stellt noch keinen MCP-Server bereit.
+weiterhin Aufgabe des Hosts. MCP-fähige Hosts starten stattdessen `vmind mcp DB`
+und erhalten dieselben Operationen als Werkzeuge (siehe `docs/protocol.md`).
 
 ## Grenzen
 

@@ -241,3 +241,50 @@ fn failed_model_call_keeps_user_message_without_fabricating_an_answer() {
     assert_eq!(messages[1]["role"], "tool");
     assert!(!messages.iter().any(|m| m["role"] == "assistant"));
 }
+#[test]
+fn mcp_server_handshakes_and_writes_journal_in_configured_scope() {
+    let temp = Temp::new();
+    let path = temp.0.join("mcp.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    let mut child = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(["--scope", "projekt", "mcp", db])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    {
+        let mut input = child.stdin.take().unwrap();
+        for message in [
+            serde_json::json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{
+                "protocolVersion":"2025-06-18","capabilities":{},
+                "clientInfo":{"name":"test","version":"1"}}}),
+            serde_json::json!({"jsonrpc":"2.0","method":"notifications/initialized"}),
+            serde_json::json!({"jsonrpc":"2.0","id":2,"method":"tools/list"}),
+            serde_json::json!({"jsonrpc":"2.0","id":3,"method":"tools/call","params":{
+                "name":"log","arguments":{"kind":"task","task_key":"mcp",
+                "task_status":"done","body":"MCP getestet","source":"Workflow-Test"}}}),
+        ] {
+            writeln!(input, "{message}").unwrap();
+        }
+    }
+    let out = child.wait_with_output().unwrap();
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let replies: Vec<Value> = String::from_utf8(out.stdout)
+        .unwrap()
+        .lines()
+        .map(|s| serde_json::from_str(s).unwrap())
+        .collect();
+    assert_eq!(replies.len(), 3);
+    assert_eq!(replies[0]["result"]["protocolVersion"], "2025-06-18");
+    assert!(replies[1]["result"]["tools"].as_array().unwrap().len() >= 10);
+    assert_eq!(replies[2]["result"]["isError"], false);
+    let resume = cli(&["--scope", "projekt", "resume", db]);
+    assert_eq!(resume["tasks"][0]["task_key"], "mcp");
+    assert_eq!(resume["tasks"][0]["task_status"], "done");
+}

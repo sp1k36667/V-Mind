@@ -51,9 +51,9 @@ eine vollständig autonome KI-Anbindung ist noch nicht fertig.
 
 ## Prüfungen des Rust-Kerns
 
-**28 lokal ausgeführte Tests bestanden.** Sie prüfen unter anderem Migrationen,
+**37 lokal ausgeführte Tests bestanden.** Sie prüfen unter anderem Migrationen,
 Persistenz, Volltextsuche, Projekttrennung, Validierung, zurückgezogene Einträge,
-Gesprächsfortsetzung nach Programmneustart sowie CLI- und JSONL-Abläufe.
+Gesprächsfortsetzung nach Programmneustart sowie CLI-, JSONL- und MCP-Abläufe.
 Formatprüfung und Clippy liefen ebenfalls erfolgreich. Diese Softwaretests sind
 getrennt von den sieben Funktionsprüfungen und zehn Modelltests des E2B-Versuchs.
 
@@ -70,6 +70,7 @@ getrennt von den sieben Funktionsprüfungen und zehn Modelltests des E2B-Versuch
 - SQLite FTS5 mit BM25-Relevanzsortierung, Unicode-Suche und deutschen/englischen Stoppwörtern.
 - Projektbereiche: Abruf aus dem gewählten Bereich plus dem gemeinsamen Bereich `global`.
 - JSON-Ausgaben und ein modellunabhängiges JSONL-Werkzeugprotokoll über stdin/stdout.
+- MCP-Server (`vmind mcp DB`) mit denselben Operationen als Werkzeuge, z. B. für Claude Code.
 - Optionaler lokaler Ollama-Adapter: Frage → Wissensabruf → Modellantwort.
 - Atomare Migration bis Schema 3, ohne bestehende Einträge zu löschen.
 
@@ -248,7 +249,25 @@ cargo run -p vmind-cli --locked -- serve vmind.db
 ```
 
 Danach wird ein JSON-Objekt pro Eingabezeile verarbeitet. Das eigene Protokoll ist
-in [docs/protocol.md](docs/protocol.md) beschrieben; es ist kein MCP-Server.
+in [docs/protocol.md](docs/protocol.md) beschrieben.
+
+MCP-fähige Clients starten stattdessen den MCP-Server. Mit `--scope` wird der
+Standardbereich gesetzt; Validierung bleibt auch hier der CLI vorbehalten:
+
+```sh
+vmind --scope v-mind mcp vmind.db
+```
+
+Für Claude Code liegt im Projektordner eine `.mcp.json`, die genau diesen Aufruf
+einträgt. Claude Code fragt beim ersten Start nach der Freigabe des Servers.
+Optional lädt ein SessionStart-Hook in `.claude/settings.local.json` (nicht im
+Repository) den Projektstand automatisch zu Sitzungsbeginn:
+
+```json
+{"hooks":{"SessionStart":[{"hooks":[{"type":"command",
+  "command":"vmind --scope v-mind resume \"$CLAUDE_PROJECT_DIR/vmind.db\""}]}]}}
+```
+
 Eine automatische Anbindung an Codex/ChatGPT ist damit noch nicht eingerichtet.
 
 ## Konfiguration und Grenzen

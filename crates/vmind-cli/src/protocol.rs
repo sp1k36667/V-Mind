@@ -159,26 +159,42 @@ pub fn dispatch(store: &MemoryStore, mut value: Value) -> Value {
     }
 }
 
-pub fn serve(store: &MemoryStore, input: impl BufRead, mut output: impl Write) -> io::Result<()> {
+pub(crate) enum Line {
+    Eof,
+    TooLong,
+    Data(Vec<u8>),
+}
+
+/// Liest eine Eingabezeile von höchstens 1 MiB; gilt für JSONL und MCP.
+pub(crate) fn read_line(input: &mut impl BufRead) -> io::Result<Line> {
     const MAX: u64 = 1_048_576;
+    let mut line = Vec::new();
+    let n = Read::by_ref(input)
+        .take(MAX + 1)
+        .read_until(b'\n', &mut line)?;
+    Ok(match n {
+        0 => Line::Eof,
+        n if n as u64 > MAX => Line::TooLong,
+        _ => Line::Data(line),
+    })
+}
+
+pub fn serve(store: &MemoryStore, input: impl BufRead, mut output: impl Write) -> io::Result<()> {
     let mut input = input;
     loop {
-        let mut line = Vec::new();
-        let n = Read::by_ref(&mut input)
-            .take(MAX + 1)
-            .read_until(b'\n', &mut line)?;
-        if n == 0 {
-            return Ok(());
-        }
-        if n as u64 > MAX {
-            writeln!(
-                output,
-                "{}",
-                json!({"id":null,"ok":false,"error":"Zeile überschreitet 1 MiB; Verbindung beendet"})
-            )?;
-            output.flush()?;
-            return Err(io::Error::other("JSONL-Zeile zu groß"));
-        }
+        let line = match read_line(&mut input)? {
+            Line::Eof => return Ok(()),
+            Line::TooLong => {
+                writeln!(
+                    output,
+                    "{}",
+                    json!({"id":null,"ok":false,"error":"Zeile überschreitet 1 MiB; Verbindung beendet"})
+                )?;
+                output.flush()?;
+                return Err(io::Error::other("JSONL-Zeile zu groß"));
+            }
+            Line::Data(line) => line,
+        };
         let answer = match serde_json::from_slice::<Value>(&line) {
             Ok(value) => dispatch(store, value),
             Err(error) => json!({"id":null,"ok":false,"error":error.to_string()}),

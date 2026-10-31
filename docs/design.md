@@ -61,8 +61,9 @@ gehören nicht ins öffentliche Repository.
 ## Bewusst offen
 
 Noch keine produktionsreife Zugriffskontrolle, Manipulationssicherheit, Verschlüsselung,
-automatische Wahrheitsprüfung, automatische Anbindung an Codex, MCP, Embeddings oder
-GPU-residente Suche. Die ersten nächsten Schritte sind reale Fehlerfälle, Bewertung
+automatische Wahrheitsprüfung, automatische Anbindung an Codex, Embeddings oder
+GPU-residente Suche. Ein MCP-Server (`vmind mcp DB`) bildet die JSONL-Operationen
+als Werkzeuge ab; er ist ein Adapter in `vmind-cli`, kein Teil des Kerns. Die ersten nächsten Schritte sind reale Fehlerfälle, Bewertung
 der Abrufqualität und daraus abgeleitete Suchverbesserungen. ROCm bleibt unverändert.
 
 ## Projekt- und Gesprächsgedächtnis (Schema 3)

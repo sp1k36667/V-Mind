@@ -2,6 +2,7 @@
 /backups/
 /.vmind/
 /.cargo/config.toml
+/.claude/settings.local.json
 /setup/ollama-install.sh
 *.db
 *.db-shm

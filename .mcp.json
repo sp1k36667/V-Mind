@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "vmind": {
+      "command": "vmind",
+      "args": ["--scope", "v-mind", "mcp", "vmind.db"]
+    }
+  }
+}

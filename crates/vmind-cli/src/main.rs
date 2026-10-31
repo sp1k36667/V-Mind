@@ -1,3 +1,4 @@
+mod mcp;
 mod ollama;
 mod prompt;
 mod protocol;
@@ -33,6 +34,7 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
   messages DB GESPRÄCH_ID [NACH_ID]
   chat DB GESPRÄCH_ID FRAGE
   serve DB                      (JSONL-Protokoll v1 über stdin/stdout)
+  mcp DB                        (MCP-Server über stdio; --scope = Standardbereich)
 Standardbereich: VMIND_SCOPE oder global.
 Ollama: VMIND_OLLAMA_URL oder http://127.0.0.1:11434
 Modell: VMIND_MODEL oder vmind-gemma4:e2b";
@@ -177,7 +179,7 @@ fn resume_output(db: &str, scope: &str, session: Option<&str>, json_mode: bool) 
 fn run() -> Result<()> {
     let mut args: Vec<String> = env::args().skip(1).collect();
     let mut json_mode = false;
-    let mut scope = env::var("VMIND_SCOPE").unwrap_or_else(|_| "global".into());
+    let mut explicit_scope = env::var("VMIND_SCOPE").ok();
     while let Some(arg) = args.first() {
         match arg.as_str() {
             "--json" => {
@@ -185,12 +187,13 @@ fn run() -> Result<()> {
                 args.remove(0);
             }
             "--scope" if args.len() >= 2 => {
-                scope = args.remove(1);
+                explicit_scope = Some(args.remove(1));
                 args.remove(0);
             }
             _ => break,
         }
     }
+    let scope = explicit_scope.clone().unwrap_or_else(|| "global".into());
     match args.as_slice() {
         [] => println!("{HELP}"),
         [cmd] if cmd == "--help" || cmd == "help" => println!("{HELP}"),
@@ -366,6 +369,14 @@ fn run() -> Result<()> {
         [cmd, db] if cmd == "serve" => {
             protocol::serve(
                 &MemoryStore::open_existing(db)?,
+                io::stdin().lock(),
+                io::stdout().lock(),
+            )?;
+        }
+        [cmd, db] if cmd == "mcp" => {
+            mcp::serve(
+                &MemoryStore::open_existing(db)?,
+                explicit_scope.as_deref(),
                 io::stdin().lock(),
                 io::stdout().lock(),
             )?;
