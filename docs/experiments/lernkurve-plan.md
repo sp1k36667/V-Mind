@@ -249,6 +249,24 @@ Versuch jeder Aufgabe wird das Modell entladen (`keep_alive: 0`), damit die Haup
 reproduzierbar ist. Ladezeit wird getrennt erfasst (`lade_ms`) und nicht zur Modellzeit
 gezählt. Für Wiederholungen mit Temperatur 0,7 ist Streuung ohnehin gewollt.
 
+## Probelauf 5: Kontrolle der Reproduzierbarkeit
+
+Kontakte und Lesezeichen, A/B/C, Seed 42, Modell vor jedem ersten Versuch entladen.
+Zählt nicht zur Auswertung.
+
+- Kontakte, Versuch 1: in A, B und C byte-gleicher Code, identisch mit A aus Probelauf 4.
+  Lesezeichen, Versuch 1: A und B byte-gleich (B hatte keine Lehre), C abweichend wegen
+  anderer Eingabe (ungeprüfte Lehren). Die Hauptmessgröße ist damit reproduzierbar.
+- Bei reproduzierbarem Verhalten behob E2B bei den Kontakten in fünf Versuchen keinen
+  Fehler; der Fix aus Probelauf 4 war vom Zwischenspeicherzustand abhängig. B erhielt
+  daher keine Lehre.
+
+Erwartung vor dem Hauptlauf, offen festgehalten: Weil E2B Fehler selten selbst behebt,
+wird B wenige Lehren erhalten. Ein Ergebnis „kein Unterschied zwischen A und B“ würde
+dann vor allem zeigen, dass dieses Modell für Selbstlernen über Fehlerbehebung zu schwach
+ist, nicht dass geprüfte Lehren nutzlos sind. Die Zahl der behobenen Fehler und der
+validierten Lehren wird deshalb im Bericht an erster Stelle genannt.
+
 ## Umsetzung
 
 - Testhost: `examples/lernkurve/run.py` (baut auf `gemma_regeneration_test.py` auf),
