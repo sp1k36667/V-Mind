@@ -1,6 +1,6 @@
 # V-Mind ausführlich: Kommandozeile, Projektgedächtnis und Grenzen
 
-Diese Seite ergänzt die [README](../README.md). Sie beschreibt alle Befehle,
+Diese Seite ergänzt die [README](../README.de.md). Sie beschreibt alle Befehle,
 den Ablauf für lange Projekte, Konfiguration, Grenzen und Entwicklungshinweise.
 
 ## Startprompt für die nutzende KI

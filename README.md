@@ -1,75 +1,72 @@
 # V-Mind
 
+**English** · [Deutsch](README.de.md)
+
 [![Rust checks](https://github.com/sp1k36667/V-Mind/actions/workflows/ci.yml/badge.svg)](https://github.com/sp1k36667/V-Mind/actions/workflows/ci.yml)
-[![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Der Duden für KIs: ein überprüfbares Gedächtnis, das Neustarts überlebt.**
+**A verifiable memory for AI that survives restarts.**
 
-KIs vergessen nach jeder Sitzung alles und behaupten manchmal selbstsicher Falsches.
-V-Mind ist ein kleiner lokaler Speicher (Rust + SQLite), in dem eine KI zwei Dinge
-dauerhaft ablegen und wiederfinden kann:
+AI assistants forget everything after each session, and sometimes state wrong things with
+confidence. V-Mind is a small local store (Rust + SQLite) where an AI can keep two things
+and find them again later:
 
-1. **Geprüftes Wissen:** gelöste Fehler und bewährte Lösungen, jeweils mit Quelle
-   und Prüfnachweis. Neues Wissen ist erst *ungeprüft* und wird erst nach einer
-   echten Prüfung freigegeben.
-2. **Projektgedächtnis:** Ziel, Aufgaben, Entscheidungen, nächster Schritt und
-   Gesprächsverlauf. So weiß eine KI auch in einer neuen Sitzung, wo die Arbeit steht.
+1. **Verified knowledge:** solved errors and proven solutions, each with a source and
+   evidence. New knowledge starts out *unverified* and only becomes valid after a real check.
+2. **Project memory:** goal, tasks, decisions, next step and conversation history, so an AI
+   knows where the work stands, even in a brand-new session.
 
-V-Mind ist modellunabhängig. Es funktioniert als **MCP-Server** (z. B. mit Claude),
-über die Kommandozeile, über ein einfaches JSONL-Protokoll und mit lokalen Modellen
-über Ollama.
+V-Mind is model-agnostic. It works as an **MCP server** (e.g. with Claude), from the command
+line, through a simple JSONL protocol, and with local models via Ollama.
 
-> Status: experimenteller Prototyp. 50 automatische Tests, MIT-Lizenz.
+> Status: experimental prototype, MIT license. Detailed docs, CLI help texts and the AI
+> start prompt are currently in German.
 
-## Was V-Mind anders macht
+## What makes V-Mind different
 
-Die meisten KI-Gedächtnisse speichern einfach, was die KI für wichtig hält.
-V-Mind trennt dagegen streng zwischen *vermutet* und *geprüft*:
+Most AI memories store whatever the model considers important. V-Mind strictly separates
+*assumed* from *verified*:
 
 ```
-  propose / add            validate (Mensch/CLI, mit Nachweis)       invalidate
+  propose / add            validate (human/CLI, with evidence)       invalidate
  ───────────────▶ pending ─────────────────────────────────▶ validated ──────────▶ invalidated
-                  wird nie abgerufen                          wird abgerufen        nie mehr abgerufen,
-                                                                                    Historie bleibt
+                  never retrieved                             retrieved             never retrieved again,
+                                                                                    history is kept
 ```
 
-- **Nur validiertes Wissen** wird abgerufen, immer mit Quelle, Prüfer und Nachweis.
-- **Eine KI kann Wissen nur vorschlagen.** Die Freigabe ist absichtlich nicht über
-  KI-Werkzeuge möglich, nur über die Kommandozeile.
-- **Nichts wird still überschrieben.** Veraltetes wird zurückgezogen, jede Änderung
-  bleibt in der Historie nachvollziehbar.
-- **Projektbereiche** (`--scope`) halten Projekte getrennt; der Bereich `global`
-  gilt für alle.
-- **Alles lokal:** eine SQLite-Datei, kein Cloud-Dienst, keine GPU nötig.
+- **Only validated knowledge** is retrieved, always with source, reviewer and evidence.
+- **An AI can only propose knowledge.** Approval is deliberately not available through AI
+  tools, only through the command line or an executable check.
+- **Nothing is silently overwritten.** Outdated entries are withdrawn; every change stays
+  traceable in the history.
+- **Scopes** (`--scope`) keep projects apart; the `global` scope applies to all of them.
+- **Fully local:** one SQLite file, no cloud service, no GPU required.
 
-**Die Idee dahinter: Lernen über Läufe, ohne Training.** Ein Modell findet über einen
-echten Test einen Fehler, behebt ihn und schlägt die Erfahrung vor. Sobald die Prüfung
-sie bestätigt, nutzen alle späteren Läufe sie und machen den Fehler gar nicht erst.
+**The idea behind it: learning across runs, without training.** A model finds an error
+through a real test, fixes it, and proposes the lesson. Once a check confirms it, every
+later run can retrieve it and avoid the mistake from the start.
 
-Ähnliche Ansätze wie Reflexion, Voyager oder mem0 speichern meist, was das Modell
-*glaubt*. V-Mind speichert, was *nachweislich funktioniert hat*.
-[Abgrenzung im Detail](docs/design.md#abgrenzung-zu-ähnlichen-ansätzen).
+Related approaches such as Reflexion, Voyager or mem0 mostly store what the model
+*believes*. V-Mind stores what *verifiably worked*.
+[Detailed comparison (German)](docs/design.md#abgrenzung-zu-ähnlichen-ansätzen).
 
-## Wofür?
+## What is it for?
 
-- **Programmieren mit KI:** gelöste Fehler und bewährte Lösungen dauerhaft verfügbar,
-  auch für andere Modelle.
-- **Lange Projekte:** Die KI weiß nach jedem Neustart, was erledigt ist und was als
-  Nächstes kommt.
-- **Kleine lokale Modelle zu Spezialisten machen:** ein allgemeines Modell plus
-  geprüftes Fachwissen, z. B. für die Wissenschaft, mit Quellen und ohne Training.
-  Das ist bisher eine Hypothese; [Chancen und Grenzen](docs/design.md#spezialisierung-kleiner-lokaler-modelle).
+- **Coding with AI:** solved errors and proven solutions stay available, also for other models.
+- **Long-running projects:** after every restart the AI knows what is done and what comes next.
+- **Turning small local models into specialists:** a general model plus verified domain
+  knowledge, e.g. for science, with sources and without training. This is a hypothesis so
+  far; [opportunities and limits (German)](docs/design.md#spezialisierung-kleiner-lokaler-modelle).
 
-## In Claude nutzen (Claude Desktop / Claude Code)
+## Use it with Claude (Claude Desktop / Claude Code)
 
-Mit V-Mind als MCP-Server liest Claude beim Start den Projektstand, sucht vor
-Änderungen nach geprüftem Wissen und hält erledigte Arbeit im Tagebuch fest.
-Das funktioniert im **Code-Tab der Claude-Desktop-App** und in **Claude Code im
-Terminal**.
+With V-Mind as an MCP server, Claude loads the project state at startup, looks up verified
+knowledge before making changes, and records finished work in the project journal. This
+works in the **Code tab of the Claude desktop app** and in **Claude Code in the terminal**.
 
-### 1. V-Mind installieren
+### 1. Install V-Mind
 
-Voraussetzungen: Rust/Cargo, Git und SQLite mit FTS5. Unter Ubuntu:
+Requirements: Rust/Cargo, Git and SQLite with FTS5. On Ubuntu:
 
 ```sh
 sudo apt install build-essential pkg-config libsqlite3-dev
@@ -83,61 +80,61 @@ git clone https://github.com/sp1k36667/V-Mind.git
 cargo install --path V-Mind/crates/vmind-cli --locked
 ```
 
-Danach steht der Befehl `vmind` zur Verfügung (`vmind --help` zeigt alle Befehle).
+The `vmind` command is now available (`vmind --help` lists all commands).
 
-### 2. Datenbank in deinem Projekt anlegen
+### 2. Create a database in your project
 
-Im Ordner des Projekts, an dem Claude arbeiten soll:
+In the folder of the project Claude should work on:
 
 ```sh
 vmind init vmind.db
 ```
 
-Die Datenbank ist lokal und gehört nicht ins Git-Repository (`*.db` in `.gitignore`).
+The database is local and does not belong in the Git repository (`*.db` in `.gitignore`).
 
-### 3. MCP-Server eintragen
+### 3. Register the MCP server
 
-Lege im Projektordner eine Datei `.mcp.json` an. Ersetze `mein-projekt` durch einen
-Namen für den Projektbereich:
+Create a `.mcp.json` file in the project folder. Replace `my-project` with a name for the
+project scope:
 
 ```json
 {
   "mcpServers": {
     "vmind": {
       "command": "vmind",
-      "args": ["--scope", "mein-projekt", "mcp", "vmind.db"]
+      "args": ["--scope", "my-project", "mcp", "vmind.db"]
     }
   }
 }
 ```
 
-Alternativ mit der Claude-Code-Kommandozeile, nur für dich und dieses Projekt:
+Alternatively with the Claude Code CLI, only for you and this project:
 
 ```sh
-claude mcp add vmind -- vmind --scope mein-projekt mcp vmind.db
+claude mcp add vmind -- vmind --scope my-project mcp vmind.db
 ```
 
-### 4. Claude neu starten und Server freigeben
+### 4. Restart Claude and approve the server
 
-Beim nächsten Start einer Sitzung im Projekt fragt Claude, ob der Server `vmind`
-erlaubt werden soll. Danach hat Claude diese Werkzeuge:
+The next time a session starts in the project, Claude asks whether the `vmind` server may
+be used. After that Claude has these tools:
 
-| Werkzeug | Zweck |
+| Tool | Purpose |
 |---|---|
-| `resume` | Projektstand laden: Ziel, Aufgaben, Entscheidungen, nächster Schritt |
-| `recall` | Geprüftes Wissen per Volltextsuche finden |
-| `get` | Einen Eintrag mit vollständiger Historie ansehen |
-| `propose` | Neue Erfahrung als *ungeprüft* vorschlagen |
-| `log` | Aufgabe, Entscheidung, nächsten Schritt oder Notiz festhalten |
-| `journal` | Projekttagebuch seitenweise lesen |
-| `pending`, `stats` | Ungeprüfte Einträge und Zahlen anzeigen |
-| `session_new`, `sessions`, `message`, `messages` | Gespräche speichern und lesen |
+| `resume` | Load project state: goal, tasks, decisions, next step |
+| `recall` | Find verified knowledge via full-text search |
+| `get` | Show an entry with its full history, active check and recent check runs |
+| `propose` | Propose a new lesson as *unverified* |
+| `log` | Record a task, decision, next step or note |
+| `journal` | Read the project journal page by page |
+| `pending`, `stats` | Show unverified entries and counts |
+| `session_new`, `sessions`, `message`, `messages` | Store and read conversations |
 
-### 5. Optional: Projektstand automatisch laden
+### 5. Optional: load the project state automatically
 
-Ein SessionStart-Hook gibt Claude den Projektstand schon beim Sitzungsstart mit,
-ohne dass Claude erst daran denken muss. Datei `.claude/settings.local.json` im
-Projektordner (persönlich, nicht ins Repository einchecken):
+A SessionStart hook hands Claude the project state right at session start, without Claude
+having to remember to ask. File `.claude/settings.local.json` in the project folder
+(personal, do not commit it):
 
 ```json
 {
@@ -147,7 +144,7 @@ Projektordner (persönlich, nicht ins Repository einchecken):
         "hooks": [
           {
             "type": "command",
-            "command": "vmind --scope mein-projekt resume \"$CLAUDE_PROJECT_DIR/vmind.db\""
+            "command": "vmind --scope my-project resume \"$CLAUDE_PROJECT_DIR/vmind.db\""
           }
         ]
       }
@@ -156,133 +153,129 @@ Projektordner (persönlich, nicht ins Repository einchecken):
 }
 ```
 
-### 6. Loslegen
+### 6. Get started
 
-Sag Claude zum Beispiel:
+Tell Claude, for example:
 
-- „Lies den Projektstand aus V-Mind und mach beim nächsten Schritt weiter.“
-- „Halte in V-Mind fest, was du erledigt hast, mit dem Testergebnis als Nachweis.“
-- „Schlag die Lösung für diesen Fehler in V-Mind als ungeprüften Eintrag vor.“
+- "Load the project state from V-Mind and continue with the next step."
+- "Record in V-Mind what you finished, with the test result as evidence."
+- "Propose the fix for this error to V-Mind as an unverified entry."
 
-Geprüftes Wissen gibst du selbst frei, nachdem du die Lösung wirklich getestet hast:
+You approve knowledge yourself after you have really tested the solution:
 
 ```sh
 vmind pending vmind.db
 ```
 
 ```sh
-vmind validate vmind.db 1 'Dein Name' 'Welcher Test lief und mit welchem Ergebnis'
+vmind validate vmind.db 1 'Your name' 'Which test ran and what the result was'
 ```
 
-Oder du lässt einen echten Test entscheiden, siehe nächster Abschnitt.
+Or let a real test decide, see the next section.
 
-### Prüfbefehle: Tests entscheiden, was gilt
+### Checks: tests decide what counts
 
-Ein Eintrag kann einen **Prüfbefehl** bekommen, zum Beispiel den Test, der den Fehler
-gefunden hat. Besteht er, wird ein ungeprüfter Eintrag automatisch gültig, mit Befehl,
-Exit-Code und Laufzeit als Nachweis. Das ist der Kern der Lernschleife: Die KI schlägt
-vor, der Test entscheidet.
+An entry can get an executable **check**, for example the test that found the error. If it
+passes, an unverified entry becomes valid automatically, with command, exit code and
+duration as evidence. This is the core of the learning loop: the AI proposes, the test
+decides.
 
 ```sh
-vmind check-set vmind.db 1 'Dein Name' . pytest tests/test_app.py -k corrupt
+vmind check-set vmind.db 1 'Your name' . pytest tests/test_app.py -k corrupt
 ```
 
 ```sh
 vmind check vmind.db 1
 ```
 
-`revalidate` führt alle Prüfbefehle des Bereichs erneut aus, zum Beispiel nach einem
-Update. Fällt ein gültiger Eintrag durch, wird das gemeldet. Zurückgezogen wird er nur
-mit `--invalidate`, weil ein Rückzug endgültig ist:
+`revalidate` re-runs all checks of a scope, for example after an update. If a valid entry
+fails, it is reported. It is only withdrawn with `--invalidate`, because withdrawal is
+permanent:
 
 ```sh
-vmind --scope mein-projekt revalidate vmind.db
+vmind --scope my-project revalidate vmind.db
 ```
 
-Sicherheit: Prüfbefehle laufen ohne Shell (keine `;`, `&&`, Umleitungen) in einem festen
-Ordner und mit Zeitlimit. Setzen und Ausführen geht **nur über die Kommandozeile**,
-nicht über MCP. Eine KI kann V-Mind also keinen Befehl unterschieben. Achte darauf, dass
-der Befehl wirklich etwas prüft: `cargo test` mit einem vertippten Testnamen führt null
-Tests aus und meldet trotzdem Erfolg. Details: [docs/cli.md](docs/cli.md#prüfbefehle).
+Security: checks run without a shell (no `;`, `&&` or redirects), in a fixed directory and
+with a timeout. Setting and running checks is **only possible from the command line**, not
+via MCP, so an AI cannot slip a command into V-Mind. Make sure a check really tests
+something: `cargo test` with a mistyped test name runs zero tests and still reports success.
+Details (German): [docs/cli.md](docs/cli.md#prüfbefehle).
 
-Für andere MCP-fähige Programme gilt dasselbe: Server-Befehl
-`vmind --scope BEREICH mcp /absoluter/pfad/vmind.db`. Wo die Konfiguration liegt,
-hängt vom jeweiligen Programm ab. Technische Details: [docs/protocol.md](docs/protocol.md).
+The same applies to other MCP-capable programs: server command
+`vmind --scope SCOPE mcp /absolute/path/vmind.db`. Where the configuration lives depends on
+the program. Technical details (German): [docs/protocol.md](docs/protocol.md).
 
-## Weitere Wege, V-Mind zu nutzen
+## Other ways to use V-Mind
 
-**Kommandozeile:** Wissen speichern, prüfen, abrufen und das Projekttagebuch führen.
+**Command line:** store, verify and retrieve knowledge, and keep the project journal.
 
 ```sh
-vmind --scope mein-projekt recall vmind.db 'SQLite Migration'
+vmind --scope my-project recall vmind.db 'SQLite migration'
 ```
 
 ```sh
-vmind --scope mein-projekt task vmind.db datenbank done 'Migration implementiert' 'cargo test: alle Tests bestanden'
+vmind --scope my-project task vmind.db database done 'Migration implemented' 'cargo test: all tests passed'
 ```
 
-**Lokale Modelle über Ollama:** `ask` ruft passendes Wissen und den Projektstand ab
-und stellt die Frage an ein lokales Modell (Standard: Gemma 4 E2B, siehe
-`setup/Modelfile`). Antworten werden gespeichert, aber nie automatisch als Wissen
-übernommen.
+**Local models via Ollama:** `ask` retrieves matching knowledge and the project state and
+sends the question to a local model (default: Gemma 4 E2B, see `setup/Modelfile`). Answers
+are stored, but never automatically turned into knowledge.
 
 ```sh
-vmind --scope mein-projekt ask vmind.db 'Wie verhindere ich fehlende Tabellen beim ersten Start?'
+vmind --scope my-project ask vmind.db 'How do I prevent missing tables on first start?'
 ```
 
-**JSONL-Protokoll:** `vmind serve vmind.db` verarbeitet ein JSON-Objekt pro Zeile
-über stdin/stdout, für eigene Programme ohne MCP. Siehe [docs/protocol.md](docs/protocol.md).
+**JSONL protocol:** `vmind serve vmind.db` processes one JSON object per line over
+stdin/stdout, for your own programs without MCP. See [docs/protocol.md](docs/protocol.md).
 
-Alle Befehle, der Ablauf für lange Projekte, Konfiguration und Grenzen stehen
-ausführlich in **[docs/cli.md](docs/cli.md)**.
+All commands, the workflow for long projects, configuration and limits are described in
+detail in **[docs/cli.md](docs/cli.md)** (German).
 
-## Erster Versuch: hilft geprüftes Wissen einem kleinen Modell?
+## First experiment: does verified knowledge help a small model?
 
-Das kleine lokale Modell Gemma 4 E2B sollte einen Python-Aufgabenplaner bauen,
-einmal ohne und einmal mit V-Mind. Im Speicher lag eine zuvor von Gemma 4 12B
-erzeugte und geprüfte Lösung. Aufgabe, Einstellungen und Prüfungen waren gleich.
+The small local model Gemma 4 E2B had to build a Python task planner, once without and once
+with V-Mind. The store contained a solution previously generated and verified with Gemma 4
+12B. Task, settings and checks were identical.
 
-| Ergebnis | Ohne V-Mind | Mit V-Mind |
+| Result | Without V-Mind | With V-Mind |
 |---|---:|---:|
-| Unabhängige Funktionsprüfungen | 2 von 7 | 7 von 7 |
-| Eigene Testsuite am Ende | nicht lauffähig | 10 von 10 |
-| Modellzeit, zwei Versuche zusammen | 46,5 s | 17,1 s |
+| Independent functional checks | 2 of 7 | 7 of 7 |
+| Model's own test suite at the end | not runnable | 10 of 10 |
+| Model time, both attempts combined | 46.5 s | 17.1 s |
 
-**Ehrliche Einordnung:** Das zeigt, dass ein kleines Modell eine gespeicherte,
-geprüfte Lösung zuverlässig wiederverwenden kann. Die Ausgabe war bytegleich mit
-der Referenz. Es zeigt *nicht*, dass das Modell dazulernt oder neue Aufgaben löst.
-Der nächste geplante Versuch prüft, ob gespeicherte Erfahrungen auch bei
-*veränderten* Aufgaben helfen.
-[Aufbau, Messwerte und Grenzen im Detail](docs/experiments/e2b-pilot.md).
+**Honest assessment:** this shows that a small model can reliably reuse a stored, verified
+solution. The output was byte-identical to the reference. It does *not* show that the model
+learns or solves new tasks. A pre-registered follow-up experiment is in progress: does a
+small model get better over a series of *different* tasks when it stores its own fixed
+errors as lessons that only count after a passing check?
+[Setup, measurements and limits (German)](docs/experiments/e2b-pilot.md).
 
-## Grenzen
+## Limits
 
-- Die Suche (SQLite FTS5) findet Wörter, keine Bedeutungen: keine Synonyme,
-  Übersetzung oder Wortstämme.
-- Eine Validierung dokumentiert eine Prüfung; V-Mind beweist nicht selbst, dass
-  eine Lösung stimmt.
-- Projektbereiche ordnen Wissen, sind aber keine Zugriffskontrolle. Daten liegen
-  unverschlüsselt in einer lokalen Datei.
-- Keine automatische Anbindung an Codex oder ChatGPT; V-Mind beobachtet keine
-  anderen Programme.
+- Search (SQLite FTS5) finds words, not meanings: no synonyms, translation or stemming.
+- A validation documents a check; V-Mind does not itself prove that a solution is correct.
+- Scopes organize knowledge but are not access control. Data is stored unencrypted in a
+  local file.
+- No automatic integration with Codex or ChatGPT; V-Mind does not observe other programs.
 
-Vollständige Liste: [docs/cli.md](docs/cli.md#konfiguration-und-grenzen).
+Full list (German): [docs/cli.md](docs/cli.md#konfiguration-und-grenzen).
 
-## Projekt
+## Project
 
-| Datei | Inhalt |
+| File | Contents (currently German) |
 |---|---|
-| [docs/cli.md](docs/cli.md) | Alle Befehle, lange Projekte, Konfiguration, Entwicklung |
-| [docs/protocol.md](docs/protocol.md) | JSONL-Protokoll und MCP-Server |
-| [docs/design.md](docs/design.md) | Architektur und Entscheidungen |
-| [docs/start-prompt.md](docs/start-prompt.md) | Startanweisung für KI-Clients |
-| [AGENTS.md](AGENTS.md) | Arbeitsregeln für KIs, die an V-Mind selbst arbeiten |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Beiträge und Prüfungen |
+| [docs/cli.md](docs/cli.md) | All commands, long projects, configuration, development |
+| [docs/protocol.md](docs/protocol.md) | JSONL protocol and MCP server |
+| [docs/design.md](docs/design.md) | Architecture and decisions |
+| [docs/start-prompt.md](docs/start-prompt.md) | Start prompt for AI clients |
+| [AGENTS.md](AGENTS.md) | Working rules for AIs that work on V-Mind itself |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contributions and checks |
 
-Aufbau: `crates/vmind-core` (SQLite-Speicher und Abruf, ohne Modellbezug) und
-`crates/vmind-cli` (Kommandozeile, JSONL, MCP, Ollama-Adapter).
+Layout: `crates/vmind-core` (SQLite store and retrieval, no model dependency) and
+`crates/vmind-cli` (command line, JSONL, MCP, Ollama adapter).
 
-Prüfungen vor jedem Beitrag, jeweils einzeln:
+Checks before every contribution, one at a time:
 
 ```sh
 cargo test --workspace --locked
@@ -296,6 +289,6 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo fmt --all -- --check
 ```
 
-## Lizenz
+## License
 
-MIT, siehe [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE).
