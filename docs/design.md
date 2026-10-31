@@ -58,12 +58,89 @@ Der Erstimport protokolliert `imported`, weil V1 keinen Prüfzeitpunkt gespeiche
 Echte historische Zeitpunkte werden nicht nachträglich erfunden. Datenbank-Backups
 gehören nicht ins öffentliche Repository.
 
+## Lernen über Läufe
+
+Die Kernidee ist eine Lernschleife ohne Training: Ein Modell findet über echtes
+Testfeedback einen Fehler, behebt ihn und schlägt die Erfahrung („Fehler X →
+Lösung Y“) als `pending` vor. Gültig wird sie erst, wenn eine Prüfung sie bestätigt,
+idealerweise derselbe Test, der den Fehler gefunden hat. Spätere Läufe rufen die
+Erfahrung ab und vermeiden den Fehler von Anfang an.
+
+Stand: Der E2B-Pilot zeigt die Wiederverwendung geprüften Wissens eines anderen
+Modells (`docs/experiments/e2b-pilot.md`). Die vollständige Schleife mit selbst
+gefundenen und testbasiert bestätigten Erfahrungen ist noch nicht experimentell
+gezeigt; dafür sind Prüfbefehle am Eintrag und ein Lernkurven-Experiment geplant.
+
+## Abgrenzung zu ähnlichen Ansätzen
+
+Die Idee, dass Sprachmodelle ohne Training aus Erfahrung lernen, ist nicht neu.
+Bekannte Arbeiten und Werkzeuge, so wie wir sie verstehen:
+
+- **Reflexion** (Shinn u. a., 2023): Das Modell formuliert nach Fehlschlägen
+  sprachliche Lehren und nutzt sie in weiteren Versuchen derselben Aufgabe.
+- **Voyager** (Wang u. a., 2023): Ein Minecraft-Agent baut eine Bibliothek aus
+  ausführbaren Fähigkeiten auf; aufgenommen wird nach Umgebungsfeedback und einer
+  Selbstprüfung durch das Modell. Konzeptionell der nächste Verwandte.
+- **ExpeL** (Zhao u. a., 2023): Erkenntnisse werden aus erfolgreichen und
+  gescheiterten Versuchen abgeleitet und später abgerufen.
+- **mem0, Letta (MemGPT)** und eingebaute Memory-Funktionen von KI-Assistenten:
+  allgemeine Gedächtnisschichten, die speichern, was das Modell für relevant hält.
+- **RAG** allgemein: Abruf aus Dokumentensammlungen, ohne eigenen Prüfstatus pro Aussage.
+
+V-Mind unterscheidet sich in der Kombination:
+
+| | Übliche Ansätze | V-Mind |
+|---|---|---|
+| Wer entscheidet, ob eine Erfahrung gilt? | meist das Modell selbst | eine externe Prüfung mit Nachweis |
+| Ungeprüfte Erfahrung | wird meist direkt genutzt | bleibt `pending`, wird nie abgerufen |
+| Falsches oder Veraltetes | oft unbemerkt, teils überschrieben | Rückzug mit Grund, Historie bleibt |
+| Herkunft | oft unklar | Pflichtfeld bei jedem Eintrag |
+| Modellbindung | oft ein bestimmtes System | modellunabhängig: MCP, CLI, JSONL, Ollama |
+| Betrieb | häufig Forschungsprototyp oder Cloud-Dienst | eine lokale SQLite-Datei |
+
+Kurz: Andere Systeme merken sich, was das Modell glaubt. V-Mind merkt sich, was
+nachweislich funktioniert hat. Die genannten Arbeiten lösen teils andere Probleme
+(z. B. Lernen innerhalb einer Aufgabe oder in einer Spielwelt); der Vergleich soll
+die Unterschiede einordnen, nicht deren Ergebnisse bewerten.
+
+## Spezialisierung kleiner lokaler Modelle
+
+Ein kleines, allgemeines Modell kann mit einer fachlichen V-Mind-Datenbank als
+Spezialist arbeiten, ohne Training. Beispiel Wissenschaft: Methoden, Formeln,
+bekannte Fallstricke, geprüfte Messwerte und Literaturangaben, jeweils mit Quelle
+und Prüfnachweis.
+
+Vorteile gegenüber Feinabstimmung:
+
+- kein Training und keine Trainingshardware; das Modell bleibt austauschbar,
+- Wissen lässt sich jederzeit ergänzen, korrigieren und zurückziehen,
+- jede Antwortgrundlage ist auf eine Quelle zurückführbar, in der Wissenschaft zentral,
+- Daten bleiben lokal.
+
+Grenzen, die dabei beachtet werden müssen:
+
+- Das Modell erhält Wissen, keine neue Denkfähigkeit. Schwieriges Schlussfolgern
+  bleibt durch das Modell begrenzt.
+- Der Nutzen hängt am Abruf: Fachbegriffe, Synonyme und Formelschreibweisen
+  findet die heutige Wortsuche (FTS5) schlecht; semantische Suche ist dafür nötig.
+- Der Kontext kleiner Modelle ist knapp (E2B: 8.192 Tokens); Einträge müssen
+  kurz und präzise sein.
+- „Validiert“ braucht fachlich passende Nachweise: ein reproduzierbares Skript oder
+  eine Rechnung, eine geprüfte Quelle mit DOI und Fundstelle, ein Messprotokoll.
+  Code-Tests sind dafür nur ein Sonderfall.
+
+Stand: Hypothese, noch nicht getestet. Ein Prüfversuch wäre ein fachlicher
+Fragenkatalog mit bekannten Antworten, beantwortet von demselben kleinen Modell
+mit und ohne fachliche V-Mind-Datenbank.
+
 ## Bewusst offen
 
 Noch keine produktionsreife Zugriffskontrolle, Manipulationssicherheit, Verschlüsselung,
-automatische Wahrheitsprüfung, automatische Anbindung an Codex, MCP, Embeddings oder
-GPU-residente Suche. Die ersten nächsten Schritte sind reale Fehlerfälle, Bewertung
-der Abrufqualität und daraus abgeleitete Suchverbesserungen. ROCm bleibt unverändert.
+automatische Wahrheitsprüfung, automatische Anbindung an Codex, Embeddings oder
+GPU-residente Suche. Ein MCP-Server (`vmind mcp DB`) bildet die JSONL-Operationen
+als Werkzeuge ab; er ist ein Adapter in `vmind-cli`, kein Teil des Kerns.
+Die ersten nächsten Schritte sind reale Fehlerfälle, Bewertung der Abrufqualität
+und daraus abgeleitete Suchverbesserungen. ROCm bleibt unverändert.
 
 ## Projekt- und Gesprächsgedächtnis (Schema 3)
 

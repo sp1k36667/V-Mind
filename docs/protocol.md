@@ -1,8 +1,8 @@
 # V-Mind JSONL-Protokoll v1
 
 Transport: Prozess `vmind serve DB` starten, UTF-8-JSON auf stdin, eine Antwort pro
-Zeile auf stdout. EOF beendet den Prozess. Keine HTTP-Ports, kein MCP, keine
-Sprachmodell-Abhängigkeit. Bei `cargo run` geht Cargo-Ausgabe nach stderr.
+Zeile auf stdout. EOF beendet den Prozess. Keine HTTP-Ports, keine
+Sprachmodell-Abhängigkeit. Für MCP-Clients siehe Abschnitt „MCP-Server“ am Ende. Bei `cargo run` geht Cargo-Ausgabe nach stderr.
 
 Jede Anfrage darf eine frei gewählte `id` enthalten; sie wird in der Antwort
 zurückgegeben. Fehlt sie, lautet sie `null`. Fehler einer einzelnen Anfrage stoppen
@@ -152,3 +152,31 @@ Rollen: `user`, `assistant`, `tool`. Erfolg beim Speichern: `data.message_id`;
 beim Lesen: `data.messages`. Cursorverfahren wie bei `journal`.
 Der Server erzeugt keine Modellantworten und beobachtet keine fremden Apps.
 Gesprächsimporte und Projektberichte werden nicht als validiertes Wissen behandelt.
+
+## MCP-Server
+
+`vmind [--scope BEREICH] mcp DB` spricht MCP über stdio: JSON-RPC 2.0, eine Nachricht
+pro Zeile, dieselbe 1-MiB-Grenze. Unterstützt werden `initialize`, `ping`,
+`tools/list` und `tools/call`; Benachrichtigungen wie `notifications/initialized`
+erhalten keine Antwort. Ausgehandelte Versionen: 2024-11-05, 2025-03-26, 2025-06-18
+und 2025-11-25; bei unbekannter Version antwortet der Server mit der neuesten.
+
+Werkzeuge: `recall`, `get`, `propose`, `pending`, `stats`, `resume`, `journal`, `log`,
+`session_new`, `sessions`, `message`, `messages`. Ihre Argumente entsprechen den
+gleichnamigen JSONL-Operationen ohne `op` und `id`. Jeder Aufruf läuft durch
+denselben Dispatcher; Feldprüfung, Grenzen und Fehlertexte sind identisch.
+Auch hier gibt es kein `validate`-Werkzeug.
+
+Wird der Server mit `--scope` oder `VMIND_SCOPE` gestartet, ergänzt er diesen Bereich,
+wenn ein Aufruf kein `scope` enthält. Ein ausdrücklich übergebenes `scope` hat Vorrang.
+Ohne konfigurierten Bereich verlangen Projektwerkzeuge weiterhin ein explizites `scope`.
+
+Ergebnisse stehen als JSON-Text in `content[0].text`. Fachliche Fehler liefern
+`isError: true` mit Fehlertext; Protokollfehler (unbekannte Methode oder unbekanntes
+Werkzeug) liefern JSON-RPC-Fehlerobjekte.
+
+Einbindung in Claude Code über `.mcp.json` im Projektordner:
+
+```json
+{"mcpServers":{"vmind":{"command":"vmind","args":["--scope","v-mind","mcp","vmind.db"]}}}
+```

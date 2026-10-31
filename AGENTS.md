@@ -85,5 +85,7 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo fmt --all -- --check
 ```
 
-Die JSONL-Schnittstelle ist ein eigenes Protokoll, kein MCP-Server. Sie ist noch
-nicht automatisch in Codex oder ChatGPT eingebunden. API: `docs/protocol.md`.
+Die JSONL-Schnittstelle ist ein eigenes Protokoll. `vmind mcp DB` stellt dieselben
+Operationen zusätzlich als MCP-Server über stdio bereit; `.mcp.json` bindet ihn in
+Claude Code ein. Eine automatische Anbindung an Codex oder ChatGPT ist nicht
+eingerichtet. API: `docs/protocol.md`.

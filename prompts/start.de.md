@@ -133,7 +133,8 @@ es unterstützt. Eine optionale `id` ordnet die Antwort der Anfrage zu.
 Erfolg: `{"id":1,"ok":true,"data":...}`. Fehler:
 `{"id":1,"ok":false,"error":"..."}`. Nur erfolgreiche Schreibantworten bestätigen
 eine Speicherung. Unbekannte Felder sind Fehler. Eine Eingabezeile darf höchstens
-1 MiB groß sein. Es ist V-Minds eigenes Protokoll, kein MCP.
+1 MiB groß sein. Es ist V-Minds eigenes Protokoll; dieselben Operationen gibt es
+zusätzlich als MCP-Werkzeuge über `vmind mcp DB`.
 
 Projektverlauf ist exakt bereichsgebunden; dort wird `global` nicht beigemischt.
 Bereiche sind keine Zugriffskontrolle. Direkte IDs können bereichsübergreifend
