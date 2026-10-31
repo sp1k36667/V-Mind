@@ -146,3 +146,26 @@ fn long_output_keeps_the_end() {
     assert_eq!(stored.chars().count(), 4000);
     assert!(stored.ends_with("ENDE"));
 }
+
+#[test]
+fn command_line_quotes_arguments_with_spaces_or_special_characters() {
+    let (s, id) = store_with_entry("p");
+    s.set_check(
+        id,
+        &argv(&[
+            "sh",
+            "-c",
+            "cargo test 2>&1 | grep -q '0 passed'",
+            "",
+            "a.b=c",
+        ]),
+        "/repo",
+        "T",
+    )
+    .unwrap();
+    let check = s.active_check(id).unwrap().unwrap();
+    assert_eq!(
+        check.command_line(),
+        r"sh -c 'cargo test 2>&1 | grep -q '\''0 passed'\''' '' a.b=c"
+    );
+}
