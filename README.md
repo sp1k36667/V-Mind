@@ -1,304 +1,239 @@
 # V-Mind
 
-**Der Duden für KIs: geprüftes Wissen und Projekterfahrung dauerhaft verfügbar machen.**
+[![Rust checks](https://github.com/sp1k36667/V-Mind/actions/workflows/ci.yml/badge.svg)](https://github.com/sp1k36667/V-Mind/actions/workflows/ci.yml)
+[![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-blue.svg)](LICENSE)
 
-V-Mind ist ein schlanker, modellunabhängiger Speicher in Rust und SQLite. Eine KI
-kann darin gelöste Fehler, bewährte Lösungen, Entscheidungen, Arbeitsfortschritte und
-Gespräche ablegen und später gezielt nachschlagen – auch nach einem Neustart.
+**Der Duden für KIs: ein überprüfbares Gedächtnis, das Neustarts überlebt.**
 
-Status: experimenteller Prototyp, MIT-Lizenz.
+KIs vergessen nach jeder Sitzung alles und behaupten manchmal selbstsicher Falsches.
+V-Mind ist ein kleiner lokaler Speicher (Rust + SQLite), in dem eine KI zwei Dinge
+dauerhaft ablegen und wiederfinden kann:
 
-## Die Idee
+1. **Geprüftes Wissen:** gelöste Fehler und bewährte Lösungen, jeweils mit Quelle
+   und Prüfnachweis. Neues Wissen ist erst *ungeprüft* und wird erst nach einer
+   echten Prüfung freigegeben.
+2. **Projektgedächtnis:** Ziel, Aufgaben, Entscheidungen, nächster Schritt und
+   Gesprächsverlauf. So weiß eine KI auch in einer neuen Sitzung, wo die Arbeit steht.
 
-Ein kleineres Sprachmodell soll auf geprüftes Wissen und Erfahrungen zurückgreifen
-können, die beispielsweise bei der Arbeit mit einem stärkeren Modell entstanden sind.
-V-Mind hält dieses Wissen außerhalb der Modellgewichte bereit. Die KI erhält passende
-Einträge samt Quelle und Prüfnachweis und kann damit ihre aktuelle Aufgabe bearbeiten.
+V-Mind ist modellunabhängig. Es funktioniert als **MCP-Server** (z. B. mit Claude),
+über die Kommandozeile, über ein einfaches JSONL-Protokoll und mit lokalen Modellen
+über Ollama.
 
-Dazu kommen ein dauerhaftes Projekttagebuch und gespeicherte Gespräche: Was wurde
-schon gemacht, welche Entscheidungen gelten, was ist noch offen, und wo geht es weiter?
+> Status: experimenteller Prototyp. 37 automatische Tests, MIT-Lizenz.
 
-## Erster lokaler Test: E2B ohne und mit V-Mind
+## Was V-Mind anders macht
 
-Wir haben Gemma 4 E2B denselben Python-Aufgabenplaner in einem neuen Projektordner
-erzeugen lassen – einmal ohne gespeicherte Lösungen und einmal mit echtem V-Mind-Abruf.
-Aufgabe, Modell, Einstellungen und unabhängige Prüfungen waren gleich. Pro Bedingung
-waren höchstens zwei Versuche mit tatsächlichem Testfeedback vorgesehen.
+Die meisten KI-Gedächtnisse speichern einfach, was die KI für wichtig hält.
+V-Mind trennt dagegen streng zwischen *vermutet* und *geprüft*:
 
-| Ergebnis | Ohne V-Mind-Wissen | Mit V-Mind-Wissen |
-|---|---:|---:|
-| Unabhängige Funktionsprüfungen | 2 von 7, in beiden Versuchen | 7 von 7, in beiden Versuchen |
-| Eigene Testsuite am Ende | nicht lauffähig | 10 von 10 bestanden |
-| Modelllaufzeit, beide Versuche zusammen | 46,5 Sekunden | 17,1 Sekunden |
-
-Die Modellaufrufe waren in diesem Einzeltest mit V-Mind rund **2,7-mal schneller**.
-Die Zeit umfasst Kontextverarbeitung, Generierung und Modellladen, aber weder
-Testausführung noch sonstige Hostarbeit. Im Lauf ohne Wissen steckten 2,8 Sekunden
-zusätzliche Ladezeit; ohne diesen Anteil bleibt ein Faktor von rund 2,5.
-
-**Was das Ergebnis belegt:** E2B konnte die zuvor von Gemma 4 12B erzeugte und
-geprüfte Referenzlösung aus V-Mind erfolgreich wiederverwenden. Die Dateien kamen
-in diesem Neustarttest aus E2Bs neuer Modellausgabe; der Host kopierte keine
-Referenzdateien direkt in den Projektordner. Die finalen Ausgaben waren bytegleich
-mit der gespeicherten Referenz. Die eigene Testsuite funktionierte erst im zweiten Versuch.
-
-Dies ist ein erster Beleg für den Nutzen zugänglichen geprüften Wissens. Es ist
-kein Beweis für veränderte Modellgewichte, allgemeines Modelllernen oder die
-selbstständige Lösung neuer Aufgaben. Der Testhost führte die Arbeitsschritte;
-eine vollständig autonome KI-Anbindung ist noch nicht fertig.
-
-[Versuchsaufbau, Ergebnisse und Grenzen im Detail](docs/experiments/e2b-pilot.md).
-
-## Prüfungen des Rust-Kerns
-
-**37 lokal ausgeführte Tests bestanden.** Sie prüfen unter anderem Migrationen,
-Persistenz, Volltextsuche, Projekttrennung, Validierung, zurückgezogene Einträge,
-Gesprächsfortsetzung nach Programmneustart sowie CLI-, JSONL- und MCP-Abläufe.
-Formatprüfung und Clippy liefen ebenfalls erfolgreich. Diese Softwaretests sind
-getrennt von den sieben Funktionsprüfungen und zehn Modelltests des E2B-Versuchs.
-
-[Automatische Rust-Prüfungen auf GitHub](https://github.com/sp1k36667/V-Mind/actions/workflows/ci.yml).
-
-## Was jetzt funktioniert
-
-- Rust-Workspace mit unabhängigem SQLite-Kern und Kommandozeile.
-- Fehler/Lösungs-Paare und Langzeitwissen mit Quelle, Prüfer und Prüfnachweis.
-- Lebenszyklus: ungeprüft → validiert → bei Bedarf zurückgezogen.
-- Nachvollziehbare Ereignishistorie; Zurückziehen löscht den Eintrag nicht.
-- Persistentes Projekttagebuch mit Zielen, Aufgabenständen, Entscheidungen und nächsten Schritten.
-- Gespeicherte Gespräche und automatisch geladener Fortsetzungsstand für `ask`/`chat`.
-- SQLite FTS5 mit BM25-Relevanzsortierung, Unicode-Suche und deutschen/englischen Stoppwörtern.
-- Projektbereiche: Abruf aus dem gewählten Bereich plus dem gemeinsamen Bereich `global`.
-- JSON-Ausgaben und ein modellunabhängiges JSONL-Werkzeugprotokoll über stdin/stdout.
-- MCP-Server (`vmind mcp DB`) mit denselben Operationen als Werkzeuge, z. B. für Claude Code.
-- Optionaler lokaler Ollama-Adapter: Frage → Wissensabruf → Modellantwort.
-- Atomare Migration bis Schema 3, ohne bestehende Einträge zu löschen.
-
-Eine gespeicherte Validierung dokumentiert eine externe Prüfung. V-Mind beweist
-nicht selbst, dass die Lösung richtig ist. Modellantworten sind weiterhin ungeprüft
-und werden als Gesprächsverlauf gespeichert. Sie werden nicht automatisch als Fachwissen übernommen oder validiert.
-
-## Startprompt für die nutzende KI
-
-Die vollständige gemeinsame Startanweisung liegt in `prompts/start.de.md`.
-Der Ollama-Adapter verwendet genau diese Datei als Systemprompt. Änderungen daran
-werden beim nächsten Build bzw. erneuten Installieren übernommen.
-
-```sh
-vmind start-prompt
+```
+  propose / add            validate (Mensch/CLI, mit Nachweis)       invalidate
+ ───────────────▶ pending ─────────────────────────────────▶ validated ──────────▶ invalidated
+                  wird nie abgerufen                          wird abgerufen        nie mehr abgerufen,
+                                                                                    Historie bleibt
 ```
 
-Für externe KI-Clients die Anweisung als Startkonfiguration übernehmen und zusätzlich
-die realen Werkzeuge, Datenbank, Projektbereich und Gesprächs-ID anbinden. Der Prompt
-richtet keine Verbindung ein. Details: [docs/start-prompt.md](docs/start-prompt.md).
+- **Nur validiertes Wissen** wird abgerufen, immer mit Quelle, Prüfer und Nachweis.
+- **Eine KI kann Wissen nur vorschlagen.** Die Freigabe ist absichtlich nicht über
+  KI-Werkzeuge möglich, nur über die Kommandozeile.
+- **Nichts wird still überschrieben.** Veraltetes wird zurückgezogen, jede Änderung
+  bleibt in der Historie nachvollziehbar.
+- **Projektbereiche** (`--scope`) halten Projekte getrennt; der Bereich `global`
+  gilt für alle.
+- **Alles lokal:** eine SQLite-Datei, kein Cloud-Dienst, keine GPU nötig.
 
-## Voraussetzungen
+## In Claude nutzen (Claude Desktop / Claude Code)
 
-Rust/Cargo, Git und die SQLite-Entwicklungsbibliothek mit FTS5; unter Ubuntu typischerweise
-`build-essential`, `pkg-config` und `libsqlite3-dev`. Auf dem Entwicklungs-PC sind
-Build und Tests bereits erfolgreich ausgeführt worden. Zum Wissensabruf braucht
-V-Mind weder Ollama noch eine GPU. Nur `ask` benötigt einen erreichbaren Ollama-Dienst.
+Mit V-Mind als MCP-Server liest Claude beim Start den Projektstand, sucht vor
+Änderungen nach geprüftem Wissen und hält erledigte Arbeit im Tagebuch fest.
+Das funktioniert im **Code-Tab der Claude-Desktop-App** und in **Claude Code im
+Terminal**.
 
-Gemma 4 E2B ist das erste Testmodell, keine Voraussetzung für den Speicherkern.
-`setup/Modelfile` definiert `vmind-gemma4:e2b` mit 8.192 Kontext-Tokens.
+### 1. V-Mind installieren
 
-## Starten
-
-Jeden Befehl einzeln im Projektordner ausführen. Zuerst eine Datenbank initialisieren:
-
-```sh
-cargo run -p vmind-cli --locked -- init vmind.db
-```
-
-Eine Erfahrung im Projektbereich speichern:
+Voraussetzungen: Rust/Cargo, Git und SQLite mit FTS5. Unter Ubuntu:
 
 ```sh
-cargo run -p vmind-cli --locked -- --scope beispiel add vmind.db error_solution 'Tabelle fehlt nach dem ersten Start' 'Migration vor dem ersten Zugriff ausführen' 'Eigener reproduzierbarer Fehlerfall'
-```
-
-Die ID aus der Ausgabe verwenden. Eintrag 1 ist hier nur ein Beispiel:
-
-```sh
-cargo run -p vmind-cli --locked -- show vmind.db 1
-```
-
-Nach tatsächlicher Prüfung mit Nachweis freigeben:
-
-```sh
-cargo run -p vmind-cli --locked -- validate vmind.db 1 'Name des Prüfers' 'Beschreibung des ausgeführten Tests und seines Ergebnisses'
-```
-
-Wissen ohne Sprachmodell abrufen:
-
-```sh
-cargo run -p vmind-cli --locked -- --scope beispiel recall vmind.db 'Tabelle erster Start Migration'
-```
-
-Oder eine Frage mit automatisch abgerufenem Wissen an Ollama stellen:
-
-```sh
-cargo run -p vmind-cli --locked -- --scope beispiel ask vmind.db 'Wie verhindere ich fehlende Tabellen beim ersten Start?'
-```
-
-Die alte Form `ask DB SUCHTEXT FRAGE` bleibt verfügbar, wenn gezielte Suchbegriffe
-besser passen als die Frage selbst. `search DB SUCHTEXT` bleibt als wörtliche,
-groß-/kleinschreibungssensitive Suche nur im Bereich `global` erhalten.
-
-Einen widerlegten oder veralteten Eintrag zurückziehen:
-
-```sh
-cargo run -p vmind-cli --locked -- invalidate vmind.db 1 'Name des Prüfers' 'Konkreter Grund für das Zurückziehen'
-```
-
-Zurückgezogene Einträge werden nie mehr automatisch abgerufen und können nicht
-erneut validiert werden. Korrekturen als neuen Eintrag mit Verweis auf die alte ID
-in der Quelle speichern, prüfen und freigeben.
-
-`pending DB` zeigt maximal 100 aktive ungeprüfte Einträge. `stats DB` zeigt den
-Status des gewählten Bereichs plus `global`. `--json` vor dem Befehl liefert
-maschinenlesbare Ausgaben. `--help` zeigt alle Befehle. `init` darf eine neue Datei
-anlegen; andere Befehle verlangen eine vorhandene Datenbank.
-
-## Direktes Programm installieren
-
-```sh
-cargo install --path crates/vmind-cli --locked
-```
-
-Nach der Installation kann jeder Aufruf auch direkt
-mit `vmind` beginnen, beispielsweise `vmind stats vmind.db`. Nach Quellcodeänderungen
-erneut installieren, damit das installierte Programm dem neuen Stand entspricht.
-Für weitere Entwicklungssitzungen stehen Hinweise in `AGENTS.md`.
-
-## Lange Projekte und Neustarts
-
-`ask` speichert die Nutzerfrage vor dem Modellaufruf und danach die erfolgreiche
-Antwort. Bei einem Fehler bleibt die Frage mit einem Fehlerhinweis erhalten; eine
-KI-Antwort wird nicht erfunden. Weitere `ask`-Aufrufe im selben Bereich verwenden
-das gleiche Standardgespräch – auch nach einem Programm- oder Rechnerneustart,
-sofern dieselbe Datenbank vorhanden ist.
-
-Das Projekttagebuch hält zusätzlich fest, was gemacht wurde und warum. Beispiele:
-
-```sh
-vmind --scope v-mind log vmind.db goal 'Ein dauerhaftes Projektgedächtnis bauen' 'Nutzeranforderung'
+sudo apt install build-essential pkg-config libsqlite3-dev
 ```
 
 ```sh
-vmind --scope v-mind task vmind.db datenbank in_progress 'Migration implementieren' 'Arbeitsbericht'
+git clone https://github.com/sp1k36667/V-Mind.git
 ```
 
 ```sh
-vmind --scope v-mind task vmind.db datenbank done 'Migration implementiert und Tests ausgeführt' 'Konkreter Testlauf und Ergebnis'
+cargo install --path V-Mind/crates/vmind-cli --locked
 ```
 
-Der gleiche Aufgabenschlüssel aktualisiert den abgeleiteten aktuellen Stand,
-aber jede frühere Meldung bleibt erhalten. Statuswerte: `open`, `in_progress`,
-`done`, `blocked`. Weitere Ereignistypen: `goal`, `decision`, `next_step`, `note`.
-Nur tatsächlich erledigte und überprüfte Arbeit entsprechend kennzeichnen.
+Danach steht der Befehl `vmind` zur Verfügung (`vmind --help` zeigt alle Befehle).
 
-Beim Fortsetzen zuerst:
+### 2. Datenbank in deinem Projekt anlegen
+
+Im Ordner des Projekts, an dem Claude arbeiten soll:
 
 ```sh
-vmind --scope v-mind resume vmind.db
+vmind init vmind.db
 ```
 
-Die Übersicht enthält das aktuelle Ziel, den nächsten Schritt, höchstens 20 aktuelle
-Aufgabenstände (unerledigte zuerst), zehn Entscheidungen, zehn letzte Projektereignisse
-und zehn letzte Chatnachrichten. Gesamtzahlen zeigen, ob weitere Daten vorhanden sind.
-Die vollständige Historie bleibt seitenweise verfügbar, jeweils maximal 100 Einträge:
+Die Datenbank ist lokal und gehört nicht ins Git-Repository (`*.db` in `.gitignore`).
 
-```sh
-vmind --scope v-mind journal vmind.db
-```
+### 3. MCP-Server eintragen
 
-Für die nächste Seite die letzte ausgegebene Ereignis-ID als weiteres Argument
-angeben. Dasselbe Cursorverfahren gilt für `messages DB GESPRÄCH_ID [NACH_ID]`.
-Eine Übersicht allein enthält also nicht jede Zeile eines monatelangen Projekts.
-
-Mit `session-new DB TITEL` ein separates Gespräch anlegen, mit `chat DB ID FRAGE`
-fortsetzen. `sessions DB` zeigt die letzten 100 Gespräche des Bereichs. Explizite
-Gespräche benötigen den passenden Projektbereich bei `chat` und `resume`.
-
-Projektkontext wird exakt nach Bereich getrennt; `global` wird hierbei nicht
-beigemischt. Jeder Modellaufruf über V-Mind erhält einen begrenzten Ausschnitt aus
-Projektstand und vorigen Nachrichten zusätzlich zum Fachwissen. Der Verlauf ist
-unvalidierter Arbeitsbericht, keine Garantie für richtig ausgeführte Arbeit.
-
-Extern arbeitende KIs müssen über die Werkzeugschnittstelle Projektereignisse und
-Nachrichten melden sowie beim Start `resume` lesen. V-Mind beobachtet keine fremden
-Apps automatisch. Eine vollständige automatische Codex-/ChatGPT-Anbindung ist noch
-nicht eingerichtet. Die Projektanweisungen in `AGENTS.md` beschreiben den Ablauf.
-Anfragen innerhalb desselben Gesprächs sollten nacheinander ausgeführt werden;
-parallele Generierungen werden noch nicht pro Gespräch gesperrt.
-
-## Verwendung durch KI-Werkzeuge
-
-`recall` liefert vollständige Einträge samt Quelle und Nachweis, ohne ein Modell
-aufzurufen. Das ist die bevorzugte Anbindung für eine bereits vorhandene KI.
-`ask` ist zusätzlich ein lokaler Testclient für Ollama.
-
-```sh
-cargo run -p vmind-cli --locked -- --json --scope beispiel recall vmind.db 'SQLite Migration'
-```
-
-Für länger laufende Clients:
-
-```sh
-cargo run -p vmind-cli --locked -- serve vmind.db
-```
-
-Danach wird ein JSON-Objekt pro Eingabezeile verarbeitet. Das eigene Protokoll ist
-in [docs/protocol.md](docs/protocol.md) beschrieben.
-
-MCP-fähige Clients starten stattdessen den MCP-Server. Mit `--scope` wird der
-Standardbereich gesetzt; Validierung bleibt auch hier der CLI vorbehalten:
-
-```sh
-vmind --scope v-mind mcp vmind.db
-```
-
-Für Claude Code liegt im Projektordner eine `.mcp.json`, die genau diesen Aufruf
-einträgt. Claude Code fragt beim ersten Start nach der Freigabe des Servers.
-Optional lädt ein SessionStart-Hook in `.claude/settings.local.json` (nicht im
-Repository) den Projektstand automatisch zu Sitzungsbeginn:
+Lege im Projektordner eine Datei `.mcp.json` an. Ersetze `mein-projekt` durch einen
+Namen für den Projektbereich:
 
 ```json
-{"hooks":{"SessionStart":[{"hooks":[{"type":"command",
-  "command":"vmind --scope v-mind resume \"$CLAUDE_PROJECT_DIR/vmind.db\""}]}]}}
+{
+  "mcpServers": {
+    "vmind": {
+      "command": "vmind",
+      "args": ["--scope", "mein-projekt", "mcp", "vmind.db"]
+    }
+  }
+}
 ```
 
-Eine automatische Anbindung an Codex/ChatGPT ist damit noch nicht eingerichtet.
+Alternativ mit der Claude-Code-Kommandozeile, nur für dich und dieses Projekt:
 
-## Konfiguration und Grenzen
+```sh
+claude mcp add vmind -- vmind --scope mein-projekt mcp vmind.db
+```
 
-- `VMIND_SCOPE`: Standardbereich, sonst `global`. `--scope` hat Vorrang.
-- `VMIND_OLLAMA_URL`: sonst `http://127.0.0.1:11434`. Der erste Adapter unterstützt HTTP.
-- `VMIND_MODEL`: sonst `vmind-gemma4:e2b`. Keine automatische Cloud-Ausweichverbindung.
-- Automatischer Modellkontext: maximal drei validierte Treffer, je 600 Zeichen für
-  Problem/Lösung, 300 für Quelle/Nachweis und 100 für den Prüfer. Kürzungen sind
-  im Modellkontext mit `truncated` markiert; `show` liefert den vollständigen Eintrag.
-  Dazu kommen höchstens acht Aufgaben, drei Entscheidungen, drei letzte Ereignisse
-  und sechs letzte Chatnachrichten. Projekttexte sind auf 250 Zeichen pro Ereignis,
-  Quellen auf 100 und Chatnachrichten auf 600 Zeichen begrenzt. `resume`, `journal`
-  und `messages` liefern die vollständigen gespeicherten Texte.
-- Maximal 2.000 Zeichen für die Frage, 8.192 Kontext-Tokens, 512 Antwort-Tokens,
-  180 Sekunden Zeitlimit. Zeichenlimits sind keine exakte Tokenzählung.
-- Abgeschnittene, leere, unvollständige und HTTP-Fehlerantworten werden als Fehler gemeldet.
-- FTS5 sucht Wörter, keine Bedeutungen oder beliebigen Wortteile; keine automatische
-  Übersetzung, Wortstammbildung, semantische Suche oder Konflikterkennung.
-- Bereichstrennung steuert die Relevanz, ist keine Zugriffskontrolle. `show` und
-  `get` lesen ausdrücklich angegebene IDs unabhängig vom Bereich.
-- Ein lokales Programm mit Schreibzugriff auf die Datenbank kann die Daten ändern.
-  Die Historie ist nachvollziehbar, aber nicht kryptografisch manipulationssicher.
-- Inhalte liegen als Klartext vor. Keine Benutzerverwaltung oder Verschlüsselung.
+### 4. Claude neu starten und Server freigeben
 
-## Entwicklung und Daten
+Beim nächsten Start einer Sitzung im Projekt fragt Claude, ob der Server `vmind`
+erlaubt werden soll. Danach hat Claude diese Werkzeuge:
 
-Cargo verwendet standardmäßig `target/` im Projektordner. Für einen lokalen
-SSD-Buildpfad kann eine nicht versionierte `.cargo/config.toml` angelegt werden.
-Datenbanken, Gesprächsverläufe, Backups und Builddateien sind nicht Teil des Repositorys.
-Der Rust-Kern wurde lokal mit Rust/Cargo 1.95.0 geprüft.
+| Werkzeug | Zweck |
+|---|---|
+| `resume` | Projektstand laden: Ziel, Aufgaben, Entscheidungen, nächster Schritt |
+| `recall` | Geprüftes Wissen per Volltextsuche finden |
+| `get` | Einen Eintrag mit vollständiger Historie ansehen |
+| `propose` | Neue Erfahrung als *ungeprüft* vorschlagen |
+| `log` | Aufgabe, Entscheidung, nächsten Schritt oder Notiz festhalten |
+| `journal` | Projekttagebuch seitenweise lesen |
+| `pending`, `stats` | Ungeprüfte Einträge und Zahlen anzeigen |
+| `session_new`, `sessions`, `message`, `messages` | Gespräche speichern und lesen |
+
+### 5. Optional: Projektstand automatisch laden
+
+Ein SessionStart-Hook gibt Claude den Projektstand schon beim Sitzungsstart mit,
+ohne dass Claude erst daran denken muss. Datei `.claude/settings.local.json` im
+Projektordner (persönlich, nicht ins Repository einchecken):
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "vmind --scope mein-projekt resume \"$CLAUDE_PROJECT_DIR/vmind.db\""
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 6. Loslegen
+
+Sag Claude zum Beispiel:
+
+- „Lies den Projektstand aus V-Mind und mach beim nächsten Schritt weiter.“
+- „Halte in V-Mind fest, was du erledigt hast, mit dem Testergebnis als Nachweis.“
+- „Schlag die Lösung für diesen Fehler in V-Mind als ungeprüften Eintrag vor.“
+
+Geprüftes Wissen gibst du selbst frei, nachdem du die Lösung wirklich getestet hast:
+
+```sh
+vmind pending vmind.db
+```
+
+```sh
+vmind validate vmind.db 1 'Dein Name' 'Welcher Test lief und mit welchem Ergebnis'
+```
+
+Für andere MCP-fähige Programme gilt dasselbe: Server-Befehl
+`vmind --scope BEREICH mcp /absoluter/pfad/vmind.db`. Wo die Konfiguration liegt,
+hängt vom jeweiligen Programm ab. Technische Details: [docs/protocol.md](docs/protocol.md).
+
+## Weitere Wege, V-Mind zu nutzen
+
+**Kommandozeile:** Wissen speichern, prüfen, abrufen und das Projekttagebuch führen.
+
+```sh
+vmind --scope mein-projekt recall vmind.db 'SQLite Migration'
+```
+
+```sh
+vmind --scope mein-projekt task vmind.db datenbank done 'Migration implementiert' 'cargo test: 37/37 bestanden'
+```
+
+**Lokale Modelle über Ollama:** `ask` ruft passendes Wissen und den Projektstand ab
+und stellt die Frage an ein lokales Modell (Standard: Gemma 4 E2B, siehe
+`setup/Modelfile`). Antworten werden gespeichert, aber nie automatisch als Wissen
+übernommen.
+
+```sh
+vmind --scope mein-projekt ask vmind.db 'Wie verhindere ich fehlende Tabellen beim ersten Start?'
+```
+
+**JSONL-Protokoll:** `vmind serve vmind.db` verarbeitet ein JSON-Objekt pro Zeile
+über stdin/stdout, für eigene Programme ohne MCP. Siehe [docs/protocol.md](docs/protocol.md).
+
+Alle Befehle, der Ablauf für lange Projekte, Konfiguration und Grenzen stehen
+ausführlich in **[docs/cli.md](docs/cli.md)**.
+
+## Erster Versuch: hilft geprüftes Wissen einem kleinen Modell?
+
+Das kleine lokale Modell Gemma 4 E2B sollte einen Python-Aufgabenplaner bauen,
+einmal ohne und einmal mit V-Mind. Im Speicher lag eine zuvor von Gemma 4 12B
+erzeugte und geprüfte Lösung. Aufgabe, Einstellungen und Prüfungen waren gleich.
+
+| Ergebnis | Ohne V-Mind | Mit V-Mind |
+|---|---:|---:|
+| Unabhängige Funktionsprüfungen | 2 von 7 | 7 von 7 |
+| Eigene Testsuite am Ende | nicht lauffähig | 10 von 10 |
+| Modellzeit, zwei Versuche zusammen | 46,5 s | 17,1 s |
+
+**Ehrliche Einordnung:** Das zeigt, dass ein kleines Modell eine gespeicherte,
+geprüfte Lösung zuverlässig wiederverwenden kann. Die Ausgabe war bytegleich mit
+der Referenz. Es zeigt *nicht*, dass das Modell dazulernt oder neue Aufgaben löst.
+Der nächste geplante Versuch prüft, ob gespeicherte Erfahrungen auch bei
+*veränderten* Aufgaben helfen.
+[Aufbau, Messwerte und Grenzen im Detail](docs/experiments/e2b-pilot.md).
+
+## Grenzen
+
+- Die Suche (SQLite FTS5) findet Wörter, keine Bedeutungen: keine Synonyme,
+  Übersetzung oder Wortstämme.
+- Eine Validierung dokumentiert eine Prüfung; V-Mind beweist nicht selbst, dass
+  eine Lösung stimmt.
+- Projektbereiche ordnen Wissen, sind aber keine Zugriffskontrolle. Daten liegen
+  unverschlüsselt in einer lokalen Datei.
+- Keine automatische Anbindung an Codex oder ChatGPT; V-Mind beobachtet keine
+  anderen Programme.
+
+Vollständige Liste: [docs/cli.md](docs/cli.md#konfiguration-und-grenzen).
+
+## Projekt
+
+| Datei | Inhalt |
+|---|---|
+| [docs/cli.md](docs/cli.md) | Alle Befehle, lange Projekte, Konfiguration, Entwicklung |
+| [docs/protocol.md](docs/protocol.md) | JSONL-Protokoll und MCP-Server |
+| [docs/design.md](docs/design.md) | Architektur und Entscheidungen |
+| [docs/start-prompt.md](docs/start-prompt.md) | Startanweisung für KI-Clients |
+| [AGENTS.md](AGENTS.md) | Arbeitsregeln für KIs, die an V-Mind selbst arbeiten |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Beiträge und Prüfungen |
+
+Aufbau: `crates/vmind-core` (SQLite-Speicher und Abruf, ohne Modellbezug) und
+`crates/vmind-cli` (Kommandozeile, JSONL, MCP, Ollama-Adapter).
+
+Prüfungen vor jedem Beitrag, jeweils einzeln:
 
 ```sh
 cargo test --workspace --locked
@@ -312,19 +247,6 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo fmt --all -- --check
 ```
 
-Migration 0001 wurde neu entworfen, weil die Migration aus dem alten Chat nicht
-verfügbar war. Migration 0002 ergänzt Volltextsuche, Bereiche, Rückzug und Historie.
-Migration 0003 ergänzt Projekttagebuch und Gespräche.
-Beim Import alter Einträge wird keine historische Prüfzeit erfunden.
-Vor Migrationen einer bestehenden Datenbank vorher mit der SQLite-Backup-API sichern; keine
-laufende Datenbank blind als Einzeldatei kopieren.
-
-Architektur und Arbeitsablauf: [docs/design.md](docs/design.md).
-GPU-residente Suchindizes mit ROCm/HIP sind geplant; die systemweite ROCm-Installation
-wird dafür aktuell nicht verändert.
-
 ## Lizenz
 
-MIT, siehe LICENSE.
-
-Beiträge und Prüfungen: [CONTRIBUTING.md](CONTRIBUTING.md).
+MIT, siehe [LICENSE](LICENSE).
