@@ -1,0 +1,11 @@
+[workspace]
+members = ["crates/vmind-core", "crates/vmind-cli"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[workspace.dependencies]
+rusqlite = "0.37"
