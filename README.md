@@ -1,9 +1,63 @@
 # V-Mind
 
-Ein schlanker, modellunabhängiger „Duden für KIs“: Erfahrungen dauerhaft speichern,
-nachvollziehbar prüfen und im passenden Kontext wiederfinden.
+**Der Duden für KIs: geprüftes Wissen und Projekterfahrung dauerhaft verfügbar machen.**
+
+V-Mind ist ein schlanker, modellunabhängiger Speicher in Rust und SQLite. Eine KI
+kann darin gelöste Fehler, bewährte Lösungen, Entscheidungen, Arbeitsfortschritte und
+Gespräche ablegen und später gezielt nachschlagen – auch nach einem Neustart.
 
 Status: experimenteller Prototyp, MIT-Lizenz.
+
+## Die Idee
+
+Ein kleineres Sprachmodell soll auf geprüftes Wissen und Erfahrungen zurückgreifen
+können, die beispielsweise bei der Arbeit mit einem stärkeren Modell entstanden sind.
+V-Mind hält dieses Wissen außerhalb der Modellgewichte bereit. Die KI erhält passende
+Einträge samt Quelle und Prüfnachweis und kann damit ihre aktuelle Aufgabe bearbeiten.
+
+Dazu kommen ein dauerhaftes Projekttagebuch und gespeicherte Gespräche: Was wurde
+schon gemacht, welche Entscheidungen gelten, was ist noch offen, und wo geht es weiter?
+
+## Erster lokaler Test: E2B ohne und mit V-Mind
+
+Wir haben Gemma 4 E2B denselben Python-Aufgabenplaner in einem neuen Projektordner
+erzeugen lassen – einmal ohne gespeicherte Lösungen und einmal mit echtem V-Mind-Abruf.
+Aufgabe, Modell, Einstellungen und unabhängige Prüfungen waren gleich. Pro Bedingung
+waren höchstens zwei Versuche mit tatsächlichem Testfeedback vorgesehen.
+
+| Ergebnis | Ohne V-Mind-Wissen | Mit V-Mind-Wissen |
+|---|---:|---:|
+| Unabhängige Funktionsprüfungen | 2 von 7, in beiden Versuchen | 7 von 7, in beiden Versuchen |
+| Eigene Testsuite am Ende | nicht lauffähig | 10 von 10 bestanden |
+| Modelllaufzeit, beide Versuche zusammen | 46,5 Sekunden | 17,1 Sekunden |
+
+Die Modellaufrufe waren in diesem Einzeltest mit V-Mind rund **2,7-mal schneller**.
+Die Zeit umfasst Kontextverarbeitung, Generierung und Modellladen, aber weder
+Testausführung noch sonstige Hostarbeit. Im Lauf ohne Wissen steckten 2,8 Sekunden
+zusätzliche Ladezeit; ohne diesen Anteil bleibt ein Faktor von rund 2,5.
+
+**Was das Ergebnis belegt:** E2B konnte die zuvor von Gemma 4 12B erzeugte und
+geprüfte Referenzlösung aus V-Mind erfolgreich wiederverwenden. Die Dateien kamen
+in diesem Neustarttest aus E2Bs neuer Modellausgabe; der Host kopierte keine
+Referenzdateien direkt in den Projektordner. Die finalen Ausgaben waren bytegleich
+mit der gespeicherten Referenz. Die eigene Testsuite funktionierte erst im zweiten Versuch.
+
+Dies ist ein erster Beleg für den Nutzen zugänglichen geprüften Wissens. Es ist
+kein Beweis für veränderte Modellgewichte, allgemeines Modelllernen oder die
+selbstständige Lösung neuer Aufgaben. Der Testhost führte die Arbeitsschritte;
+eine vollständig autonome KI-Anbindung ist noch nicht fertig.
+
+[Versuchsaufbau, Ergebnisse und Grenzen im Detail](docs/experiments/e2b-pilot.md).
+
+## Prüfungen des Rust-Kerns
+
+**28 lokal ausgeführte Tests bestanden.** Sie prüfen unter anderem Migrationen,
+Persistenz, Volltextsuche, Projekttrennung, Validierung, zurückgezogene Einträge,
+Gesprächsfortsetzung nach Programmneustart sowie CLI- und JSONL-Abläufe.
+Formatprüfung und Clippy liefen ebenfalls erfolgreich. Diese Softwaretests sind
+getrennt von den sieben Funktionsprüfungen und zehn Modelltests des E2B-Versuchs.
+
+[Automatische Rust-Prüfungen auf GitHub](https://github.com/sp1k36667/V-Mind/actions/workflows/ci.yml).
 
 ## Was jetzt funktioniert
 
