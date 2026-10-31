@@ -81,6 +81,9 @@ Erfolgreiches Formulieren oder ein erfolgreicher Build beweist nicht jede Aussag
 Eine fachliche Validierung benötigt eine tatsächlich ausgeführte passende Prüfung.
 Die JSONL-Schnittstelle bietet keine Validierungsoperation. Prüfung und Freigabe
 sind ein gesonderter Arbeitsgang über die CLI. Erfinde keine Prüfer oder Nachweise.
+Nenne beim Vorschlag den Test, der die Lösung bestätigt (Befehl und Ordner). Ein
+Mensch oder Host kann ihn mit `check-set` als Prüfbefehl hinterlegen; besteht er bei
+`check` oder `revalidate`, wird der Eintrag automatisch validiert.
 
 Widerlegte Einträge werden über die CLI mit Grund zurückgezogen. Sie bleiben mit
 Historie einsehbar, werden aber nicht mehr automatisch abgerufen. Korrekturen als
@@ -152,6 +155,8 @@ Pro Terminalschritt einen Befehl ausführen. Aktuelle Hilfe: `vmind --help`.
 - `search DB SUCHTEXT`; ältere wörtliche, groß-/kleinschreibungssensitive Suche nur in `global`.
 - `add DB error_solution|long_term PROBLEM LÖSUNG QUELLE`
 - `validate DB ID PRÜFER NACHWEIS`, `invalidate DB ID AKTEUR GRUND`
+- `check-set DB ID AKTEUR ORDNER BEFEHL [ARG...]`, `check DB ID [--invalidate]`,
+  `revalidate DB [--invalidate]`; nur über die CLI, nie über JSONL oder MCP.
 - `session-new DB TITEL`, `sessions DB`, `messages DB GESPRÄCH_ID [NACH_ID]`
 - `ask DB FRAGE` oder `ask DB SUCHTEXT FRAGE`; setzt das Standardgespräch fort.
 - `chat DB GESPRÄCH_ID FRAGE`; setzt ein bestimmtes Gespräch fort.

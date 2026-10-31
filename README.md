@@ -19,7 +19,7 @@ V-Mind ist modellunabhängig. Es funktioniert als **MCP-Server** (z. B. mit Clau
 über die Kommandozeile, über ein einfaches JSONL-Protokoll und mit lokalen Modellen
 über Ollama.
 
-> Status: experimenteller Prototyp. 37 automatische Tests, MIT-Lizenz.
+> Status: experimenteller Prototyp. 50 automatische Tests, MIT-Lizenz.
 
 ## Was V-Mind anders macht
 
@@ -174,6 +174,37 @@ vmind pending vmind.db
 vmind validate vmind.db 1 'Dein Name' 'Welcher Test lief und mit welchem Ergebnis'
 ```
 
+Oder du lässt einen echten Test entscheiden, siehe nächster Abschnitt.
+
+### Prüfbefehle: Tests entscheiden, was gilt
+
+Ein Eintrag kann einen **Prüfbefehl** bekommen, zum Beispiel den Test, der den Fehler
+gefunden hat. Besteht er, wird ein ungeprüfter Eintrag automatisch gültig, mit Befehl,
+Exit-Code und Laufzeit als Nachweis. Das ist der Kern der Lernschleife: Die KI schlägt
+vor, der Test entscheidet.
+
+```sh
+vmind check-set vmind.db 1 'Dein Name' . pytest tests/test_app.py -k corrupt
+```
+
+```sh
+vmind check vmind.db 1
+```
+
+`revalidate` führt alle Prüfbefehle des Bereichs erneut aus, zum Beispiel nach einem
+Update. Fällt ein gültiger Eintrag durch, wird das gemeldet. Zurückgezogen wird er nur
+mit `--invalidate`, weil ein Rückzug endgültig ist:
+
+```sh
+vmind --scope mein-projekt revalidate vmind.db
+```
+
+Sicherheit: Prüfbefehle laufen ohne Shell (keine `;`, `&&`, Umleitungen) in einem festen
+Ordner und mit Zeitlimit. Setzen und Ausführen geht **nur über die Kommandozeile**,
+nicht über MCP. Eine KI kann V-Mind also keinen Befehl unterschieben. Achte darauf, dass
+der Befehl wirklich etwas prüft: `cargo test` mit einem vertippten Testnamen führt null
+Tests aus und meldet trotzdem Erfolg. Details: [docs/cli.md](docs/cli.md#prüfbefehle).
+
 Für andere MCP-fähige Programme gilt dasselbe: Server-Befehl
 `vmind --scope BEREICH mcp /absoluter/pfad/vmind.db`. Wo die Konfiguration liegt,
 hängt vom jeweiligen Programm ab. Technische Details: [docs/protocol.md](docs/protocol.md).
@@ -187,7 +218,7 @@ vmind --scope mein-projekt recall vmind.db 'SQLite Migration'
 ```
 
 ```sh
-vmind --scope mein-projekt task vmind.db datenbank done 'Migration implementiert' 'cargo test: 37/37 bestanden'
+vmind --scope mein-projekt task vmind.db datenbank done 'Migration implementiert' 'cargo test: alle Tests bestanden'
 ```
 
 **Lokale Modelle über Ollama:** `ask` ruft passendes Wissen und den Projektstand ab

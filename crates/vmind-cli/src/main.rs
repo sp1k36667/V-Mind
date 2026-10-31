@@ -1,7 +1,9 @@
+mod check_cmd;
 mod mcp;
 mod ollama;
 mod prompt;
 mod protocol;
+mod runner;
 
 use serde::Serialize;
 use serde_json::json;
@@ -18,6 +20,9 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
   show DB ID
   validate DB ID PRÜFER NACHWEIS
   invalidate DB ID AKTEUR GRUND
+  check-set DB ID AKTEUR ORDNER BEFEHL [ARG...]   (Prüfbefehl ohne Shell setzen)
+  check DB ID [--invalidate]     (Prüfbefehl ausführen; bestanden validiert)
+  revalidate DB [--invalidate]   (alle Prüfbefehle im Bereich plus global)
   search DB WÖRTLICHER_SUCHTEXT   (globale Einträge)
   recall DB SUCHTEXT             (Volltext, Projekt plus global)
   ask DB FRAGE                  (automatischer Wissensabruf)
@@ -37,7 +42,8 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
   mcp DB                        (MCP-Server über stdio; --scope = Standardbereich)
 Standardbereich: VMIND_SCOPE oder global.
 Ollama: VMIND_OLLAMA_URL oder http://127.0.0.1:11434
-Modell: VMIND_MODEL oder vmind-gemma4:e2b";
+Modell: VMIND_MODEL oder vmind-gemma4:e2b
+Zeitlimit für Prüfbefehle: VMIND_CHECK_TIMEOUT Sekunden, sonst 300";
 
 fn emit(value: impl Serialize, human: String, json_mode: bool) -> Result<()> {
     if json_mode {
@@ -251,19 +257,50 @@ fn run() -> Result<()> {
                 .get(id)?
                 .ok_or_else(|| io::Error::other("Eintrag nicht gefunden"))?;
             let history = store.history(id)?;
+            let check = store.active_check(id)?;
+            let runs = store.check_runs(id, 5)?;
+            let check_text = check.as_ref().map_or("–".to_string(), |c| {
+                format!("#{} `{}` in {}", c.id, c.command_line(), c.workdir)
+            });
             let human = format!(
-                "{}\nErstellt: {}\nZurückgezogen durch: {}\nGrund: {}\n\nHistorie:\n{}",
+                "{}\nErstellt: {}\nZurückgezogen durch: {}\nGrund: {}\nPrüfbefehl: {}\n\nHistorie:\n{}\n\nLetzte Prüfläufe:\n{}",
                 summary(std::slice::from_ref(&memory)),
                 memory.created_at,
                 memory.invalidated_by.as_deref().unwrap_or("–"),
                 memory.invalidation_reason.as_deref().unwrap_or("–"),
+                check_text,
                 history
                     .iter()
                     .map(|e| format!("{} {} / {}: {}", e.created_at, e.action, e.actor, e.reason))
                     .collect::<Vec<_>>()
+                    .join("\n"),
+                runs.iter()
+                    .map(|r| format!(
+                        "{} {} (Exit {}, {} ms)",
+                        r.created_at,
+                        r.outcome,
+                        r.exit_code.map_or("–".into(), |c| c.to_string()),
+                        r.duration_ms
+                    ))
+                    .collect::<Vec<_>>()
                     .join("\n")
             );
-            emit(json!({"memory":memory,"history":history}), human, json_mode)?;
+            emit(
+                json!({"memory":memory,"history":history,"check":check,"check_runs":runs}),
+                human,
+                json_mode,
+            )?;
+        }
+        [cmd, db, id, actor, dir, argv @ ..] if cmd == "check-set" && !argv.is_empty() => {
+            check_cmd::set(db, id, actor, dir, argv, json_mode)?
+        }
+        [cmd, db, id] if cmd == "check" => check_cmd::check_one(db, id, false, json_mode)?,
+        [cmd, db, id, flag] if cmd == "check" && flag == "--invalidate" => {
+            check_cmd::check_one(db, id, true, json_mode)?
+        }
+        [cmd, db] if cmd == "revalidate" => check_cmd::revalidate(db, &scope, false, json_mode)?,
+        [cmd, db, flag] if cmd == "revalidate" && flag == "--invalidate" => {
+            check_cmd::revalidate(db, &scope, true, json_mode)?
         }
         [cmd, db] if cmd == "pending" => {
             let records = MemoryStore::open_existing(db)?.pending(&scope)?;

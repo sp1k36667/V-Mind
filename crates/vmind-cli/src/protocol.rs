@@ -98,7 +98,9 @@ pub fn dispatch(store: &MemoryStore, mut value: Value) -> Value {
                 limit,
             } => json!({"memories": store.recall(&query, &scope, limit)?}),
             Operation::Get { memory_id } => {
-                json!({"memory": store.get(memory_id)?, "history":store.history(memory_id)?})
+                json!({"memory": store.get(memory_id)?, "history":store.history(memory_id)?,
+                    "check":store.active_check(memory_id)?,
+                    "check_runs":store.check_runs(memory_id, 5)?})
             }
             Operation::Propose {
                 kind,
@@ -150,7 +152,7 @@ pub fn dispatch(store: &MemoryStore, mut value: Value) -> Value {
                 "operations":["describe", "recall", "get", "propose", "pending", "stats", "resume", "journal", "log", "session_new", "sessions", "message", "messages"],
                 "default_scope":"global", "recall_includes_global":true,
                 "proposals_require_external_validation":true,
-                "validation":"CLI validate; no validation operation in this protocol"}),
+                "validation":"CLI validate or CLI check/revalidate; no validation or check execution in this protocol"}),
         })
     })();
     match result {

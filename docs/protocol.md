@@ -61,7 +61,9 @@ Erfolg beim Vorschlag (Beispiel-ID):
 ```
 
 `recall` und `pending` liefern unter `data.memories` eine Liste vollständiger
-Datensätze. `get` liefert `data.memory` (oder `null`) und `data.history`.
+Datensätze. `get` liefert `data.memory` (oder `null`), `data.history`, den aktiven
+Prüfbefehl `data.check` (oder `null`) und die letzten fünf Läufe `data.check_runs`.
+Prüfbefehle lassen sich über dieses Protokoll weder setzen noch ausführen.
 Ein Datensatz enthält `id`, `scope`, `kind`, `problem`, `solution`, `source`, `status`,
 `validated_by`, `evidence`, `created_at`, `invalidated_by`, `invalidation_reason`.
 `status` ist `pending`, `validated` oder `invalidated`.

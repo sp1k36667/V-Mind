@@ -1,5 +1,9 @@
+mod checks;
 mod project;
+pub use checks::{Applied, Check, CheckResult, CheckRun, Outcome};
 pub use project::{ChatMessage, Conversation, JournalEntry, Resume};
+
+const SCHEMA_VERSION: i64 = 4;
 
 // Persistentes, modellunabhängiges Gedächtnis mit nachvollziehbarer Validierung.
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Result, params};
@@ -128,15 +132,15 @@ impl MemoryStore {
         conn.busy_timeout(std::time::Duration::from_secs(5))?;
         conn.pragma_update(None, "foreign_keys", true)?;
         let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
-        if version == 3 {
+        if version == SCHEMA_VERSION {
             return Ok(Self { conn });
         }
-        if !(0..=3).contains(&version) {
+        if !(0..=SCHEMA_VERSION).contains(&version) {
             return Err(invalid("Unbekannte Datenbankversion"));
         }
         let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
         let mut version: i64 = tx.query_row("PRAGMA user_version", [], |r| r.get(0))?;
-        if !(0..=3).contains(&version) {
+        if !(0..=SCHEMA_VERSION).contains(&version) {
             return Err(invalid("Unbekannte Datenbankversion"));
         }
         if version == 0 {
@@ -149,8 +153,12 @@ impl MemoryStore {
         }
         if version == 2 {
             tx.execute_batch(include_str!("../../../migrations/0003_project_context.sql"))?;
+            version = 3;
         }
-        tx.pragma_update(None, "user_version", 3)?;
+        if version == 3 {
+            tx.execute_batch(include_str!("../../../migrations/0004_checks.sql"))?;
+        }
+        tx.pragma_update(None, "user_version", SCHEMA_VERSION)?;
         tx.commit()?;
         Ok(Self { conn })
     }

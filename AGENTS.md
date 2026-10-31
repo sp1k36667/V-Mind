@@ -89,3 +89,8 @@ Die JSONL-Schnittstelle ist ein eigenes Protokoll. `vmind mcp DB` stellt dieselb
 Operationen zusätzlich als MCP-Server über stdio bereit; `.mcp.json` bindet ihn in
 Claude Code ein. Eine automatische Anbindung an Codex oder ChatGPT ist nicht
 eingerichtet. API: `docs/protocol.md`.
+
+Prüfbefehle (`check-set`) vor dem Setzen lesen wie jeden auszuführenden Befehl.
+Ein bestandener Prüfbefehl validiert einen Eintrag; daher sicherstellen, dass er
+tatsächlich Tests ausführt (bei `cargo test` mit `--exact`, Ausgabe „1 passed“ prüfen).
+`revalidate --invalidate` zieht endgültig zurück und nur gezielt einsetzen.
