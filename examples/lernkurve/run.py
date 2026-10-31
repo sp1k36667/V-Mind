@@ -7,6 +7,7 @@ Plan: docs/experiments/lernkurve-plan.md
 """
 
 import argparse
+import difflib
 import hashlib
 import json
 import random
@@ -31,6 +32,7 @@ MAX_LEHRE_ZEICHEN = 300
 WIEDERHOLUNG_TEMPERATUR = 0.7
 MAX_MELDUNG_ZEICHEN = 450
 MAX_RUECKMELDUNG_ZEICHEN = 2500
+MAX_DIFF_ZEICHEN = 3000
 CODE_IN_LEHRE = re.compile(r"```|\bdef |\bimport |\bclass |self\.|\breturn\b")
 
 ALLGEMEIN = """Allgemeine Anforderungen: Nur Python-Standardbibliothek, eine Datei app.py.
@@ -51,7 +53,9 @@ Wenn "testrueckmeldung" Fehler enthält, behebe genau diese im "vorheriger_code"
 
 LEHRE_SYSTEM = """Du formulierst kurze, übertragbare Lehren aus Programmierfehlern.
 Antworte nur mit JSON {"problem": "...", "loesung": "..."}, je höchstens 200 Zeichen,
-nur in Worten, ohne Quelltext und ohne Namen dieser konkreten Aufgabe."""
+nur in Worten, ohne Quelltext und ohne Namen dieser konkreten Aufgabe.
+Wenn "code_aenderung" vorhanden ist, hat genau diese Änderung den Fehler behoben:
+beschreibe als Problem, was vorher falsch war, und als Lösung, was die Änderung tut."""
 
 
 def ollama(system, prompt, seed, num_predict, als_json=False, temperatur=0.0):
@@ -67,6 +71,17 @@ def ollama(system, prompt, seed, num_predict, als_json=False, temperatur=0.0):
     )
     with urllib.request.urlopen(anfrage, timeout=300) as antwort:
         return nutzlast, json.load(antwort)
+
+
+def modell_entladen():
+    """Bei Temperatur 0 hing die Antwort im Probelauf 4 vom Zwischenspeicher des Modells ab
+    (gleiche Eingabe, andere Ausgabe). Frisch geladen ist sie wiederholbar."""
+    anfrage = urllib.request.Request(
+        OLLAMA, data=json.dumps({"model": MODELL, "keep_alive": 0}).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(anfrage, timeout=120) as antwort:
+        antwort.read()
 
 
 def vmind(db, anfrage):
@@ -127,7 +142,8 @@ def erzeugen(ordner, aufgabentext, erinnerungen, rueckmeldung, vorher, seed, tem
     nutzlast, antwort = ollama(SYSTEM, json.dumps(inhalt, ensure_ascii=False), seed, 2400,
                                temperatur=temperatur)
     speichern(ordner / "generierung.json", {"anfrage": nutzlast, "antwort": antwort})
-    info = {"ms": antwort.get("total_duration", 0) // 1_000_000,
+    lade_ms = antwort.get("load_duration", 0) // 1_000_000
+    info = {"ms": antwort.get("total_duration", 0) // 1_000_000 - lade_ms, "lade_ms": lade_ms,
             "ausgabe_tokens": antwort.get("eval_count"),
             "prompt_tokens": antwort.get("prompt_eval_count"),
             "abgeschnitten": not antwort.get("done") or antwort.get("done_reason") == "length"}
@@ -137,10 +153,35 @@ def erzeugen(ordner, aufgabentext, erinnerungen, rueckmeldung, vorher, seed, tem
     return ("" if info["abgeschnitten"] else code), info
 
 
-def lehre_erfragen(aufgabentext, test, meldung, code, seed):
-    prompt = json.dumps({"aufgabe": aufgabentext, "fehlgeschlagene_pruefung": test,
-                         "fehlermeldung": meldung, "aktueller_code": code[-4000:]},
-                        ensure_ascii=False)
+def inhaltszeilen(code):
+    """Zeilen ohne Leerzeilen und reine Kommentare; sie verdrängten im Diff den Fix."""
+    return [z.rstrip() for z in code.splitlines() if z.strip() and not z.strip().startswith("#")]
+
+
+def code_aenderung(versuche, codes, test):
+    """Diff vom letzten fehlgeschlagenen zum ersten danach bestandenen Versuch dieser
+    Prüfung; leer, wenn der Fehler nie behoben wurde. Ohne Diff trafen die Lehren im
+    Probelauf 3 den eigentlichen Fix nicht."""
+    fehlgeschlagen = [i for i, v in enumerate(versuche) if v["status"][test] != "ok"]
+    if not fehlgeschlagen:
+        return "", None
+    vorher = fehlgeschlagen[-1]
+    nachher = next((j for j in range(vorher + 1, len(versuche))
+                    if versuche[j]["status"][test] == "ok"), None)
+    if nachher is None:
+        return "", vorher
+    diff = difflib.unified_diff(inhaltszeilen(codes[vorher]), inhaltszeilen(codes[nachher]),
+                                "vorher/app.py", "nachher/app.py", n=2, lineterm="")
+    return "\n".join(diff)[:MAX_DIFF_ZEICHEN], vorher
+
+
+def lehre_erfragen(aufgabentext, test, meldung, code, diff, seed):
+    inhalt = {"aufgabe": aufgabentext, "fehlgeschlagene_pruefung": test, "fehlermeldung": meldung}
+    if diff:
+        inhalt["code_aenderung"] = diff
+    else:
+        inhalt["aktueller_code"] = code[-4000:]
+    prompt = json.dumps(inhalt, ensure_ascii=False)
     _, antwort = ollama(LEHRE_SYSTEM, prompt, seed, 300, als_json=True)
     ms = antwort.get("total_duration", 0) // 1_000_000
     try:
@@ -156,22 +197,22 @@ def lehre_erfragen(aufgabentext, test, meldung, code, seed):
     return {"problem": problem, "loesung": loesung}, None, ms
 
 
-def lehren_speichern(bedingung, db, ordner, aufgabe, aufgabentext, versuche, code, seed):
-    """B: nur behobene Fehler, bestätigt per Prüfbefehl. C: alle Fehler, ungeprüft."""
-    fehlgeschlagen = {}
-    for versuch in versuche:
-        for test, status in versuch["status"].items():
-            if status != "ok":
-                fehlgeschlagen.setdefault(test, versuch["meldungen"].get(test, ""))
+def lehren_speichern(bedingung, db, ordner, aufgabe, aufgabentext, versuche, codes, seed):
+    """B: nur behobene Fehler, bestätigt per Prüfbefehl. C: alle Fehler, ungeprüft.
+    Zu behobenen Fehlern erhalten B und C gleichermaßen den Code-Unterschied."""
+    fehlgeschlagen = sorted({t for v in versuche for t, s in v["status"].items() if s != "ok"})
     letzter = versuche[-1]["status"]
     if bedingung == "B":
         kandidaten = [t for t in fehlgeschlagen if letzter.get(t) == "ok"]
     else:
-        kandidaten = list(fehlgeschlagen)
+        kandidaten = fehlgeschlagen
     protokoll = []
     for test in kandidaten[:MAX_LEHREN_JE_AUFGABE]:
-        lehre, grund, ms = lehre_erfragen(aufgabentext, test, fehlgeschlagen[test], code, seed)
-        eintrag = {"test": test, "lehre": lehre, "abgewiesen": grund, "ms": ms}
+        diff, fehl_index = code_aenderung(versuche, codes, test)
+        meldung = versuche[fehl_index]["meldungen"].get(test, "")
+        lehre, grund, ms = lehre_erfragen(aufgabentext, test, meldung, codes[-1], diff, seed)
+        eintrag = {"test": test, "lehre": lehre, "abgewiesen": grund, "ms": ms,
+                   "diff_zeichen": len(diff)}
         if lehre:
             quelle = f"Lernkurve {aufgabe}, Prüfung {test}"
             eintrag["id"] = vmind(db, {"op": "propose", "scope": SCOPE, "kind": "error_solution",
@@ -195,14 +236,17 @@ def aufgabe_loesen(bedingung, db, ordner, aufgabe, seed, max_versuche):
     abnahme_einrichten(aufgabe, ordner)
     erwartet = alle_tests(aufgabe)
     erinnerungen = gedaechtnis(bedingung, db, aufgabentext)
-    rueckmeldung, vorher, versuche, code = "", "", [], ""
+    rueckmeldung, vorher, versuche, codes = "", "", [], []
     for nummer in range(1, max_versuche + 1):
         versuch_ordner = ordner / f"versuch-{nummer}"
         versuch_ordner.mkdir()
         temperatur = 0.0 if nummer == 1 else WIEDERHOLUNG_TEMPERATUR
+        if nummer == 1:
+            modell_entladen()
         code, info = erzeugen(versuch_ordner, aufgabentext, erinnerungen, rueckmeldung, vorher,
                               seed + nummer - 1, temperatur)
         info["temperatur"] = temperatur
+        codes.append(code)
         (ordner / "app.py").write_text(code + "\n", encoding="utf-8")
         ergebnis = abnahme_ausfuehren(ordner)
         (versuch_ordner / "abnahme.txt").write_text(ergebnis["ausgabe"], encoding="utf-8")
@@ -222,7 +266,7 @@ def aufgabe_loesen(bedingung, db, ordner, aufgabe, seed, max_versuche):
         vorher = code
     lehren = []
     if bedingung in ("B", "C"):
-        lehren = lehren_speichern(bedingung, db, ordner, aufgabe, aufgabentext, versuche, code,
+        lehren = lehren_speichern(bedingung, db, ordner, aufgabe, aufgabentext, versuche, codes,
                                   seed)
     return {"aufgabe": aufgabe, "gedaechtnis_ids": [m["id"] for m in erinnerungen],
             "versuche": versuche, "bestanden": versuche[-1]["bestanden"],

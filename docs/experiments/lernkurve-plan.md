@@ -209,6 +209,46 @@ fehlgeschlagenem und bestandenem Code formuliert werden, nicht nur aus Fehlermel
 Endstand. Erst dann misst B, ob übertragene Erfahrung hilft, und nicht, ob vage
 Allgemeinplätze helfen.
 
+## Änderung nach Probelauf 3: Lehren aus dem Code-Unterschied
+
+Vor dem ersten gezählten Lauf, für B und C gleich: Zu jedem **behobenen** Fehler erhält
+das Modell beim Formulieren der Lehre den Unterschied (unified diff, nur Inhaltszeilen
+ohne Leerzeilen und reine Kommentare, höchstens 3.000 Zeichen) zwischen dem letzten
+fehlgeschlagenen und dem ersten danach bestandenen Code, dazu die Fehlermeldung genau
+dieses fehlgeschlagenen Versuchs. C erhält zu nie behobenen Fehlern weiterhin die
+Fehlermeldung und den letzten Code, ohne Diff.
+
+Offline an den Daten von Probelauf 3 (B, Kontakte) geprüft: Der bereinigte Diff zeigt
+den eigentlichen Fix (eine Prüffunktion, die Ausnahmen wirft und nichts zurückgibt, war
+mit `if not …` abgefragt worden, wodurch jede E-Mail abgelehnt wurde). Von drei Lehren
+beschrieb eine den Fix annähernd („Validierungsfehler abfangen und weitergeben“), zwei
+eine nebensächliche JSON-Änderung im selben Diff. Das ist eine Grenze des Modells beim
+Lesen von Diffs und wird bei der Auswertung je Lehre berichtet.
+
+## Probelauf 4 und Determinismus
+
+Diff-Lehren, drei Aufgaben (Kontakte, Lesezeichen, Aufgabenplaner), Seed 42. Zählt nicht
+zur Auswertung.
+
+- Abruf und Übertragung funktionieren technisch: B rief bei Lesezeichen und Aufgabenplaner
+  die drei Lehren aus den Kontakten ab.
+- B lernte beim Aufgabenplaner per Prüfbefehl bestätigt „Schlüssel vor der Prüfung in
+  Integer umwandeln“, genau den Fehler, an dem E2B dort in allen Probeläufen scheiterte
+  (IDs sind nach dem Laden aus JSON Text).
+- C übernahm erneut Falsches, z. B. „Nach Löschung müssen alle IDs neu nummeriert werden,
+  um Wiederverwendung zu verhindern“, das Gegenteil der Anforderung.
+- **Nicht deterministisch:** Bei der ersten Aufgabe waren Prompt, Systemanweisung und
+  Einstellungen in A, B und C byte-gleich (Temperatur 0, Seed 42), C erhielt trotzdem eine
+  andere Antwort (6/9 statt 3/9). Gegentest mit derselben Anfrage: dreimal hintereinander
+  gleich, aber anders als das Original; nach Entladen des Modells war die erste Antwort
+  wieder gleich dem Original, die zweite schon nicht mehr. Die Antwort hängt also vom
+  Zwischenspeicherzustand des Modells ab.
+
+Änderung vor dem ersten gezählten Lauf, für alle Bedingungen gleich: Vor dem ersten
+Versuch jeder Aufgabe wird das Modell entladen (`keep_alive: 0`), damit die Hauptmessgröße
+reproduzierbar ist. Ladezeit wird getrennt erfasst (`lade_ms`) und nicht zur Modellzeit
+gezählt. Für Wiederholungen mit Temperatur 0,7 ist Streuung ohnehin gewollt.
+
 ## Umsetzung
 
 - Testhost: `examples/lernkurve/run.py` (baut auf `gemma_regeneration_test.py` auf),
