@@ -20,7 +20,10 @@ Eine neuere unbekannte Version wird nicht als gesund/kompatibel bezeichnet.
 Dies ist keine fachliche Prüfung der Inhalte und kein Schutz gegen gezielte
 Manipulationen. Auch die vollständige inhaltliche Synchronisierung der FTS-Indizes
 wird damit nicht nachgewiesen. Fehlende Schreibrechte, ein defekter MCP-Client oder
-Ollama werden von dieser Datenbankdiagnose nicht getestet.
+Ollama werden von dieser Datenbankdiagnose nicht getestet. Bei WAL-Datenbanken
+kann selbst ein Lesezugriff beschreibbare vorhandene `-shm`/`-wal`-Dateien oder ein
+geeignetes Verzeichnis benötigen; ein Fehler dabei ist kein Beweis für kaputte Daten.
+Eine aktive WAL-Datenbank nicht durch Weglassen dieser Dateien scheinbar reparieren.
 
 ## Konsistente Sicherung
 
@@ -54,10 +57,19 @@ stderr ausgegeben (JSON/MCP-stdout bleibt sauber). Die Migration hält dabei ihr
 Schreibsperre; der Snapshot entsteht über eine separate rein lesende Verbindung.
 Scheitert die Sicherung, findet kein Upgrade statt. Auch die Migration selbst bleibt
 atomar. In-Memory-Datenbanken brauchen keine Dateisicherung; neue leere Datenbanken
-werden direkt initialisiert. Automatische Sicherungen werden nicht still gelöscht.
+werden direkt initialisiert. Automatische Sicherungen werden nicht still gelöscht. Nach geprüftem Upgrade und
+getesteter Wiederherstellung können alte Sicherungen bewusst selbst entfernt werden.
+Mindestens eine unabhängige geprüfte Rückfallkopie behalten.
 
 Schreibrecht im Quellordner und genügend Platz für die Sicherung sind erforderlich.
-Das ist eine bewusste Voraussetzung für ein automatisches Upgrade. Eine fehlgeschlagene
+Das ist eine bewusste Voraussetzung für ein automatisches Upgrade. Mit
+`VMIND_BACKUP_DIR` lässt sich ein anderer vorhandener Sicherungsordner verwenden,
+beispielsweise auf einem zweiten Datenträger. Ein leerer Wert ist ein Fehler und
+überspringt die Sicherung nicht. Bei fehlendem Platz/Rechten bleibt das Upgrade
+abgebrochen und die Fehlermeldung nennt diese Abhilfe. Das Datenbankverzeichnis
+braucht für SQLite-Journal und Upgrade selbst weiterhin geeignete Schreibrechte
+und Platz. Auch `vmind backup DB ANDERER_PFAD` ist zur unabhängigen Sicherung möglich;
+eine solche Kopie deaktiviert die automatische Sicherung nicht. Eine fehlgeschlagene
 Migration kann eine gültige Sicherung zurücklassen; deren Vorhandensein bedeutet
 nicht, dass die Migration abgeschlossen ist.
 

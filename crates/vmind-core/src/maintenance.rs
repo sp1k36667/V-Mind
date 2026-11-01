@@ -191,12 +191,32 @@ pub(crate) fn backup_before_migration(source: &Path) -> Result<()> {
         .duration_since(UNIX_EPOCH)
         .map_err(|e| invalid(&e.to_string()))?
         .as_nanos();
-    let mut name = source.as_os_str().to_os_string();
+    let directory = std::env::var_os("VMIND_BACKUP_DIR");
+    let destination = if let Some(directory) = directory {
+        if directory.is_empty() {
+            return Err(invalid(
+                "VMIND_BACKUP_DIR darf nicht leer sein; Sicherung wird nicht übersprungen",
+            ));
+        }
+        let name = source
+            .file_name()
+            .ok_or_else(|| invalid("Datenbank-Dateiname fehlt"))?;
+        Path::new(&directory).join(name)
+    } else {
+        source.to_path_buf()
+    };
+    let mut name = destination.as_os_str().to_os_string();
     name.push(format!(
         ".before-schema-{SCHEMA_VERSION}-{stamp}-{}.db",
         std::process::id()
     ));
-    let report = backup_database(source, Path::new(&name))?;
+    let report = backup_database(source, Path::new(&name)).map_err(|error| {
+        invalid(&format!(
+            "Migration abgebrochen, Sicherung fehlgeschlagen: {error}. \
+            Speicherplatz und Schreibrechte prüfen; VMIND_BACKUP_DIR auf einen vorhandenen \
+            beschreibbaren Sicherungsordner setzen. Keine Sicherung wird übersprungen."
+        ))
+    })?;
     eprintln!(
         "V-Mind: geprüfte Sicherung vor Migration: {}",
         report.destination
