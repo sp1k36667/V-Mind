@@ -1,8 +1,8 @@
 # Fortsetzungs-Folgelauf 2x2 – vorab festgelegter Plan
 
-Status: Entwurf zur Gegenprüfung durch Codex. Nach Freigabe wird dieser Plan zusammen
-mit `examples/continuity/run_2x2.py` eingefroren; der Commit-Hash steht im Bericht.
-Kein Lauf vor dem Einfrieren. Hintergrund: [erster Fortsetzungspilot](continuity-pilot.md)
+Status: zum Einfrieren vorgelegt, Codex' Prüfpunkte (Teamkanal #73) eingearbeitet.
+Maßgeblich ist der Commit, der diesen Plan zusammen mit `examples/continuity/run_2x2.py`
+enthält; sein Hash steht im Bericht. Kein Lauf vor Codex' unabhängigem Selbsttest. Hintergrund: [erster Fortsetzungspilot](continuity-pilot.md)
 (negativ: V 117/165, M 133/165).
 
 ## Frage
@@ -64,8 +64,11 @@ Modell-Digest und SHA-256 von Harness und beiden Binaries.
 ## Bewertung
 
 - **Streng (primär):** exakter Wert nach Entfernen äußeren Leerraums.
-- **Mild (sekundär, getrennt berichtet):** zusätzlich äußere Anführungszeichen und
-  abschließende `. , ; :` entfernt; `unbekannt` ohne Groß-/Kleinschreibung.
+- **Mild (sekundär, getrennt berichtet), genau in dieser Reihenfolge:** Leerraum außen
+  entfernen, äußere Anführungszeichen `" ' „ “ ”` entfernen, Leerraum entfernen,
+  abschließende `. , ; :` entfernen, Leerraum entfernen; danach zählt `unbekannt` in
+  beliebiger Groß-/Kleinschreibung als `unbekannt`. Keine weitere Angleichung, auch nicht
+  nachträglich.
 - **Überholter Wert:** Die Antwort enthält einen der bekannten alten Werte der Frage und
   nicht den aktuellen Wert (Fragen `release`, `backend`, `schema`, `search`, `next`).
 - **Erfindung:** bei `password` oder `production_date` ein Wert, der mild nicht
@@ -74,20 +77,39 @@ Modell-Digest und SHA-256 von Harness und beiden Binaries.
 
 ## Vorab festgelegte Kriterien (beschreibend, keine Signifikanzaussage)
 
-1. **Filter wirkt:** In den Projekten 0 bis 2 (je Bedingung 15 Aufrufe) nennt Ja bei
-   `next` höchstens einmal einen überholten Schritt und seltener als J0; ebenso Ta
-   gegenüber T0.
-2. **Kontrolle:** In Projekt 3 berichten wir J0 gegen Ja und T0 gegen Ta nur beschreibend;
-   ein großer Unterschied dort spräche für Zufall statt Filterwirkung.
-3. **Format:** Ja liegt bei den acht Fakten (160 Antworten je Bedingung, mild) höchstens
-   8 Antworten unter Ta. Der Unterschied wird in beide Richtungen berichtet.
-4. **Keine Erfindungen** unter Ja und Ta.
+Die Kriterien sind in `acceptance()` des Harness umgesetzt; `summary.json` enthält ihr
+Ergebnis. Der Selbsttest prüft vor jedem Lauf mit künstlichen Antworten, dass leere
+Antworten sicher scheitern und dass „unentschieden“, „nicht besser“ und „besser“ richtig
+erkannt werden.
 
-Ein Bestehen zeigt, dass der Filter im synthetischen Fall veraltete Antworten verhindert
-und die JSON-Übergabe bei abgesichertem Ausgabeformat nicht schlechter ist als eine
-flache Liste. Es zeigt keinen Vorteil gegenüber einer von Menschen geschriebenen
-Übergabe, keine Lernwirkung und nichts über reale Projekte. Ein negatives Ergebnis wird
-mit unveränderten Kriterien veröffentlicht.
+1. **Untergrenzen für Ja und Ta, jede einzeln:** 20 ausgewertete Aufrufe, keine
+   technischen Fehler, keine Formatfehler, mindestens 144 von 160 Fakten mild richtig,
+   mindestens 39 von 40 unbeantwortbaren Angaben mild als `unbekannt`, keine Erfindung.
+   Fehlende Antworten zählen als falsch, nie als korrektes Unwissen.
+2. **Filterwirkung**, gemessen an `next` in den Projekten 0 bis 2 (je Bedingung 15
+   Aufrufe), getrennt für J (J0 gegen Ja) und T (T0 gegen Ta):
+   - „nicht besser“, wenn der neue Arm mehr als einmal einen überholten Schritt nennt
+     oder nicht seltener als ein alter Arm mit Fehlern;
+   - „unentschieden“, wenn der alte Arm keinen überholten Schritt nennt und der neue
+     ebenfalls keinen: Dann gibt es nichts zu beheben, eine Filterwirkung ist nicht messbar;
+   - „besser“, wenn der alte Arm mindestens einen überholten Schritt nennt und der neue
+     höchstens einen und weniger als der alte.
+
+   Filter insgesamt: „nicht bestanden“, sobald ein Paar „nicht besser“ ist; „bestanden“,
+   wenn mindestens ein Paar „besser“ und keines „nicht besser“ ist; sonst „unentschieden“.
+3. **Format:** Ja liegt bei den Fakten (mild) höchstens 8 Antworten unter Ta. Der
+   Unterschied wird in beide Richtungen berichtet.
+4. **Kontrolle:** In Projekt 3 sind vollständiger Snapshot und Prompt vor und nach dem
+   Filter identisch (vom Selbsttest geprüft; Prompt-Hash je Aufruf gespeichert).
+   Unterschiede dort zeigen nur die Streuung durch den Zufall und werden beschreibend
+   berichtet.
+
+**Bestanden** heißt: 1 für Ja und Ta erfüllt, Filter „bestanden“, 3 erfüllt. Ein
+„unentschieden“ beim Filter ist kein Bestehen. Ein Bestehen ist eine lokale,
+beschreibende Schwelle dieses synthetischen Aufbaus und kein Nachweis der
+Gleichwertigkeit oder Überlegenheit gegenüber anderen Übergaben. Es zeigt keinen Vorteil
+gegenüber einer von Menschen geschriebenen Übergabe, keine Lernwirkung und nichts über
+reale Projekte. Ein negatives Ergebnis wird mit unveränderten Kriterien veröffentlicht.
 
 ## Ergebnisse je Frage
 

@@ -119,7 +119,9 @@ def strict(value):
 
 
 def mild(value):
-    """Pre-registered secondary rule: outer whitespace, quotes and . , ; : removed."""
+    """Pre-registered secondary rule, in exactly this order: strip whitespace, strip
+    outer quotes (" ' „ “ ”), strip whitespace, strip trailing . , ; :, strip whitespace,
+    then 'unbekannt' in any letter case counts as 'unbekannt'. Nothing else."""
     if not isinstance(value, str):
         return value
     value = value.strip().strip('"\'„“”').strip().rstrip('.,;:').strip()
@@ -139,6 +141,7 @@ def score(answer, expected, superseded):
                 by_question=hits, by_question_mild=mild_hits, stale=stale,
                 stale_count=sum(stale.values()),
                 invented=sum(k in answer and mild(answer[k]) != 'unbekannt' for k in UNKNOWN),
+                unknown_mild=sum(mild_hits[k] for k in UNKNOWN),
                 format_valid=set(answer) == set(expected) and all(isinstance(v, str) for v in answer.values()),
                 archive_unknown=mild(answer.get('archive_port')) == 'unbekannt')
 
@@ -154,6 +157,13 @@ def self_checks(fixtures):
             text = json.dumps(snapshot, ensure_ascii=False)
             assert all(expected[k] in text for k in FACTS), (n, stage)
             assert expected['archive_port'] not in text, (n, stage)
+        # Control: the whole snapshot, and therefore the prompt, is identical before and
+        # after the filter; in the other projects it differs.
+        control = PROJECTS[n]['notes_after_state']
+        assert (snapshots['0'] == snapshots['a']) == control, n
+        for fmt in 'JT':
+            same = context(fmt + '0', snapshots) == context(fmt + 'a', snapshots)
+            assert same == control, (n, fmt)
         events = {s: json.dumps(snap['recent_events'], ensure_ascii=False) for s, snap in snapshots.items()}
         old_in_window = any(o in events['0'] for olds in superseded.values() for o in olds)
         assert old_in_window != PROJECTS[n]['notes_after_state'], n
@@ -169,6 +179,32 @@ def self_checks(fixtures):
         assert score(dict(expected, password='Unbekannt'), expected, superseded)['invented'] == 0
 
 
+def acceptance_self_checks(fixtures):
+    """The criteria must reject broken runs and accept only a real filter effect."""
+    def empty(c, n, expected, superseded):
+        return {}
+
+    def perfect_with_stale_old_arms(c, n, expected, superseded):
+        if c.endswith('0') and n != CONTROL:
+            return dict(expected, next=superseded['next'][-1])
+        return dict(expected)
+
+    def perfect_everywhere(c, n, expected, superseded):
+        return dict(expected)
+
+    def stale_new_arm(c, n, expected, superseded):
+        return dict(expected, next=superseded['next'][0]) if n != CONTROL else dict(expected)
+
+    empty_result = acceptance(summary(fake_records(fixtures, empty)))
+    assert not empty_result['passed'] and not any(empty_result['floors'].values())
+    good = acceptance(summary(fake_records(fixtures, perfect_with_stale_old_arms)))
+    assert good['passed'] and good['filter_result'] == 'bestanden', good
+    undecided = acceptance(summary(fake_records(fixtures, perfect_everywhere)))
+    assert undecided['filter_result'] == 'unentschieden' and not undecided['passed']
+    worse = acceptance(summary(fake_records(fixtures, stale_new_arm)))
+    assert worse['filter_result'] == 'nicht bestanden' and not worse['passed']
+
+
 def request(endpoint, path, body=None):
     data = None if body is None else json.dumps(body).encode()
     req = urllib.request.Request(endpoint.rstrip('/') + path, data=data,
@@ -181,6 +217,14 @@ def sha256(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+CONTROL = 3
+# Pre-registered local, descriptive thresholds for Ja and Ta (20 calls each).
+MIN_FACTS_MILD = 144  # of 160 (8 facts x 20)
+MIN_UNKNOWN_MILD = 39  # of 40 (2 unanswerable questions x 20)
+MAX_STALE_NEXT_NEW = 1  # of 15 (projects 0-2)
+MAX_FORMAT_GAP = 8  # Ja may trail Ta by at most this many mild facts
+
+
 def summary(records):
     out = {}
     for c in CONDITIONS:
@@ -188,13 +232,56 @@ def summary(records):
         out[c] = dict(runs=len(rs), correct=sum(r['correct'] for r in rs),
                       correct_mild=sum(r['correct_mild'] for r in rs),
                       facts=sum(r['facts'] for r in rs), facts_mild=sum(r['facts_mild'] for r in rs),
+                      unknown_mild=sum(r['unknown_mild'] for r in rs),
                       stale=sum(r['stale_count'] for r in rs),
-                      stale_control=sum(r['stale_count'] for r in rs if r['project'] == 3),
+                      stale_next_main=sum(r['stale']['next'] for r in rs if r['project'] != CONTROL),
+                      stale_control=sum(r['stale_count'] for r in rs if r['project'] == CONTROL),
                       invented=sum(r['invented'] for r in rs),
                       errors=sum('error' in r for r in rs),
                       invalid_format=sum(not r['format_valid'] for r in rs),
                       archive_unknown=sum(r['archive_unknown'] for r in rs))
     return out
+
+
+def filter_effect(old, new):
+    """'besser', 'nicht besser' or 'unentschieden' (the old arm had no stale answer)."""
+    if new['stale_next_main'] > MAX_STALE_NEXT_NEW:
+        return 'nicht besser'
+    if old['stale_next_main'] == 0:
+        # Nothing to remove: the new arm must stay at zero, but no filter benefit follows.
+        return 'unentschieden' if new['stale_next_main'] == 0 else 'nicht besser'
+    return 'besser' if new['stale_next_main'] < old['stale_next_main'] else 'nicht besser'
+
+
+def acceptance(s):
+    """The frozen criteria. Passing is a local descriptive threshold, nothing more."""
+    floors = {c: s[c]['runs'] == 20 and s[c]['errors'] == 0 and s[c]['invalid_format'] == 0
+              and s[c]['facts_mild'] >= MIN_FACTS_MILD
+              and s[c]['unknown_mild'] >= MIN_UNKNOWN_MILD and s[c]['invented'] == 0
+              for c in ('Ja', 'Ta')}
+    effects = {'J': filter_effect(s['J0'], s['Ja']), 'T': filter_effect(s['T0'], s['Ta'])}
+    if 'nicht besser' in effects.values():
+        filter_result = 'nicht bestanden'
+    elif 'besser' in effects.values():
+        filter_result = 'bestanden'
+    else:
+        filter_result = 'unentschieden'
+    format_ok = s['Ja']['facts_mild'] >= s['Ta']['facts_mild'] - MAX_FORMAT_GAP
+    return dict(floors=floors, filter_effects=effects, filter_result=filter_result,
+                format_json_not_worse=format_ok,
+                passed=all(floors.values()) and filter_result == 'bestanden' and format_ok)
+
+
+def fake_records(fixtures, answer_for):
+    """Records as a run would produce them, for self-tests of the acceptance rules."""
+    records = []
+    for n, (_, expected, superseded) in enumerate(fixtures):
+        for seed in SEEDS:
+            for c in CONDITIONS:
+                answer = answer_for(c, n, expected, superseded)
+                records.append(dict(project=n, seed=seed, condition=c,
+                                    **score(answer, expected, superseded)))
+    return records
 
 
 def main():
@@ -209,12 +296,14 @@ def main():
     args.output.mkdir(parents=True, exist_ok=False)
     fixtures = [fixture(args.binary, args.binary_old, args.output, n) for n in range(len(PROJECTS))]
     self_checks(fixtures)
+    acceptance_self_checks(fixtures)
     for n, (snapshots, expected, superseded) in enumerate(fixtures):
         (args.output / f'fixture-{n}.json').write_text(json.dumps(
             dict(project=PROJECTS[n], snapshots=snapshots, expected=expected, superseded=superseded),
             ensure_ascii=False, indent=2))
     if args.self_test:
-        print(f'{len(fixtures)} fixtures, window/control checks, strict/mild/stale scoring: passed; no model call.')
+        print(f'{len(fixtures)} fixtures, window/control/prompt checks, strict/mild/stale scoring, '
+              'acceptance rules (empty, undecided, worse, better): passed; no model call.')
         return
     model = next(m for m in request(args.endpoint, '/api/tags')['models'] if m['name'] == MODEL)
     git_commit = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=Path(__file__).resolve().parents[2],
@@ -238,7 +327,8 @@ def main():
                   'Antworte als JSON-Objekt mit genau den genannten Schlüsseln und kurzen Stringwerten. '
                   'Bei fehlender Information exakt "unbekannt". Keine Vermutungen. Aufgabenstatus unverändert wiedergeben.\n'
                   + context(condition, snapshots) + '\nFragen:\n' + json.dumps(QUESTIONS, ensure_ascii=False))
-        record = dict(project=n, seed=seed, condition=condition, prompt_chars=len(prompt))
+        record = dict(project=n, seed=seed, condition=condition, prompt_chars=len(prompt),
+                      prompt_sha256=hashlib.sha256(prompt.encode()).hexdigest())
         started = time.monotonic()
         try:
             response = request(args.endpoint, '/api/generate', dict(
@@ -255,8 +345,9 @@ def main():
             f.write(json.dumps(record, ensure_ascii=False) + '\n')
         print(f'{len(records)}/{len(jobs)} project={n} seed={seed} {condition}: '
               f'{record["correct"]}/11 stale={record["stale_count"]}', flush=True)
-    result = summary(records)
-    (args.output / 'summary.json').write_text(json.dumps(result, indent=2))
+    result = dict(summary(records))
+    result['acceptance'] = acceptance(result)
+    (args.output / 'summary.json').write_text(json.dumps(result, indent=2, ensure_ascii=False))
     print(json.dumps(result, indent=2))
 
 
