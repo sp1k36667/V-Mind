@@ -215,3 +215,20 @@ fn independent_connections_observe_validation_and_withdrawal() {
             .is_empty()
     );
 }
+
+#[test]
+fn validated_lists_only_active_entries_of_scope_and_global_newest_first() {
+    let s = MemoryStore::in_memory().unwrap();
+    let global = add(&s, "global", "Global", "G");
+    let own = add(&s, "p", "Eigen", "E");
+    add(&s, "anderes", "Fremd", "F");
+    s.remember_scoped("p", "long_term", "Ungeprüft", "U", "Testquelle")
+        .unwrap();
+    let withdrawn = add(&s, "p", "Zurückgezogen", "Z");
+    s.invalidate(withdrawn, "Testprüfer", "veraltet").unwrap();
+    let ids: Vec<_> = s.validated("p", 10).unwrap().iter().map(|r| r.id).collect();
+    assert_eq!(ids, [own, global]);
+    assert_eq!(s.validated("p", 1).unwrap()[0].id, own);
+    assert!(s.validated("p", 0).is_err());
+    assert!(s.validated(" ", 10).is_err());
+}

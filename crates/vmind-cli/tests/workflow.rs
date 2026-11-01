@@ -498,3 +498,35 @@ fn independent_processes_preserve_every_concurrent_journal_write() {
     assert_eq!(bodies.len(), 16);
     assert_eq!(cli(&["doctor", db])["healthy"], true);
 }
+
+#[test]
+fn report_prints_markdown_and_leaves_the_database_unchanged() {
+    let temp = Temp::new();
+    let path = temp.0.join("report.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    cli(&[
+        "--scope",
+        "p",
+        "task",
+        db,
+        "docs",
+        "blocked",
+        "Doku fehlt",
+        "Test",
+    ]);
+    let before = std::fs::read(&path).unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(["--scope", "p", "report", db])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let text = String::from_utf8(output.stdout).unwrap();
+    assert!(text.starts_with("# Projektbericht: p"));
+    assert!(text.contains("- **blocked** docs: Doku fehlt"));
+    assert_eq!(
+        cli(&["--scope", "p", "report", db])["stats"]["schema_version"],
+        5
+    );
+    assert_eq!(std::fs::read(&path).unwrap(), before);
+}

@@ -219,6 +219,11 @@ vmind validate vmind.db 1 'Dein Name' 'Welcher Test lief und mit welchem Ergebni
 
 Oder du lässt einen echten Test entscheiden, siehe nächster Abschnitt.
 
+Wo das Projekt steht, ohne eine KI zu fragen: `vmind --scope mein-projekt report
+vmind.db` gibt einen lesbaren Bericht in Markdown aus: Ziel, nächster Schritt, Aufgaben,
+letzte Entscheidungen, geprüftes Wissen mit letztem Prüflauf und getrennt davon
+ungeprüfte Vorschläge (Entwicklungsstand nach 0.2.0).
+
 ### Prüfbefehle: Tests entscheiden, was gilt
 
 Ein Eintrag kann einen **Prüfbefehl** bekommen, zum Beispiel den Test, der den Fehler
