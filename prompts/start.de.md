@@ -162,7 +162,7 @@ Pro Terminalschritt einen Befehl ausführen. Aktuelle Hilfe: `vmind --help`.
 - `chat DB GESPRÄCH_ID FRAGE`; setzt ein bestimmtes Gespräch fort.
 - `serve DB`; startet die JSONL-Schnittstelle.
 - `init DB`; nur für ausdrücklich gewünschte neue Datenbanken.
-- `start-prompt`; gibt diese Startanweisung aus.
+- `start-prompt [de|en]`; gibt diese Startanweisung aus (ohne Angabe Deutsch).
 
 V-Mind ersetzt weder das Denken noch die Prüfung durch die KI. Nutze es, um
 vorhandene Arbeit wiederzufinden, eigene Schritte nachvollziehbar zu hinterlassen

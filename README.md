@@ -118,7 +118,7 @@ compact `resume`, bundled SQLite. See the [changelog](CHANGELOG.md).
 | Readable errors | Invalid states receive explanatory messages |
 | Visible check evidence | Retrieved knowledge includes active-definition results and times; execution errors preserve earlier failed verdicts |
 
-**Automated tests:** 96 tests run on every change in GitHub Actions on Linux, together with
+**Automated tests:** 99 tests run on every change in GitHub Actions on Linux, together with
 Clippy (all warnings are errors) and a formatting check; macOS and Windows builds are
 checked too, including filename/backup runtime tests. Among other things they cover:
 
@@ -298,8 +298,14 @@ Development version after 0.2.0 (schema 6): Claude Code can also report every Ba
 and Write call through a `PostToolUse` hook to `vmind observe`. V-Mind then keeps only the
 tool, whether it completed or failed, and the project-relative file path; never commands,
 output, error text or file contents. `resume` shows the last three sessions in summary,
-marked as observed, not verified. Setup and limits (German):
-[docs/cli.md](docs/cli.md#beobachtungen-aus-claude-code-ab-schema-6).
+marked as observed, not verified. Setup and limits in English:
+[docs/claude-code.en.md](docs/claude-code.en.md#4-optional-record-tool-calls-posttooluse-hook-schema-6);
+full reference (German): [docs/cli.md](docs/cli.md#beobachtungen-aus-claude-code-ab-schema-6).
+
+**Start instructions for the AI:** `vmind start-prompt en` prints English instructions
+([prompts/start.en.md](prompts/start.en.md)) that tell the AI how to load the project
+state, record work and treat stored knowledge; `vmind start-prompt` prints the German
+original. Put the text into your host's project instructions, for example `CLAUDE.md`.
 
 ### 6. Get started
 
@@ -501,8 +507,10 @@ Full list (German): [docs/cli.md](docs/cli.md#konfiguration-und-grenzen).
 
 ## Project
 
-| File | Contents (currently German) |
+| File | Contents (German unless marked) |
 |---|---|
+| [docs/claude-code.en.md](docs/claude-code.en.md) | **English:** MCP, start instructions and hooks for Claude Code, with what is tested |
+| [prompts/start.en.md](prompts/start.en.md) | **English:** start instructions for the AI (`vmind start-prompt en`) |
 | [docs/cli.md](docs/cli.md) | All commands, long projects, configuration, development |
 | [docs/protocol.md](docs/protocol.md) | JSONL protocol and MCP server |
 | [docs/design.md](docs/design.md) | Architecture and decisions |
