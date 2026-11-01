@@ -31,14 +31,16 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           mkdir -p dist
-          cp target/release/vmind README.md README.de.md LICENSE dist/
+          cp target/release/vmind README.md README.de.md LICENSE CHANGELOG.md CONTRIBUTING.md AGENTS.md dist/
+          cp -R docs prompts examples dist/
           tar -czf "vmind-${GITHUB_REF_NAME}-${{ matrix.name }}.tar.gz" -C dist .
       - name: Package (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force dist | Out-Null
-          Copy-Item target/release/vmind.exe, README.md, README.de.md, LICENSE dist/
+          Copy-Item target/release/vmind.exe, README.md, README.de.md, LICENSE, CHANGELOG.md, CONTRIBUTING.md, AGENTS.md dist/
+          Copy-Item -Recurse docs, prompts, examples dist/
           Compress-Archive -Path dist/* -DestinationPath "vmind-$env:GITHUB_REF_NAME-${{ matrix.name }}.zip"
       - uses: actions/upload-artifact@v4
         with:
