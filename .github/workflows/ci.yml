@@ -20,8 +20,8 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Tests
         run: cargo test --workspace --locked
-  # Die Tests nutzen Unix-Werkzeuge (sh, sleep); auf macOS und Windows wird nur gebaut,
-  # damit die Release-Programme dort sicher entstehen.
+  # Die Gesamtsuite nutzt Unix-Werkzeuge; portable Dateipfad-/Sicherungstests
+  # laufen zusätzlich auf macOS und Windows.
   build:
     strategy:
       fail-fast: false
@@ -36,3 +36,5 @@ jobs:
           toolchain: 1.95.0
       - name: Build
         run: cargo build --workspace --locked
+      - name: Backup and database filename runtime tests
+        run: cargo test --locked -p vmind-cli --test backup_paths
