@@ -68,7 +68,7 @@ fn summary(records: &[Record]) -> String {
         .iter()
         .map(|r| {
             format!(
-                "#{} [{} / {} / {}]\n{}\n→ {}\nQuelle: {}\nPrüfer: {}\nNachweis: {}",
+                "#{} [{} / {} / {}]\n{}\n→ {}\nQuelle: {}\nPrüfer: {}\nNachweis: {}\nPrüfzustand: {}",
                 r.id,
                 r.scope,
                 r.kind,
@@ -77,7 +77,8 @@ fn summary(records: &[Record]) -> String {
                 r.solution,
                 r.source,
                 r.validated_by.as_deref().unwrap_or("–"),
-                r.evidence.as_deref().unwrap_or("–")
+                r.evidence.as_deref().unwrap_or("–"),
+                check_cmd::evidence_note(&r.check)
             )
         })
         .collect::<Vec<_>>()

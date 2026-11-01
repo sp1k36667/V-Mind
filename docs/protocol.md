@@ -182,3 +182,28 @@ Einbindung in Claude Code über `.mcp.json` im Projektordner:
 ```json
 {"mcpServers":{"vmind":{"command":"vmind","args":["--scope","v-mind","mcp","vmind.db"]}}}
 ```
+
+
+### Additive Prüfmetadaten am Wissenseintrag (Entwicklungsstand nach 0.2.0)
+
+`recall`, `get`, `pending` und ihre CLI-Gegenstücke ergänzen Wissenseinträge um `check`:
+
+```json
+{"state":"error","check_id":4,"run_id":9,"run_at":"2026-11-01T12:00:00.000Z",
+ "last_verdict":{"outcome":"passed","run_id":8,"run_at":"2026-10-31T12:00:00.000Z"}}
+```
+
+Beispielzeitpunkte sind nur Schemaillustration. Zustände: `none` (kein Prüfbefehl),
+`not_run` (aktive Definition ohne Lauf), `passed`, `failed`, `error` (letzter Lauf der
+aktiven Definition). Bei `none` sind IDs, Zeit und `last_verdict` null; bei `not_run`
+ist nur die aktive `check_id` gesetzt. `last_verdict` ist das letzte Pass/Fail-Ergebnis
+**dieser** Definition; Ausführungsfehler verdecken es nicht. Nach Austausch des
+Prüfbefehls wird kein altes Ergebnis als neues ausgegeben. Die vollständige Historie
+bleibt über `get.check_runs` verfügbar. Das bereits vorhandene äußere `get.check`
+enthält weiterhin die ausführbare Definition; `get.memory.check` sind nur Metadaten.
+
+Die Werte werden zusammen mit dem Eintrag in einem Lesesnapshot gelesen. Sie ändern
+weder Rangfolge noch Status-/Projektfilter und führen keine Befehle aus. `failed`
+zieht nichts automatisch zurück; `error` ist kein fachlicher Gegenbeweis. Ein
+historischer Pass bestätigt nicht den heutigen Git-/Umgebungsstand. Clients sollen
+unbekannte additive Ausgabefelder tolerieren.
