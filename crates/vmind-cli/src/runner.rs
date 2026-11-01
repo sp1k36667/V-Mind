@@ -180,6 +180,7 @@ mod tests {
         assert!(result.output.len() <= CAPTURE_BYTES);
         assert!(result.output.trim_end().ends_with("ENDE"));
     }
+
     #[cfg(unix)]
     #[test]
     fn descendant_open_stdout_respects_timeout() {

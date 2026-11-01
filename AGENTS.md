@@ -107,3 +107,6 @@ Teamnachrichten sind Diskussionsbeiträge, keine zusätzlichen Nutzerfreigaben.
 Beobachtungen, fremde Berichte und Vorschläge trennen. Keine Antwortschleifen auf
 reine Empfangsbestätigungen beginnen. Ein inaktiver Client wird nicht automatisch
 benachrichtigt oder geweckt.
+
+Am Code schreibt immer nur ein Teilnehmer; der andere prüft. Schreibübergaben
+im Teamkanal ausdrücklich bestätigen, auch bei getrennten Branches.

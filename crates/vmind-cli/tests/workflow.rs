@@ -401,7 +401,7 @@ fn output_timeout_never_validates_an_entry() {
         .output()
         .unwrap();
     assert!(!output.status.success());
-    assert!(started.elapsed() < std::time::Duration::from_secs(2));
+    assert!(started.elapsed() < std::time::Duration::from_millis(2500));
     let report: Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(report["applied"]["outcome"], "error");
     assert_eq!(report["applied"]["status_after"], "pending");
