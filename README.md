@@ -133,13 +133,22 @@ a real project database from schema 4 to 5 with a verified backup, integrity che
 matching row counts; installation from the release on a fresh user profile without Rust or
 SQLite tools.
 
-**Experiments** (details below, all raw data in the repository):
+**Test list: all experiments, done and planned** (details below, all raw data in the
+repository):
 
-| Experiment | Result |
-|---|---|
-| Does a stored, verified solution help a small model? | Yes for reuse of the same solution; says nothing about learning |
-| Does a model get better from its own checked lessons? | No learning curve (Gemma 4 E2B pre-registered, 12B exploratory) |
-| Can a fresh model session continue a project from `resume`? | Pre-registered criteria missed: 117/165 vs. 133/165 for the same data as a flat list; cause found and fixed, follow-up prepared |
+| # | Question | Model | Status | Result |
+|---|---|---|---|---|
+| 1 | Does a stored, verified solution help a small model? | Gemma 4 E2B | done | Yes for reuse of the same solution (7/7 instead of 2/7 checks); says nothing about learning. [Report](docs/experiments/e2b-pilot.md) |
+| 2 | Does a model get better from its own checked lessons? | Gemma 4 E2B | done, pre-registered | No learning curve; 0 of 108 task runs solved; about one in five unchecked lessons clearly wrong. [Report](docs/experiments/lernkurve.md) |
+| 3 | Same question as 2 | Gemma 4 12B | done, exploratory | No learning curve either, but 12B fixed errors itself and its unchecked lessons were rarely wrong. [Report](docs/experiments/lernkurve.md#explorativer-lauf-mit-gemma-4-12b) |
+| 4 | Can a fresh session continue a project from `resume`? | Gemma 4 12B | done, pre-registered | Criteria missed: 117/165 vs. 133/165 for the same data as a flat list; cause found and fixed. [Report](docs/experiments/continuity-pilot.md) |
+| 5 | Does the fix help, and does the format matter? | Gemma 4 12B | pre-registered and frozen, not run yet | – [Plan](https://github.com/sp1k36667/V-Mind/blob/exp/continuity-2x2/docs/experiments/continuity-2x2-plan.md) |
+| 6 | Does one correct, verified lesson help on *new* tasks? | Gemma 4 12B | draft | – [Draft](docs/experiments/transfer-pilot-plan.md) |
+
+New experiments use **Gemma 4 12B only**. In tests 2 and 3, 12B fixed its own errors far more
+often and wrote far fewer wrong lessons than E2B, so it is the better basis for testing
+whether lessons help at all. Test 6 starts with a hand-written correct lesson: if even that
+does not help, self-written lessons cannot be the answer.
 
 **In progress** (open pull requests, under review): observing Claude Code tool calls through
 a hook (only tool, result and project path; never commands, output or file contents), new
