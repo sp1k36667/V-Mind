@@ -1,0 +1,17 @@
+{
+  "git_commit": "be01ee67cef2f54efe284f0b030707ce390d9685",
+  "model": "hf.co/google/gemma-4-12B-it-qat-q4_0-gguf:Q4_0",
+  "digest": "18a4d9511d9965d973356e62310a2793771c22456be408cc06a05f04a6376acd",
+  "seeds": [
+    3101,
+    3102,
+    3103,
+    3104,
+    3105
+  ],
+  "temperature": 0.7,
+  "num_ctx": 8192,
+  "num_predict": 512,
+  "source_sha256": "0c335f4fd22755980d1ee2eca5a1e7b0efc334ca35b1d52bdc11e2ed7e49d912",
+  "binary_sha256": "2e29bdfafe3b30a71919c638c704555d4492ebabd5a2ee34589c6ac2d4029cf3"
+}
