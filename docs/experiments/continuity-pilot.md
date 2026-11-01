@@ -88,6 +88,26 @@ nachträglich normalisiert.
   V meldete die fehlende Archiv-Portnummer in allen 15 Aufrufen als unbekannt.
   Ein eigener Werkzeugtest muss zeigen, ob ein Client ältere Details tatsächlich findet.
 
+## Nachträgliche beschreibende Prüfung der Punktverluste
+
+Claude hat alle Zahlen unabhängig aus den Rohdaten nachgerechnet und die betroffenen
+Antworten angesehen. Diese Analyse wurde erst nach dem Lauf vorgenommen; sie ändert
+weder die festgelegte Bewertung noch das negative Ergebnis.
+
+M liegt insgesamt 16 Punkte über V. Nach Fragen zerlegt: V verliert gegenüber M neun
+Punkte beim Datenordner, sieben beim nächsten Schritt, vier beim Backend und zwei beim
+unbekannten Produktivdatum; sechs Punkte gewinnt V bei anderen Fragen zurück.
+Die neun Ordnerverluste entstehen in Projekt 1 und 2 durch einen angehängten Satzpunkt,
+der schon im Zieltext unmittelbar nach dem Pfad steht. Die vier Backendverluste
+betreffen ebenfalls zusätzliche Wörter wie „Backend SQLite“. Das sind überwiegend
+Darstellungsabweichungen und keine falschen Backend- oder Ordnerbehauptungen.
+
+Dagegen nennt V in neun Antworten tatsächlich den überholten nächsten Schritt
+`old-packaging`. Dieser inhaltliche Fehler bleibt auch bei milderer Zeichensetzung
+bestehen. Alle 15 V-Antworten haben zusätzliche JSON-Felder; diese Vertragstreue ist
+von der fachlichen Richtigkeit einzelner Werte getrennt zu bewerten. Daraus folgt:
+**Die 16 Punkte Abstand dürfen nicht als 16 zusätzliche Sachfehler bezeichnet werden.**
+
 ## Aufwand und Grenzen
 
 Gemma-4-12B Q4_0, Temperatur 0,7, 8192 Kontext, maximal 512 Ausgabetokens, Seeds
