@@ -29,6 +29,7 @@ fn request(model: &str, question: &str, memories: &[Record], resume: Option<&Res
         .map(|m| {
             json!({
                 "id": m.id,
+                "check": m.check,
                 "kind": m.kind,
                 "scope": m.scope,
                 "truncated": m.problem.chars().count() > 600 || m.solution.chars().count() > 600
@@ -175,6 +176,40 @@ mod tests {
                 .contains("kein Test- oder Erledigungsnachweis")
         );
         assert_eq!(prompt["vmind_runtime"]["tools_available"], false);
+    }
+
+    #[test]
+    fn request_carries_a_failed_check_even_when_knowledge_remains_validated() {
+        let store = vmind_core::MemoryStore::in_memory().unwrap();
+        let id = store
+            .remember("long_term", "Problem", "Lösung", "Fixture")
+            .unwrap();
+        store.validate(id, "Tester", "manueller Nachweis").unwrap();
+        store
+            .set_check(id, &["command".into()], "/", "Tester")
+            .unwrap();
+        let check = store.active_check(id).unwrap().unwrap();
+        store
+            .apply_check(
+                &check,
+                &vmind_core::CheckResult {
+                    outcome: vmind_core::Outcome::Failed,
+                    exit_code: Some(1),
+                    duration_ms: 1,
+                    output: "Fixture".into(),
+                },
+                false,
+            )
+            .unwrap();
+        let memories = store.recall("Problem", "global", 3).unwrap();
+        let req = request("test-model", "Problem lösen", &memories, None);
+        let prompt: Value = serde_json::from_str(req["prompt"].as_str().unwrap()).unwrap();
+        assert_eq!(prompt["memory"][0]["check"]["state"], "failed");
+        assert_eq!(
+            prompt["memory"][0]["check"]["last_verdict"]["outcome"],
+            "failed"
+        );
+        assert_eq!(store.get(id).unwrap().unwrap().status, "validated");
     }
 
     fn mock_response(status: &str, body: &str) -> (String, thread::JoinHandle<()>) {

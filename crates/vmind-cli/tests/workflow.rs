@@ -338,6 +338,7 @@ fn check_commands_drive_the_learning_loop_end_to_end() {
     assert_eq!(ok["applied"]["status_after"], "validated");
     let found = cli(&["--scope", "p", "recall", db, "Markerdatei"]);
     assert_eq!(found[0]["validated_by"], "vmind check");
+    assert_eq!(found[0]["check"]["state"], "passed");
     let shown = cli(&["show", db, &id]);
     assert_eq!(shown["check"]["argv"][2], "test -f marker");
     assert_eq!(shown["check_runs"].as_array().unwrap().len(), 2);
@@ -347,6 +348,18 @@ fn check_commands_drive_the_learning_loop_end_to_end() {
     let (passed, report) = cli_status(&["--scope", "p", "revalidate", db]);
     assert!(!passed);
     assert_eq!(report["results"][0]["status_after"], "validated");
+    let retrieved = cli(&["--scope", "p", "recall", db, "Markerdatei"]);
+    assert_eq!(retrieved[0]["check"]["state"], "failed");
+    assert_eq!(retrieved[0]["status"], "validated");
+    let project = cli(&["--scope", "p", "report", db]);
+    assert_eq!(project["knowledge"][0]["check"]["state"], "failed");
+    let human = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(["--scope", "p", "recall", db, "Markerdatei"])
+        .output()
+        .unwrap();
+    assert!(human.status.success());
+    assert!(String::from_utf8(human.stdout).unwrap().contains("WARNUNG"));
+
     let (passed, report) = cli_status(&["--scope", "p", "revalidate", db, "--invalidate"]);
     assert!(!passed);
     assert_eq!(report["results"][0]["status_after"], "invalidated");

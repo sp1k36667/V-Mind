@@ -1,10 +1,14 @@
+mod check_evidence;
 mod checks;
+pub use check_evidence::{CheckEvidence, CheckState, CheckVerdict};
 mod maintenance;
 pub use maintenance::{BackupReport, DoctorReport, backup_database, inspect_database};
 mod observations;
+mod paths;
 mod project;
 pub use checks::{Applied, Check, CheckResult, CheckRun, Outcome};
 pub use observations::{Observation, SessionSummary};
+pub use paths::literal_file_path;
 pub use project::{ChatMessage, Conversation, JournalEntry, Resume};
 
 const SCHEMA_VERSION: i64 = 6;
@@ -40,6 +44,7 @@ pub struct Record {
     pub created_at: String,
     pub invalidated_by: Option<String>,
     pub invalidation_reason: Option<String>,
+    pub check: CheckEvidence,
 }
 
 #[derive(Debug, Serialize)]
@@ -76,6 +81,7 @@ fn record(row: &rusqlite::Row<'_>) -> Result<Record> {
         created_at: row.get(9)?,
         invalidated_by: row.get(10)?,
         invalidation_reason: row.get(11)?,
+        check: CheckEvidence::default(),
     })
 }
 
@@ -154,6 +160,12 @@ fn create_private(path: &Path) -> Result<()> {
 }
 
 impl MemoryStore {
+    /// Persistent filesystem filename, including names resembling a SQLite URI.
+    pub fn open_file(path: impl AsRef<Path>) -> Result<Self> {
+        Self::open(literal_file_path(path)?)
+    }
+    /// SQLite-compatible API, including explicitly chosen :memory: and file: URIs.
+    /// For persistent filenames use open_file; CLI commands always use file APIs.
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         create_private(path.as_ref())?;
         Self::from_connection(Connection::open(path)?)
@@ -161,13 +173,16 @@ impl MemoryStore {
     /// Öffnet nur eine vorhandene Datei, verhindert versehentliche neue Datenbanken bei Tippfehlern.
     pub fn open_existing(path: impl AsRef<Path>) -> Result<Self> {
         Self::from_connection(Connection::open_with_flags(
-            path,
+            literal_file_path(path)?,
             OpenFlags::SQLITE_OPEN_READ_WRITE,
         )?)
     }
     /// Reads only an existing current-schema database; never creates or upgrades.
     pub fn open_read_only(path: impl AsRef<Path>) -> Result<Self> {
-        let conn = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+        let conn = Connection::open_with_flags(
+            literal_file_path(path)?,
+            OpenFlags::SQLITE_OPEN_READ_ONLY,
+        )?;
         conn.busy_timeout(std::time::Duration::from_secs(5))?;
         let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
         if version != SCHEMA_VERSION {
@@ -182,7 +197,10 @@ impl MemoryStore {
     /// und stellt nichts um. Für Hintergrundaufrufe wie Hooks, die kein Upgrade auslösen
     /// dürfen.
     pub fn open_current(path: impl AsRef<Path>) -> Result<Self> {
-        let conn = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_WRITE)?;
+        let conn = Connection::open_with_flags(
+            literal_file_path(path)?,
+            OpenFlags::SQLITE_OPEN_READ_WRITE,
+        )?;
         conn.busy_timeout(std::time::Duration::from_secs(5))?;
         conn.pragma_update(None, "foreign_keys", true)?;
         let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
@@ -196,9 +214,15 @@ impl MemoryStore {
     /// Keeps several reads in one consistent SQLite snapshot. The callback must
     /// only read; use open_read_only when this must also be enforced by SQLite.
     pub fn read_snapshot<T>(&self, read: impl FnOnce(&Self) -> Result<T>) -> Result<T> {
-        let tx = self.conn.unchecked_transaction()?;
+        let tx = self
+            .conn
+            .is_autocommit()
+            .then(|| self.conn.unchecked_transaction())
+            .transpose()?;
         let result = read(self)?;
-        tx.commit()?;
+        if let Some(tx) = tx {
+            tx.commit()?;
+        }
         Ok(result)
     }
     pub fn in_memory() -> Result<Self> {
@@ -302,16 +326,16 @@ impl MemoryStore {
         )? == 1)
     }
     pub fn get(&self, id: i64) -> Result<Option<Record>> {
-        self.conn
-            .query_row(
-                &format!(
-                    "SELECT {FIELDS} FROM memories m
-            LEFT JOIN invalidations i ON i.memory_id=m.id WHERE m.id=?1"
-                ),
-                [id],
-                record,
-            )
-            .optional()
+        self.read_snapshot(|store| {
+            let mut found = store.conn.query_row(
+                &format!("SELECT {FIELDS} FROM memories m LEFT JOIN invalidations i ON i.memory_id=m.id WHERE m.id=?1"),
+                [id], record,
+            ).optional()?;
+            if let Some(record) = found.as_mut() {
+                record.check = store.check_evidence(id)?;
+            }
+            Ok(found)
+        })
     }
     pub fn history(&self, id: i64) -> Result<Vec<Event>> {
         let mut stmt = self.conn.prepare(
@@ -360,28 +384,30 @@ impl MemoryStore {
             return Err(invalid("Limit muss 1 bis 20 sein"));
         }
         let terms = search_terms(query);
-        let mut found = self.ranked(
-            "memories_fts",
-            &match_expression(terms.iter()),
-            scope,
-            limit,
-        )?;
-        if found.len() < limit {
-            let partial = match_expression(
-                terms
-                    .iter()
-                    .filter(|t| t.chars().count() >= MIN_PARTIAL_TERM_CHARS),
-            );
-            for extra in self.ranked("memories_trigram", &partial, scope, limit)? {
-                if found.len() == limit {
-                    break;
-                }
-                if !found.iter().any(|r| r.id == extra.id) {
-                    found.push(extra);
+        self.read_snapshot(|store| {
+            let mut found = store.ranked(
+                "memories_fts",
+                &match_expression(terms.iter()),
+                scope,
+                limit,
+            )?;
+            if found.len() < limit {
+                let partial = match_expression(
+                    terms
+                        .iter()
+                        .filter(|t| t.chars().count() >= MIN_PARTIAL_TERM_CHARS),
+                );
+                for extra in store.ranked("memories_trigram", &partial, scope, limit)? {
+                    if found.len() == limit {
+                        break;
+                    }
+                    if !found.iter().any(|r| r.id == extra.id) {
+                        found.push(extra);
+                    }
                 }
             }
-        }
-        Ok(found)
+            store.enrich_records(found)
+        })
     }
     /// Validierte aktive Treffer eines FTS-Index im Bereich plus global, nach BM25.
     fn ranked(
@@ -407,13 +433,18 @@ impl MemoryStore {
     }
     pub fn pending(&self, scope: &str) -> Result<Vec<Record>> {
         nonblank(scope)?;
-        let mut stmt = self.conn.prepare(&format!(
-            "SELECT {FIELDS} FROM memories m
+        self.read_snapshot(|store| {
+            let mut stmt = store.conn.prepare(&format!(
+                "SELECT {FIELDS} FROM memories m
             LEFT JOIN invalidations i ON i.memory_id=m.id
             WHERE m.status='pending' AND i.memory_id IS NULL AND m.scope IN ('global', ?1)
             ORDER BY m.id LIMIT 100"
-        ))?;
-        stmt.query_map([scope], record)?.collect()
+            ))?;
+            let records = stmt
+                .query_map([scope], record)?
+                .collect::<Result<Vec<_>>>()?;
+            store.enrich_records(records)
+        })
     }
     /// Validierte aktive Einträge im Bereich plus global, neueste zuerst.
     pub fn validated(&self, scope: &str, limit: usize) -> Result<Vec<Record>> {
@@ -421,14 +452,18 @@ impl MemoryStore {
         if !(1..=100).contains(&limit) {
             return Err(invalid("Limit muss 1 bis 100 sein"));
         }
-        let mut stmt = self.conn.prepare(&format!(
-            "SELECT {FIELDS} FROM memories m
+        self.read_snapshot(|store| {
+            let mut stmt = store.conn.prepare(&format!(
+                "SELECT {FIELDS} FROM memories m
             LEFT JOIN invalidations i ON i.memory_id=m.id
             WHERE m.status='validated' AND i.memory_id IS NULL AND m.scope IN ('global', ?1)
             ORDER BY m.id DESC LIMIT ?2"
-        ))?;
-        stmt.query_map(params![scope, limit as i64], record)?
-            .collect()
+            ))?;
+            let records = stmt
+                .query_map(params![scope, limit as i64], record)?
+                .collect::<Result<Vec<_>>>()?;
+            store.enrich_records(records)
+        })
     }
     pub fn stats(&self, scope: &str) -> Result<Stats> {
         nonblank(scope)?;

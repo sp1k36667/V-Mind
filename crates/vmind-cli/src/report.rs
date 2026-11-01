@@ -10,6 +10,7 @@ const REPORT_KNOWLEDGE: usize = 20;
 pub struct Knowledge {
     #[serde(flatten)]
     pub record: Record,
+    /// JSON compatibility field; human-readable notes use record.check.
     pub last_check_run: Option<CheckRun>,
 }
 
@@ -25,7 +26,11 @@ pub fn build(store: &MemoryStore, scope: &str) -> crate::Result<Report> {
     Ok(store.read_snapshot(|store| {
         let mut knowledge = Vec::new();
         for record in store.validated(scope, REPORT_KNOWLEDGE)? {
-            let last_check_run = store.check_runs(record.id, 1)?.into_iter().next();
+            let last_check_run = store
+                .check_runs(record.id, 1)?
+                .into_iter()
+                .next()
+                .filter(|run| Some(run.check_id) == record.check.check_id);
             knowledge.push(Knowledge {
                 record,
                 last_check_run,
@@ -73,21 +78,6 @@ fn status_rank(status: Option<&str>) -> u8 {
         Some("open") => 2,
         Some("done") => 3,
         _ => 4,
-    }
-}
-
-fn check_note(run: Option<&CheckRun>) -> String {
-    match run {
-        None => "kein Prüfbefehl ausgeführt".into(),
-        Some(r) if r.outcome == "failed" => format!(
-            "WARNUNG: letzter Prüflauf fehlgeschlagen am {}; Eintrag bleibt als validiert markiert, ist aktuell nicht erneut bestätigt",
-            day(&r.created_at)
-        ),
-        Some(r) if r.outcome == "error" => format!(
-            "WARNUNG: letzter Prüflauf mit Ausführungsfehler am {}; keine neue Aussage zur Gültigkeit",
-            day(&r.created_at)
-        ),
-        Some(r) => format!("letzter Prüflauf: {} am {}", r.outcome, day(&r.created_at)),
     }
 }
 
@@ -176,7 +166,7 @@ pub fn markdown(report: &Report) -> String {
             line(&m.source),
             m.validated_by.as_deref().map_or("?".into(), line),
             m.evidence.as_deref().map_or("?".into(), line),
-            check_note(k.last_check_run.as_ref())
+            crate::check_cmd::evidence_note(&m.check)
         ));
     }
     out.extend([
@@ -268,7 +258,7 @@ mod tests {
         let pending_entry = text.find("Vermutung → ungeklärt").unwrap();
         assert!(knowledge < validated_entry && validated_entry < pending);
         assert!(pending < pending_entry);
-        assert!(text.contains("Bestätigt von Prüfer: Test bestanden. kein Prüfbefehl ausgeführt."));
+        assert!(text.contains("Bestätigt von Prüfer: Test bestanden. kein Prüfbefehl hinterlegt."));
         assert!(text.contains("noch nicht bestätigt"));
     }
 

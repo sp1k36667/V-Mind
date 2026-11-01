@@ -135,6 +135,21 @@ Grenzen und Sicherheit:
 - Wer Schreibzugriff auf die Datenbankdatei hat, kann Prüfbefehle direkt ändern.
   `revalidate` nur auf eigenen, vertrauenswürdigen Datenbanken ausführen.
 
+### Prüfergebnis direkt beim Abruf (Entwicklungsstand nach 0.2.0)
+
+`recall`, `show`, `pending`, `report` und der Ollama-Kontext enthalten `check` pro
+Wissenseintrag. Es beschreibt ausschließlich die **aktive** Prüfbefehlsdefinition:
+`none` = kein Prüfbefehl (manuelle Nachweise bleiben möglich), `not_run` = noch kein
+Lauf, sonst `passed`, `failed` oder `error` für den letzten Lauf. IDs und Zeitpunkte
+machen den Befund nachlesbar. Ein Ausführungsfehler verdeckt den letzten Pass/Fail-
+Befund dieser Definition nicht (`last_verdict`).
+
+Ein Fehlschlag wird sichtbar gewarnt, ändert den gespeicherten Status aber nur bei
+bewusstem Rückzug. Die Abrufrangfolge und Status-/Bereichsfilter bleiben unverändert.
+Eine ersetzte Definition übernimmt kein früheres Testergebnis: Sie beginnt mit
+`not_run`. Der Abruf führt nichts aus; auch ein `passed` bestätigt nicht den heutigen
+Git-Commit, die aktuelle Umgebung oder die fachliche Erklärung des Eintrags.
+
 ## Direktes Programm installieren
 
 ```sh
