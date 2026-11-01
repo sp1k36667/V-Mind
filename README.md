@@ -113,10 +113,14 @@ compact `resume`, bundled SQLite. See the [changelog](CHANGELOG.md).
 | Automatic backup before upgrades | Every schema upgrade first writes and verifies a backup; if that fails, nothing is changed |
 | `vmind report DB` | Readable Markdown report for people; strictly read-only, verified knowledge and unverified proposals kept apart |
 | Cleaner `resume` | Superseded goals, next steps and task states no longer appear next to the current ones |
+| Optional tool observations (schema 6) | Claude Code hook records tool, result and bounded relative project paths, never contents, commands or output |
+| File protection | New Unix databases use mode 0600; URI-shaped file names are treated literally |
+| Readable errors | Invalid states receive explanatory messages |
+| Visible check evidence | Retrieved knowledge includes active-definition results and times; execution errors preserve earlier failed verdicts |
 
-**Automated tests:** 75 tests run on every change in GitHub Actions on Linux, together with
+**Automated tests:** 96 tests run on every change in GitHub Actions on Linux, together with
 Clippy (all warnings are errors) and a formatting check; macOS and Windows builds are
-checked too. Among other things they cover:
+checked too, including filename/backup runtime tests. Among other things they cover:
 
 - upgrades from older schemas without data loss, and failed upgrades that leave the
   database untouched;
@@ -142,7 +146,7 @@ repository):
 | 2 | Does a model get better from its own checked lessons? | Gemma 4 E2B | done, pre-registered | No learning curve; 0 of 108 task runs solved; about one in five unchecked lessons clearly wrong. [Report](docs/experiments/lernkurve.md) |
 | 3 | Same question as 2 | Gemma 4 12B | done, exploratory | No learning curve either, but 12B fixed errors itself and its unchecked lessons were rarely wrong. [Report](docs/experiments/lernkurve.md#explorativer-lauf-mit-gemma-4-12b) |
 | 4 | Can a fresh session continue a project from `resume`? | Gemma 4 12B | done, pre-registered | Criteria missed: 117/165 vs. 133/165 for the same data as a flat list; cause found and fixed. [Report](docs/experiments/continuity-pilot.md) |
-| 5 | Does the fix help, and does the format matter? | Gemma 4 12B | pre-registered and frozen, not run yet | – [Plan](https://github.com/sp1k36667/V-Mind/blob/exp/continuity-2x2/docs/experiments/continuity-2x2-plan.md) |
+| 5 | Does the fix help, and does the format matter? | Gemma 4 12B | done, 80 pre-registered calls | Obsolete next steps: JSON 1→0, text 2→0 (out of 15 each); no overall accuracy gain. [Report](docs/experiments/continuity-2x2.md) |
 | 6 | Does one correct, verified lesson help on *new* tasks? | Gemma 4 12B | draft | – [Draft](docs/experiments/transfer-pilot-plan.md) |
 
 New experiments use **Gemma 4 12B only**. In tests 2 and 3, 12B fixed its own errors far more
@@ -150,10 +154,9 @@ often and wrote far fewer wrong lessons than E2B, so it is the better basis for 
 whether lessons help at all. Test 6 starts with a hand-written correct lesson: if even that
 does not help, self-written lessons cannot be the answer.
 
-**In progress** (open pull requests, under review): observing Claude Code tool calls through
-a hook (only tool, result and project path; never commands, output or file contents), new
-database files readable only by their owner, clearer error messages, and the follow-up
-continuity test. [Open pull requests](https://github.com/sp1k36667/V-Mind/pulls).
+**In progress:** more complete download packages and further operations/privacy acceptance. The real project database still uses schema 5;
+schema 6 has so far been tested on isolated databases.
+[Open pull requests](https://github.com/sp1k36667/V-Mind/pulls).
 
 **How it is developed:** the maintainer sets goals and priorities. Two AI assistants, Claude
 (Anthropic) and Codex (OpenAI), write and review the code. Only one of them writes code at a
@@ -431,10 +434,13 @@ Re-checking the raw answers showed where the 16 points went: 7 were real errors,
 `resume` showed old "next step" entries next to the current one and the model sometimes
 picked an old one; most of the rest were correct facts in the wrong form (a quoted folder
 with a trailing full stop, "Backend SQLite" instead of "SQLite"). The old entries are now
-filtered out of `resume`. A follow-up that separates this fix from the presentation format
-is pre-registered with new projects and seeds, but has not been run yet.
+filtered out of `resume`. The pre-registered 2×2 follow-up with 80 new calls is complete: known obsolete next
+steps fell from 1/2 to 0/0 in JSON/text. Overall accuracy did not improve (159→156 and
+152→144 correct available facts out of 160 each). Ambiguous questions asking for an
+“identifier” often produced the record ID rather than the expected text. The report
+retains the original scoring; this is no general learning result.
 [Report (German)](docs/experiments/continuity-pilot.md),
-[follow-up plan (German)](https://github.com/sp1k36667/V-Mind/blob/exp/continuity-2x2/docs/experiments/continuity-2x2-plan.md).
+[follow-up report and limits (German)](docs/experiments/continuity-2x2.md).
 
 ## Trust, privacy and backups
 

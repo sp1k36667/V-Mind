@@ -51,8 +51,9 @@ scheitern; dann wird kein Erfolg gemeldet.
 
 ## Automatische Sicherung vor Schemaänderungen
 
-Vor der Migration einer vorhandenen Dateidatenbank mit Schema 1 bis 4 wird daneben
-eine geprüfte Sicherung `DB.before-schema-5-ZEIT-PID.db` erstellt. Der Pfad wird auf
+Vor der Migration einer vorhandenen Dateidatenbank mit einem älteren unterstützten Schema wird daneben
+eine geprüfte Sicherung `DB.before-schema-N-ZEIT-PID.db` erstellt (`N` ist die
+Zielversion, im Entwicklungsstand Schema 6). Der Pfad wird auf
 stderr ausgegeben (JSON/MCP-stdout bleibt sauber). Die Migration hält dabei ihre
 Schreibsperre; der Snapshot entsteht über eine separate rein lesende Verbindung.
 Scheitert die Sicherung, findet kein Upgrade statt. Auch die Migration selbst bleibt

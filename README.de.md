@@ -122,10 +122,14 @@ kompaktes `resume`, eingebautes SQLite. Siehe [Changelog](CHANGELOG.md).
 | Automatische Sicherung vor Upgrades | Jede Schemaumstellung schreibt und prüft zuerst eine Sicherung; scheitert sie, bleibt alles unverändert |
 | `vmind report DB` | Lesbarer Bericht in Markdown für Menschen; strikt nur lesend, geprüftes Wissen und ungeprüfte Vorschläge getrennt |
 | Aufgeräumtes `resume` | Überholte Ziele, nächste Schritte und Aufgabenstände erscheinen nicht mehr neben den aktuellen |
+| Optionale Werkzeugbeobachtung (Schema 6) | Claude-Code-Hook meldet Werkzeug, Ergebnis und begrenzte relative Projektpfade; keine Inhalte, Befehle oder Ausgaben |
+| Dateischutz | Neue Datenbanken erhalten unter Unix Modus 0600; URI-artige Dateinamen werden wörtlich behandelt |
+| Verständliche Fehler | Ungültige Zustände erhalten erklärende Meldungen |
+| Sichtbarer Prüfzustand | Wissensabruf zeigt letzte Prüfung der aktiven Definition samt Zeit; Fehler verdecken keinen früheren Fehlbefund |
 
-**Automatische Tests:** 75 Tests laufen bei jeder Änderung in GitHub Actions unter Linux,
+**Automatische Tests:** 96 Tests laufen bei jeder Änderung in GitHub Actions unter Linux,
 zusammen mit Clippy (jede Warnung ist ein Fehler) und einer Formatprüfung; die Builds für
-macOS und Windows werden ebenfalls geprüft. Abgedeckt sind unter anderem:
+macOS und Windows werden ebenfalls geprüft; dort laufen zusätzlich die Dateipfad-/Sicherungstests. Abgedeckt sind unter anderem:
 
 - Upgrades älterer Schemas ohne Datenverlust; fehlgeschlagene Upgrades lassen die
   Datenbank unverändert;
@@ -152,7 +156,7 @@ im Repository):
 | 2 | Wird ein Modell durch eigene geprüfte Lehren besser? | Gemma 4 E2B | durchgeführt, vorab geplant | Keine Lernkurve; 0 von 108 Aufgabenläufen gelöst; etwa jede fünfte ungeprüfte Lehre eindeutig falsch. [Bericht](docs/experiments/lernkurve.md) |
 | 3 | Gleiche Frage wie 2 | Gemma 4 12B | durchgeführt, explorativ | Ebenfalls keine Lernkurve, aber 12B behob Fehler selbst, und seine ungeprüften Lehren waren selten falsch. [Bericht](docs/experiments/lernkurve.md#explorativer-lauf-mit-gemma-4-12b) |
 | 4 | Kann eine frische Sitzung ein Projekt aus `resume` fortsetzen? | Gemma 4 12B | durchgeführt, vorab geplant | Kriterien verfehlt: 117/165 gegen 133/165 für dieselben Daten als flache Liste; Ursache gefunden und behoben. [Bericht](docs/experiments/continuity-pilot.md) |
-| 5 | Hilft die Korrektur, und spielt das Format eine Rolle? | Gemma 4 12B | vorab geplant und eingefroren, noch nicht gelaufen | – [Plan](https://github.com/sp1k36667/V-Mind/blob/exp/continuity-2x2/docs/experiments/continuity-2x2-plan.md) |
+| 5 | Hilft die Korrektur, und spielt das Format eine Rolle? | Gemma 4 12B | durchgeführt, 80 vorab geplante Aufrufe | Alte nächste Schritte: JSON 1→0, Text 2→0 (von je 15); Gesamtgenauigkeit steigt nicht. [Bericht](docs/experiments/continuity-2x2.md) |
 | 6 | Hilft eine richtige, geprüfte Lehre bei *neuen* Aufgaben? | Gemma 4 12B | Entwurf | – [Entwurf](docs/experiments/transfer-pilot-plan.md) |
 
 Neue Versuche laufen **nur noch mit Gemma 4 12B**. In den Versuchen 2 und 3 hat 12B seine
@@ -161,10 +165,8 @@ damit die bessere Grundlage, um zu prüfen, ob Lehren überhaupt helfen. Versuch
 einer von Hand geschriebenen, richtigen Lehre: Hilft selbst die nicht, können selbst
 geschriebene Lehren nicht die Lösung sein.
 
-**In Arbeit** (offene Pull Requests, in Prüfung): Beobachtung von Claude-Code-Werkzeugaufrufen
-über einen Hook (nur Werkzeug, Ergebnis und Projektpfad; nie Befehle, Ausgaben oder
-Dateiinhalte), neue Datenbankdateien nur für den Besitzer lesbar, verständlichere
-Fehlermeldungen und der Fortsetzungs-Folgeversuch.
+**In Arbeit:** vollständigere Downloadpakete und weitere Betriebs-/Datenschutzabnahme. Die echte Datenbank verwendet weiterhin Schema 5;
+Schema 6 ist bislang an isolierten Datenbanken geprüft.
 [Offene Pull Requests](https://github.com/sp1k36667/V-Mind/pulls).
 
 **Wie entwickelt wird:** Der Projektinhaber legt Ziele und Prioritäten fest. Zwei
@@ -448,11 +450,13 @@ unverändert veröffentlicht. Die Nachprüfung der Rohantworten zeigt, woher die
 kommen: 7 waren echte Fehler, weil `resume` alte „nächste Schritte“ neben dem aktuellen
 zeigte und das Modell manchmal einen alten nannte; der größte Rest waren richtige Fakten in
 falscher Form (ein Ordner mit Satzpunkt, „Backend SQLite“ statt „SQLite“). Die alten
-Einträge filtert `resume` inzwischen heraus. Ein Folgeversuch, der diese Korrektur von der
-Darstellungsform trennt, ist mit neuen Projekten und Seeds vorab festgelegt, aber noch
-nicht gelaufen.
+Einträge filtert `resume` inzwischen heraus. Der vorab geplante 2×2-Folgelauf mit 80 neuen Aufrufen ist abgeschlossen: Bekannte
+überholte nächste Schritte fallen in JSON/Text von 1/2 auf 0/0. Die Gesamtgenauigkeit
+steigt dabei nicht (159→156 und 152→144 richtige verfügbare Fakten von je 160).
+Mehrdeutige Fragen nach einer „Kennung“ führten oft zur Datensatz-ID statt zum erwarteten
+Text. Der Bericht behält die ursprüngliche Wertung bei; keine allgemeine Lernwirkung.
 [Bericht](docs/experiments/continuity-pilot.md),
-[Plan des Folgeversuchs](https://github.com/sp1k36667/V-Mind/blob/exp/continuity-2x2/docs/experiments/continuity-2x2-plan.md).
+[Bericht und Grenzen des Folgeversuchs](docs/experiments/continuity-2x2.md).
 
 ## Vertrauen, Datenschutz und Sicherung
 
