@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 – unreleased (draft)
+## 0.2.0 – unreleased
 
 First tagged release. Requires a database migration to schema 5; back up `vmind.db`
 before the first start of the new version (see "Upgrading").

@@ -21,7 +21,7 @@ V-Mind ist modellunabhängig. Es funktioniert als **MCP-Server** (z. B. mit Clau
 über die Kommandozeile, über ein einfaches JSONL-Protokoll und mit lokalen Modellen
 über Ollama.
 
-> Status: experimenteller Prototyp. 50 automatische Tests, MIT-Lizenz.
+> Status: experimenteller Prototyp. 59 automatische Tests, MIT-Lizenz.
 
 ## Was V-Mind anders macht
 
@@ -256,9 +256,22 @@ erzeugte und geprüfte Lösung. Aufgabe, Einstellungen und Prüfungen waren glei
 **Ehrliche Einordnung:** Das zeigt, dass ein kleines Modell eine gespeicherte,
 geprüfte Lösung zuverlässig wiederverwenden kann. Die Ausgabe war bytegleich mit
 der Referenz. Es zeigt *nicht*, dass das Modell dazulernt oder neue Aufgaben löst.
-Der nächste geplante Versuch prüft, ob gespeicherte Erfahrungen auch bei
-*veränderten* Aufgaben helfen.
 [Aufbau, Messwerte und Grenzen im Detail](docs/experiments/e2b-pilot.md).
+
+## Zweiter Versuch: Wird ein Modell durch eigene geprüfte Lehren besser?
+
+Über sechs *verschiedene* Aufgaben hinweg speicherte das Modell behobene Fehler als
+Lehren. In Bedingung B zählte eine Lehre erst nach bestandener Prüfung, in C ungeprüft.
+**Ergebnis: keine Lernkurve.** Gemma 4 E2B (vorab geplant) löste keinen der 108
+Aufgabenläufe; die Hypothesen werden nicht gestützt. Gemma 4 12B (explorativ) löste
+einige Aufgaben, wurde durch geprüfte Lehren aber ebenfalls nicht besser.
+
+Gezeigt haben die Läufe: Ungeprüftes Gedächtnis sammelt bei einem schwachen Modell
+falsche Lehren (in einer E2B-Stichprobe etwa jede fünfte eindeutig falsch), und die
+Bestätigung über „die Prüfung, die vorher fehlschlug, besteht jetzt“ ist zu grob, weil
+ein Fix oft viele Prüfungen gleichzeitig umschaltet. Ein kleinerer Folgeversuch, der den
+Transfer einer einzelnen geprüften Lehre misst, ist entworfen, aber nicht gelaufen.
+[Bericht](docs/experiments/lernkurve.md), [Entwurf Folgeversuch](docs/experiments/transfer-pilot-plan.md).
 
 ## Grenzen
 
@@ -282,6 +295,7 @@ Vollständige Liste: [docs/cli.md](docs/cli.md#konfiguration-und-grenzen).
 | [docs/design.md](docs/design.md) | Architektur und Entscheidungen |
 | [docs/start-prompt.md](docs/start-prompt.md) | Startanweisung für KI-Clients |
 | [AGENTS.md](AGENTS.md) | Arbeitsregeln für KIs, die an V-Mind selbst arbeiten |
+| [CHANGELOG.md](CHANGELOG.md) | Änderungen je Version (Englisch) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Beiträge und Prüfungen |
 
 Aufbau: `crates/vmind-core` (SQLite-Speicher und Abruf, ohne Modellbezug) und
