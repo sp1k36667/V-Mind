@@ -15,6 +15,12 @@
 
 ### Changed
 
+- `recall` finds longer German word forms through a simple stem ("Rundungsfehlern" finds
+  "Rundungsfehler"), ignores more function words including negations, and drops hits
+  that contain fewer than half as many query terms as the best hit. Retrieval corpus v2:
+  longer forms 0/10 → 8/10, fewer unrelated hits; one pre-registered regression
+  criterion was missed (two v1 queries that only matched via function words). Report:
+  `docs/experiments/abruf-korpus-v2.md` (German).
 - `resume` no longer lists superseded goals, next steps and task states among the recent
   events; the full history stays in `journal`. Found through the continuity pilot. (#14)
 

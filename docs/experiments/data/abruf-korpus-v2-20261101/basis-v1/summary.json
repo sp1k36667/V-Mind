@@ -1,0 +1,62 @@
+{
+  "korpus": "Abrufkorpus v1",
+  "limit": 5,
+  "reproduzierbar": true,
+  "verstoesse": [],
+  "harte_kriterien_bestanden": true,
+  "kennzahlen": {
+    "ablenker/positiv": {
+      "fragen": 6,
+      "treffer_at1": 6,
+      "treffer_at5": 6,
+      "mrr": 1.0,
+      "vor_ablenker": 6
+    },
+    "bereich/negativ": {
+      "fragen": 3,
+      "leer": 2,
+      "mittlere_treffer": 1.67
+    },
+    "bereich/positiv": {
+      "fragen": 3,
+      "treffer_at1": 3,
+      "treffer_at5": 3,
+      "mrr": 1.0
+    },
+    "kein_treffer/negativ": {
+      "fragen": 6,
+      "leer": 3,
+      "mittlere_treffer": 1.83
+    },
+    "status/negativ": {
+      "fragen": 3,
+      "leer": 1,
+      "mittlere_treffer": 3.33
+    },
+    "status/positiv": {
+      "fragen": 1,
+      "treffer_at1": 1,
+      "treffer_at5": 1,
+      "mrr": 1.0
+    },
+    "umformuliert/positiv": {
+      "fragen": 8,
+      "treffer_at1": 5,
+      "treffer_at5": 5,
+      "mrr": 0.625
+    },
+    "wortform/positiv": {
+      "fragen": 5,
+      "treffer_at1": 3,
+      "treffer_at5": 3,
+      "mrr": 0.6
+    },
+    "wortgleich/positiv": {
+      "fragen": 10,
+      "treffer_at1": 10,
+      "treffer_at5": 10,
+      "mrr": 1.0
+    },
+    "beifang_je_positivfrage": 2.61
+  }
+}
