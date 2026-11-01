@@ -202,6 +202,22 @@ pub fn markdown(report: &Report) -> String {
     }
     out.extend([
         String::new(),
+        format!(
+            "## Beobachtete Werkzeugaufrufe (nicht geprüft; letzte {} Sitzungen, {} Aufrufe insgesamt)",
+            r.observed_sessions.len(),
+            r.observation_count
+        ),
+        String::new(),
+    ]);
+    if r.observed_sessions.is_empty() {
+        out.push("Keine Beobachtungen gespeichert.".into());
+    }
+    for l in crate::observed_lines(&r.observed_sessions) {
+        // Sitzungs-IDs und Pfade stammen vom Host; wie alle Werte maskieren.
+        out.push(format!("- {}", line(l.trim_start_matches("- "))));
+    }
+    out.extend([
+        String::new(),
         "## Umfang".into(),
         String::new(),
         format!(

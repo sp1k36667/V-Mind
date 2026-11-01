@@ -75,5 +75,5 @@ fn partial_index_follows_updates_after_withdrawal() {
     let id = validated(&s, "global", "Schemamigration");
     s.invalidate(id, "Prüfer", "falsch").unwrap();
     assert!(s.recall("Migration", "global", 5).unwrap().is_empty());
-    assert_eq!(s.stats("global").unwrap().schema_version, 5);
+    assert_eq!(s.stats("global").unwrap().schema_version, 6);
 }

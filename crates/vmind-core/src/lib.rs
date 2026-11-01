@@ -1,11 +1,13 @@
 mod checks;
 mod maintenance;
 pub use maintenance::{BackupReport, DoctorReport, backup_database, inspect_database};
+mod observations;
 mod project;
 pub use checks::{Applied, Check, CheckResult, CheckRun, Outcome};
+pub use observations::{Observation, SessionSummary};
 pub use project::{ChatMessage, Conversation, JournalEntry, Resume};
 
-const SCHEMA_VERSION: i64 = 5;
+const SCHEMA_VERSION: i64 = 6;
 
 // Persistentes, modellunabhängiges Gedächtnis mit nachvollziehbarer Validierung.
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Result, params};
@@ -147,6 +149,19 @@ impl MemoryStore {
         conn.pragma_update(None, "foreign_keys", true)?;
         Ok(Self { conn })
     }
+    /// Schreibt nur in eine vorhandene Datenbank mit aktuellem Schema; legt nichts an
+    /// und stellt nichts um. Für Hintergrundaufrufe wie Hooks, die kein Upgrade auslösen
+    /// dürfen.
+    pub fn open_current(path: impl AsRef<Path>) -> Result<Self> {
+        let conn = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_WRITE)?;
+        let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
+        if version != SCHEMA_VERSION {
+            return Err(invalid(
+                "Datenbank hat nicht das aktuelle Schema; zuerst doctor, backup und ein bewusstes Upgrade ausführen",
+            ));
+        }
+        Self::from_connection(conn)
+    }
     /// Keeps several reads in one consistent SQLite snapshot. The callback must
     /// only read; use open_read_only when this must also be enforced by SQLite.
     pub fn read_snapshot<T>(&self, read: impl FnOnce(&Self) -> Result<T>) -> Result<T> {
@@ -198,6 +213,10 @@ impl MemoryStore {
         }
         if version == 4 {
             tx.execute_batch(include_str!("../../../migrations/0005_partial_search.sql"))?;
+            version = 5;
+        }
+        if version == 5 {
+            tx.execute_batch(include_str!("../../../migrations/0006_observations.sql"))?;
         }
         tx.pragma_update(None, "user_version", SCHEMA_VERSION)?;
         tx.commit()?;

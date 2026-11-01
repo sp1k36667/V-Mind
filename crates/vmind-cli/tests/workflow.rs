@@ -526,7 +526,63 @@ fn report_prints_markdown_and_leaves_the_database_unchanged() {
     assert!(text.contains("- **blocked** docs: Doku fehlt"));
     assert_eq!(
         cli(&["--scope", "p", "report", db])["stats"]["schema_version"],
-        5
+        6
     );
     assert_eq!(std::fs::read(&path).unwrap(), before);
+}
+
+fn observe(db: &str, input: &str) -> std::process::Output {
+    use std::io::Write;
+    let mut child = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .env("CLAUDE_PROJECT_DIR", "/projekt")
+        .args(["--scope", "p", "observe", db])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    child
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(input.as_bytes())
+        .unwrap();
+    child.wait_with_output().unwrap()
+}
+
+#[test]
+fn observe_hook_stores_tool_and_path_but_never_content_command_or_error() {
+    let temp = Temp::new();
+    let path = temp.0.join("observe.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    let write = r#"{"session_id":"s1","tool_use_id":"toolu_w","hook_event_name":"PostToolUse",
+        "tool_name":"Write","cwd":"/projekt",
+        "tool_input":{"file_path":"/projekt/src/neu.rs","content":"GEHEIMER-INHALT"},
+        "tool_response":{"filePath":"/projekt/src/neu.rs","type":"create"}}"#;
+    let failure = r#"{"session_id":"s1","tool_use_id":"toolu_b","hook_event_name":"PostToolUseFailure",
+        "tool_name":"Bash","cwd":"/projekt","tool_input":{"command":"echo GEHEIMES-KOMMANDO"},
+        "error":"Exit code 1\nGEHEIMER-FEHLER","is_interrupt":false}"#;
+    for input in [write, failure, write] {
+        let out = observe(db, input);
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        assert!(out.stdout.is_empty());
+    }
+    let resume = cli(&["--scope", "p", "resume", db]);
+    assert_eq!(resume["observation_count"], 2);
+    let session = &resume["observed_sessions"][0];
+    assert_eq!(session["calls"], 2);
+    assert_eq!(session["failed"], 1);
+    assert_eq!(session["paths"][0], "src/neu.rs");
+    let bytes = String::from_utf8_lossy(&std::fs::read(&path).unwrap()).into_owned();
+    for secret in ["GEHEIMER-INHALT", "GEHEIMES-KOMMANDO", "GEHEIMER-FEHLER"] {
+        assert!(!bytes.contains(secret), "{secret} gespeichert");
+    }
+    let missing = temp.0.join("fehlt.db");
+    assert!(!observe(missing.to_str().unwrap(), write).status.success());
+    assert!(!missing.exists());
 }

@@ -1,3 +1,4 @@
+use crate::observations::{HOST, RESUME_SESSIONS, SessionSummary, session_summaries};
 use crate::{MemoryStore, invalid, nonblank};
 use rusqlite::{OptionalExtension, Result, params};
 use serde::Serialize;
@@ -47,6 +48,9 @@ pub struct Resume {
     pub conversation_id: Option<String>,
     pub chat_tail: Vec<ChatMessage>,
     pub message_count: i64,
+    /// Beobachtete Werkzeugaufrufe der letzten Sitzungen, zusammengefasst; nicht geprüft.
+    pub observed_sessions: Vec<SessionSummary>,
+    pub observation_count: i64,
 }
 const JOURNAL: &str = "id,scope,kind,task_key,task_status,body,source,created_at";
 fn entry(r: &rusqlite::Row<'_>) -> Result<JournalEntry> {
@@ -279,6 +283,12 @@ impl MemoryStore {
         drop(stmt);
         let message_count = found.as_ref().map_or(0, |c| c.message_count);
         let conversation_id = found.map(|c| c.id);
+        let observed_sessions = session_summaries(conn, scope, RESUME_SESSIONS)?;
+        let observation_count = conn.query_row(
+            "SELECT count(*) FROM observations WHERE scope=?1 AND host=?2",
+            params![scope, HOST],
+            |r| r.get(0),
+        )?;
         if let Some(tx) = tx {
             tx.commit()?;
         }
@@ -294,6 +304,8 @@ impl MemoryStore {
             conversation_id,
             chat_tail,
             message_count,
+            observed_sessions,
+            observation_count,
         })
     }
 }

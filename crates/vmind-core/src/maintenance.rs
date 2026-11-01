@@ -83,6 +83,9 @@ fn inspect(conn: &Connection) -> Result<DoctorReport> {
             "memories_trigram_update",
         ]);
     }
+    if version >= 6 {
+        required.extend(["observations", "observations_scope_session"]);
+    }
     let mut missing_objects = Vec::new();
     for name in required {
         let exists: bool = tx.query_row(

@@ -214,6 +214,45 @@ Schema fordert er ein bewusstes Upgrade, statt zu migrieren. Er enthält nichts,
 gespeichert ist; Lücken stehen ausdrücklich als „noch nicht gespeichert“ da. Mit `--json`
 kommen dieselben Daten als JSON.
 
+### Beobachtungen aus Claude Code (ab Schema 6)
+
+Damit ein Projektstand nicht davon abhängt, dass die KI ans Mitschreiben denkt, kann
+Claude Code jeden Bash-, Edit- und Write-Aufruf über einen Hook an V-Mind melden. In
+`.claude/settings.local.json` des Projekts:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {"matcher": "Bash|Edit|Write", "hooks": [{"type": "command",
+        "command": "vmind --scope v-mind observe \"$CLAUDE_PROJECT_DIR/vmind.db\""}]}
+    ],
+    "PostToolUseFailure": [
+      {"matcher": "Bash|Edit|Write", "hooks": [{"type": "command",
+        "command": "vmind --scope v-mind observe \"$CLAUDE_PROJECT_DIR/vmind.db\""}]}
+    ]
+  }
+}
+```
+
+`observe` liest die Hook-Meldung von stdin und speichert in einer eigenen Tabelle nur
+Sitzungs-ID, Aufruf-ID, Werkzeug, Ergebnis (`completed` oder `failed`) und bei Edit/Write
+den Dateipfad relativ zum Projektordner. **Befehle, Ausgaben, Fehlertexte und
+Dateiinhalte werden weder gespeichert noch ausgeführt;** Pfade außerhalb des Projekts
+werden weggelassen. Dieselbe Meldung zweimal ergibt keinen zweiten Eintrag; dieselbe
+Aufruf-ID mit anderem Inhalt wird abgelehnt. Andere Werkzeuge werden still ignoriert.
+`observe` legt keine Datenbank an und stellt kein Schema um: Ist die Datenbank älter,
+meldet der Hook einen Fehler, bis das Upgrade bewusst ausgeführt wurde.
+
+`resume` und `report` zeigen die letzten drei Sitzungen zusammengefasst (Zeitraum,
+Anzahl Aufrufe und Fehlschläge, Anzahl Dateien, bis zu fünf zuletzt betroffene Pfade)
+und die Gesamtzahl; Beobachtungen stehen nicht im Projekttagebuch und verdrängen dort
+nichts. **Beobachtet heißt nicht geprüft:** Ein abgeschlossener Bash-Aufruf ist kein
+bestandener Test, keine erledigte Aufgabe und keine Validierung. Unterstützt ist nur
+Claude Code; für den Chat der Desktop-App oder andere Clients gibt es keine Hooks.
+Beobachtungen werden derzeit nie automatisch gelöscht; die Tabelle wächst mit jeder
+Sitzung. Ein geprüfter Befehl zum Aufräumen folgt später.
+
 Mit `session-new DB TITEL` ein separates Gespräch anlegen, mit `chat DB ID FRAGE`
 fortsetzen. `sessions DB` zeigt die letzten 100 Gespräche des Bereichs. Explizite
 Gespräche benötigen den passenden Projektbereich bei `chat` und `resume`.
@@ -315,7 +354,9 @@ Migration 0001 wurde neu entworfen, weil die Migration aus dem alten Chat nicht
 verfügbar war. Migration 0002 ergänzt Volltextsuche, Bereiche, Rückzug und Historie.
 Migration 0003 ergänzt Projekttagebuch und Gespräche. Migration 0004 ergänzt
 Prüfbefehle (`memory_checks`) und Prüfläufe (`check_runs`). Migration 0005 ergänzt die
-Teilwortsuche (`memories_trigram`) und baut sie für vorhandene Einträge auf.
+Teilwortsuche (`memories_trigram`) und baut sie für vorhandene Einträge auf. Migration
+0006 ergänzt die Tabelle `observations` für Hook-Beobachtungen; bestehende Daten bleiben
+unverändert.
 Beim Import alter Einträge wird keine historische Prüfzeit erfunden.
 Vor Migrationen einer bestehenden Datenbank vorher mit der SQLite-Backup-API sichern; keine
 laufende Datenbank blind als Einzeldatei kopieren.

@@ -199,6 +199,13 @@ Projektordner (persönlich, nicht ins Repository einchecken):
 }
 ```
 
+Entwicklungsstand nach 0.2.0 (Schema 6): Claude Code kann zusätzlich jeden Bash-, Edit-
+und Write-Aufruf über einen `PostToolUse`-Hook an `vmind observe` melden. V-Mind behält
+nur Werkzeug, ob es abgeschlossen oder fehlgeschlagen ist, und den Dateipfad relativ zum
+Projekt; nie Befehle, Ausgaben, Fehlertexte oder Dateiinhalte. `resume` zeigt die letzten
+drei Sitzungen zusammengefasst, als beobachtet und nicht geprüft markiert. Einrichtung
+und Grenzen: [docs/cli.md](docs/cli.md#beobachtungen-aus-claude-code-ab-schema-6).
+
 ### 6. Loslegen
 
 Sag Claude zum Beispiel:

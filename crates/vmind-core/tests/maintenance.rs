@@ -93,7 +93,7 @@ fn backup_preserves_knowledge_history_project_and_wal_commits() {
             0o600
         );
     }
-    assert_eq!(report.schema_version, 5);
+    assert_eq!(report.schema_version, 6);
     let restored = MemoryStore::open_existing(out).unwrap();
     assert_eq!(restored.recall("Migration", "global", 5).unwrap()[0].id, id);
     assert_eq!(
@@ -135,7 +135,7 @@ fn migration_creates_verified_old_schema_snapshot_before_any_changes() {
             x.file_name()
                 .unwrap()
                 .to_string_lossy()
-                .contains("before-schema-5")
+                .contains("before-schema-6")
         })
         .collect::<Vec<_>>();
     assert_eq!(snapshots.len(), 1);
@@ -149,7 +149,7 @@ fn migration_creates_verified_old_schema_snapshot_before_any_changes() {
             .unwrap(),
         "alt"
     );
-    assert_eq!(inspect_database(p).unwrap().schema_version, 5);
+    assert_eq!(inspect_database(p).unwrap().schema_version, 6);
 }
 #[test]
 fn unhealthy_snapshot_fails_and_leaves_no_successful_backup() {
