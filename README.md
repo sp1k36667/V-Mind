@@ -35,20 +35,24 @@ Most AI memories store whatever the model considers important. V-Mind strictly s
 ```
 
 - **Only validated knowledge** is retrieved, always with source, reviewer and evidence.
-- **An AI can only propose knowledge.** Approval is deliberately not available through AI
-  tools, only through the command line or an executable check.
-- **Nothing is silently overwritten.** Outdated entries are withdrawn; every change stays
-  traceable in the history.
+- **Through MCP, an AI can only propose knowledge.** Approval is deliberately not offered
+  as an MCP tool, only on the command line or through an executable check. An AI that can
+  also run shell commands can call that command line too; see
+  [Trust, privacy and backups](#trust-privacy-and-backups).
+- **V-Mind's commands never silently overwrite.** Outdated entries are withdrawn; every
+  change made through V-Mind stays traceable in the history.
 - **Scopes** (`--scope`) keep projects apart; the `global` scope applies to all of them.
 - **Fully local:** one SQLite file, no cloud service, no GPU required.
 
 **The idea behind it: learning across runs, without training.** A model finds an error
-through a real test, fixes it, and proposes the lesson. Once a check confirms it, every
-later run can retrieve it and avoid the mistake from the start.
+through a real test, fixes it, and proposes the lesson. Once a check confirms it, later
+runs can retrieve it. Whether that makes a model avoid the mistake on *new* tasks is not
+shown yet; our experiments so far did not find a learning curve (see below). What works
+today is reliable continuation of projects and reuse of verified solutions.
 
-Related approaches such as Reflexion, Voyager or mem0 mostly store what the model
-*believes*. V-Mind stores what *verifiably worked*.
-[Detailed comparison (German)](docs/design.md#abgrenzung-zu-ähnlichen-ansätzen).
+In V-Mind, a stored lesson is not used until a person or an executable check has
+confirmed it, and the confirmation is kept with the entry.
+[How this relates to other approaches (German)](docs/design.md#abgrenzung-zu-ähnlichen-ansätzen).
 
 ## What is it for?
 
@@ -133,6 +137,38 @@ be used. After that Claude has these tools:
 | `pending`, `stats` | Show unverified entries and counts |
 | `session_new`, `sessions`, `message`, `messages` | Store and read conversations |
 
+**Claude desktop app, chat (outside the Code tab):** chat sessions do not read
+`.mcp.json`. Add the server to `claude_desktop_config.json` (Settings → Developer → Edit
+Config; on macOS `~/Library/Application Support/Claude/`, on Windows `%APPDATA%\Claude\`)
+and use **absolute paths**, because the app does not start in your project folder. This is
+a manual example; we have not tested it on every platform yet:
+
+```json
+{
+  "mcpServers": {
+    "vmind": {
+      "command": "/absolute/path/to/vmind",
+      "args": ["--scope", "my-project", "mcp", "/absolute/path/to/project/vmind.db"]
+    }
+  }
+}
+```
+
+**Check the setup.** In a terminal in the project folder:
+
+```sh
+vmind --scope my-project stats vmind.db
+```
+
+It should print the schema version and counts. If Claude does not list the `vmind` tools:
+
+| Symptom | Likely cause and fix |
+|---|---|
+| Server fails to start, "command not found" | `vmind` is not on the `PATH` of the app. Use the absolute path to the program in `command`. |
+| Server fails to start, database not found | The server only opens an existing database and never creates one because a path was mistyped. The path in `args` is relative to the folder the app starts in. Use an absolute path, or run `vmind init` there first. |
+| No approval prompt in Claude Code | Check the server state with `/mcp`; if the project server was declined, reset its approval choices with `claude mcp reset-project-choices` and start a new session. See the [official Claude Code MCP documentation](https://code.claude.com/docs/en/mcp). |
+| Old behaviour after an update | A running MCP server keeps the old program until Claude is restarted. Restart Claude after installing a new version. |
+
 ### 5. Optional: load the project state automatically
 
 A SessionStart hook hands Claude the project state right at session start, without Claude
@@ -201,7 +237,8 @@ vmind --scope my-project revalidate vmind.db
 
 Security: checks run without a shell (no `;`, `&&` or redirects), in a fixed directory and
 with a timeout. Setting and running checks is **only possible from the command line**, not
-via MCP, so an AI cannot slip a command into V-Mind. Make sure a check really tests
+via MCP, so an AI that only has the MCP tools cannot store a command in V-Mind. Read a check
+before you set it, like any command you are about to run. Make sure a check really tests
 something: `cargo test` with a mistyped test name runs zero tests and still reports success.
 Details (German): [docs/cli.md](docs/cli.md#prüfbefehle).
 
@@ -268,13 +305,55 @@ drafted but not run.
 [Report (German)](docs/experiments/lernkurve.md),
 [follow-up draft (German)](docs/experiments/transfer-pilot-plan.md).
 
+## Trust, privacy and backups
+
+**What V-Mind guarantees:** only entries marked *validated* are retrieved; every
+validation, withdrawal and check run made through V-Mind is recorded with who, when and
+with what evidence; V-Mind's commands never silently overwrite; a failed migration leaves
+the database unchanged. These guarantees cover V-Mind's own commands. A program that writes
+to the SQLite file directly bypasses them, and the history itself is not tamper-proof.
+
+**What it does not guarantee:**
+
+- **Validation is auditable, not tamper-proof.** The MCP tools cannot validate. But any
+  program or AI that can run shell commands or write files on your machine can call
+  `vmind validate` or edit the SQLite file directly. If an AI works with shell access, the
+  history shows what happened; it does not prevent it.
+- **A passing check confirms what the check tests**, not that the explanation in the entry
+  is right. Our experiments found lessons whose wording was wrong although their check
+  passed.
+- **Scopes are not access control.** Anyone who can read the file can read all scopes.
+
+**Privacy:** everything is stored unencrypted in one local SQLite file: knowledge, project
+journal and conversations. The store stays on your machine. `ask` sends the question and
+the retrieved context to the Ollama endpoint in `VMIND_OLLAMA_URL` (by default a local
+server; any other address you set receives that data). MCP clients pass what they read from
+V-Mind to their model, which may run in the cloud. Do not store passwords or keys. There is currently no command to
+delete an entry's content; if a secret ends up in the file, restore an earlier backup or
+remove it with SQLite tools, and treat the secret as exposed.
+
+**Backups and upgrades:** the database is one file; while it is being written, SQLite may
+keep temporary `-journal` (or `-wal`/`-shm`) files next to it. Copy the file only while no
+client is running, or use SQLite, which makes a consistent copy at any time:
+
+```sh
+sqlite3 vmind.db ".backup vmind-backup.db"
+```
+
+Before installing a new version, make a backup and stop or restart every client that uses
+the database (MCP servers keep running the old program). The new version upgrades the
+database on first use; the [changelog](CHANGELOG.md) lists schema changes. The development
+version after 0.2.0 adds `vmind backup` (verified, never overwrites), `vmind doctor`
+(read-only check) and an automatic verified backup before every schema upgrade; see
+[docs/operations.md](docs/operations.md) (German).
+
 ## Limits
 
 - Search (SQLite FTS5) finds whole words and parts of words (e.g. "Filter" in
   "Testfilter"), but not meanings: no synonyms and no translation.
-- A validation documents a check; V-Mind does not itself prove that a solution is correct.
-- Scopes organize knowledge but are not access control. Data is stored unencrypted in a
-  local file.
+- `resume` shows a bounded snapshot (open tasks, the latest decisions and events). Older
+  details stay in the journal and must be read with `journal`.
+- No learning effect is proven; see the experiments above.
 - No automatic integration with Codex or ChatGPT; V-Mind does not observe other programs.
 
 Full list (German): [docs/cli.md](docs/cli.md#konfiguration-und-grenzen).

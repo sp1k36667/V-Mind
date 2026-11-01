@@ -36,21 +36,26 @@ V-Mind trennt dagegen streng zwischen *vermutet* und *geprüft*:
 ```
 
 - **Nur validiertes Wissen** wird abgerufen, immer mit Quelle, Prüfer und Nachweis.
-- **Eine KI kann Wissen nur vorschlagen.** Die Freigabe ist absichtlich nicht über
-  KI-Werkzeuge möglich, nur über die Kommandozeile.
-- **Nichts wird still überschrieben.** Veraltetes wird zurückgezogen, jede Änderung
-  bleibt in der Historie nachvollziehbar.
+- **Über MCP kann eine KI Wissen nur vorschlagen.** Die Freigabe ist absichtlich kein
+  MCP-Werkzeug, sondern nur über die Kommandozeile oder einen Prüfbefehl möglich. Eine KI,
+  die zusätzlich Shell-Befehle ausführen darf, kann auch diese Kommandozeile aufrufen;
+  siehe [Vertrauen, Datenschutz und Sicherung](#vertrauen-datenschutz-und-sicherung).
+- **V-Minds Befehle überschreiben nichts still.** Veraltetes wird zurückgezogen, jede
+  Änderung über V-Mind bleibt in der Historie nachvollziehbar.
 - **Projektbereiche** (`--scope`) halten Projekte getrennt; der Bereich `global`
   gilt für alle.
-- **Alles lokal:** eine SQLite-Datei, kein Cloud-Dienst, keine GPU nötig.
+- **Alles lokal:** eine SQLite-Datei, kein Cloud-Dienst und keine GPU nötig.
 
 **Die Idee dahinter: Lernen über Läufe, ohne Training.** Ein Modell findet über einen
 echten Test einen Fehler, behebt ihn und schlägt die Erfahrung vor. Sobald die Prüfung
-sie bestätigt, nutzen alle späteren Läufe sie und machen den Fehler gar nicht erst.
+sie bestätigt, können spätere Läufe sie abrufen. Ob ein Modell dadurch den Fehler bei
+*neuen* Aufgaben vermeidet, ist noch nicht gezeigt; unsere bisherigen Versuche fanden
+keine Lernkurve (siehe unten). Was heute funktioniert: Projekte zuverlässig fortsetzen
+und geprüfte Lösungen wiederverwenden.
 
-Ähnliche Ansätze wie Reflexion, Voyager oder mem0 speichern meist, was das Modell
-*glaubt*. V-Mind speichert, was *nachweislich funktioniert hat*.
-[Abgrenzung im Detail](docs/design.md#abgrenzung-zu-ähnlichen-ansätzen).
+In V-Mind wird eine gespeicherte Erfahrung erst genutzt, wenn ein Mensch oder ein
+ausführbarer Prüfbefehl sie bestätigt hat; die Bestätigung bleibt am Eintrag.
+[Verhältnis zu anderen Ansätzen](docs/design.md#abgrenzung-zu-ähnlichen-ansätzen).
 
 ## Wofür?
 
@@ -138,6 +143,39 @@ erlaubt werden soll. Danach hat Claude diese Werkzeuge:
 | `pending`, `stats` | Ungeprüfte Einträge und Zahlen anzeigen |
 | `session_new`, `sessions`, `message`, `messages` | Gespräche speichern und lesen |
 
+**Claude-Desktop-App, Chat (außerhalb des Code-Tabs):** Chats lesen keine `.mcp.json`.
+Den Server in `claude_desktop_config.json` eintragen (Einstellungen → Entwickler →
+Konfiguration bearbeiten; unter macOS `~/Library/Application Support/Claude/`, unter
+Windows `%APPDATA%\Claude\`) und **absolute Pfade** verwenden, weil die App nicht im
+Projektordner startet. Das ist ein manuelles Beispiel, noch nicht auf allen Plattformen
+getestet:
+
+```json
+{
+  "mcpServers": {
+    "vmind": {
+      "command": "/absoluter/pfad/zu/vmind",
+      "args": ["--scope", "mein-projekt", "mcp", "/absoluter/pfad/zum/projekt/vmind.db"]
+    }
+  }
+}
+```
+
+**Einrichtung prüfen.** Im Terminal im Projektordner:
+
+```sh
+vmind --scope mein-projekt stats vmind.db
+```
+
+Das zeigt Schemaversion und Zahlen. Wenn Claude die `vmind`-Werkzeuge nicht anzeigt:
+
+| Anzeichen | Wahrscheinliche Ursache und Abhilfe |
+|---|---|
+| Server startet nicht, „command not found“ | `vmind` liegt nicht im `PATH` der App. Absoluten Programmpfad bei `command` eintragen. |
+| Server startet nicht, Datenbank nicht gefunden | Der Server öffnet nur eine vorhandene Datenbank und legt keine an, nur weil ein Pfad vertippt ist. Der Pfad in `args` bezieht sich auf den Ordner, in dem die App startet. Absoluten Pfad verwenden oder dort zuerst `vmind init` ausführen. |
+| Keine Freigabeabfrage in Claude Code | Zustand mit `/mcp` prüfen; wurde der Projektserver abgelehnt, mit `claude mcp reset-project-choices` die Projektentscheidungen zurücksetzen und eine neue Sitzung starten. Siehe [offizielle Claude-Code-Dokumentation](https://code.claude.com/docs/en/mcp). |
+| Altes Verhalten nach einem Update | Ein laufender MCP-Server behält das alte Programm bis zum Neustart von Claude. Nach der Installation einer neuen Version Claude neu starten. |
+
 ### 5. Optional: Projektstand automatisch laden
 
 Ein SessionStart-Hook gibt Claude den Projektstand schon beim Sitzungsstart mit,
@@ -206,7 +244,9 @@ vmind --scope mein-projekt revalidate vmind.db
 
 Sicherheit: Prüfbefehle laufen ohne Shell (keine `;`, `&&`, Umleitungen) in einem festen
 Ordner und mit Zeitlimit. Setzen und Ausführen geht **nur über die Kommandozeile**,
-nicht über MCP. Eine KI kann V-Mind also keinen Befehl unterschieben. Achte darauf, dass
+nicht über MCP. Eine KI, die nur die MCP-Werkzeuge hat, kann V-Mind also keinen Befehl
+unterschieben. Lies einen Prüfbefehl vor dem Setzen wie jeden Befehl, den du ausführst.
+Achte darauf, dass
 der Befehl wirklich etwas prüft: `cargo test` mit einem vertippten Testnamen führt null
 Tests aus und meldet trotzdem Erfolg. Details: [docs/cli.md](docs/cli.md#prüfbefehle).
 
@@ -273,14 +313,62 @@ ein Fix oft viele Prüfungen gleichzeitig umschaltet. Ein kleinerer Folgeversuch
 Transfer einer einzelnen geprüften Lehre misst, ist entworfen, aber nicht gelaufen.
 [Bericht](docs/experiments/lernkurve.md), [Entwurf Folgeversuch](docs/experiments/transfer-pilot-plan.md).
 
+## Vertrauen, Datenschutz und Sicherung
+
+**Was V-Mind zusichert:** Nur als *validiert* markierte Einträge werden abgerufen. Jede
+Validierung, jeder Rückzug und jeder Prüflauf über V-Mind wird mit wer, wann und welchem
+Nachweis festgehalten. V-Minds Befehle überschreiben nichts still. Eine fehlgeschlagene
+Migration lässt die Datenbank unverändert. Das gilt für V-Minds eigene Befehle; ein
+Programm, das direkt in die SQLite-Datei schreibt, umgeht diese Zusagen, und die Historie
+selbst ist nicht fälschungssicher.
+
+**Was V-Mind nicht zusichert:**
+
+- **Validierung ist nachvollziehbar, nicht fälschungssicher.** Die MCP-Werkzeuge können
+  nicht validieren. Jedes Programm und jede KI, die auf deinem Rechner Shell-Befehle
+  ausführen oder Dateien schreiben darf, kann aber `vmind validate` aufrufen oder die
+  SQLite-Datei direkt ändern. Arbeitet eine KI mit Shell-Zugriff, zeigt die Historie, was
+  passiert ist; verhindern kann sie es nicht.
+- **Ein bestandener Prüfbefehl bestätigt, was er prüft**, nicht, dass die Erklärung im
+  Eintrag stimmt. In unseren Versuchen gab es Lehren mit falscher Begründung, deren
+  Prüfung trotzdem bestand.
+- **Projektbereiche sind keine Zugriffskontrolle.** Wer die Datei lesen kann, liest alle
+  Bereiche.
+
+**Datenschutz:** Alles liegt unverschlüsselt in einer lokalen SQLite-Datei: Wissen,
+Projekttagebuch und Gespräche. Der Speicher bleibt auf deinem Rechner. `ask` schickt Frage
+und abgerufenen Kontext an den Ollama-Endpunkt in `VMIND_OLLAMA_URL` (standardmäßig ein
+lokaler Server; jede andere eingestellte Adresse erhält diese Daten). MCP-Clients geben,
+was sie aus V-Mind lesen, an ihr Modell weiter, das in der Cloud laufen kann. Keine Passwörter oder Schlüssel speichern. Einen
+Befehl zum Löschen von Inhalten gibt es derzeit nicht; ist ein Geheimnis in der Datei
+gelandet, ein früheres Backup zurückspielen oder es mit SQLite-Werkzeugen entfernen und
+das Geheimnis als offengelegt behandeln.
+
+**Sicherung und Upgrade:** Die Datenbank ist eine Datei; während geschrieben wird, legt
+SQLite daneben vorübergehend `-journal`- (oder `-wal`/`-shm`-)Dateien an. Die Datei nur
+kopieren, wenn kein Client läuft, oder mit SQLite sichern, das jederzeit eine
+konsistente Kopie erstellt:
+
+```sh
+sqlite3 vmind.db ".backup vmind-sicherung.db"
+```
+
+Vor dem Installieren einer neuen Version sichern und alle Clients, die die Datenbank
+nutzen, beenden oder neu starten (MCP-Server laufen sonst mit dem alten Programm weiter).
+Die neue Version stellt die Datenbank beim ersten Zugriff um; der
+[Changelog](CHANGELOG.md) nennt Schemaänderungen. Der Entwicklungsstand nach 0.2.0 ergänzt
+`vmind backup` (geprüft, überschreibt nie), `vmind doctor` (prüft nur lesend) und eine
+automatische geprüfte Sicherung vor jeder Schemaumstellung; siehe
+[docs/operations.md](docs/operations.md).
+
 ## Grenzen
 
 - Die Suche (SQLite FTS5) findet ganze Wörter und Wortteile (z. B. „Filter“ in
   „Testfilter“), aber keine Bedeutungen: keine Synonyme und keine Übersetzung.
-- Eine Validierung dokumentiert eine Prüfung; V-Mind beweist nicht selbst, dass
-  eine Lösung stimmt.
-- Projektbereiche ordnen Wissen, sind aber keine Zugriffskontrolle. Daten liegen
-  unverschlüsselt in einer lokalen Datei.
+- `resume` zeigt einen begrenzten Ausschnitt (offene Aufgaben, die letzten Entscheidungen
+  und Ereignisse). Ältere Details bleiben im Tagebuch und müssen mit `journal` gelesen
+  werden.
+- Eine Lernwirkung ist nicht belegt; siehe die Versuche oben.
 - Keine automatische Anbindung an Codex oder ChatGPT; V-Mind beobachtet keine
   anderen Programme.
 
