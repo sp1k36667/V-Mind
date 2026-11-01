@@ -15,6 +15,8 @@ const HELP: &str = "V-Mind – lokales Gedächtnis für KI-Werkzeuge
 Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
   start-prompt                  (Startanweisung für die nutzende KI)
   init DB
+  doctor DB                     (nur lesen: Schema, Integrität, Fremdschlüssel)
+  backup DB ZIEL                (geprüfte SQLite-Sicherung, überschreibt niemals)
   add DB error_solution|long_term PROBLEM LÖSUNG QUELLE
   pending DB
   show DB ID
@@ -209,6 +211,33 @@ fn run() -> Result<()> {
             json_mode,
         )?,
         [cmd] if cmd == "--version" => println!("vmind {}", env!("CARGO_PKG_VERSION")),
+        [cmd, db] if cmd == "doctor" => {
+            let report = vmind_core::inspect_database(db)?;
+            let healthy = report.healthy;
+            let human = format!(
+                "Schema {} (unterstützt bis {}), Zustand: {}, Upgrade nötig: {}",
+                report.schema_version,
+                report.supported_schema_version,
+                if healthy {
+                    "ok"
+                } else {
+                    "Fehler – JSON-Bericht prüfen"
+                },
+                report.migration_required
+            );
+            emit(report, human, json_mode)?;
+            if !healthy {
+                return Err(io::Error::other("Datenbankprüfung fehlgeschlagen").into());
+            }
+        }
+        [cmd, db, destination] if cmd == "backup" => {
+            let report = vmind_core::backup_database(db, destination)?;
+            let human = format!(
+                "Geprüfte Sicherung: {} (Schema {}, {} Bytes)",
+                report.destination, report.schema_version, report.bytes
+            );
+            emit(report, human, json_mode)?;
+        }
         [cmd, db] if cmd == "init" => {
             let stats = MemoryStore::open(db)?.stats(&scope)?;
             emit(

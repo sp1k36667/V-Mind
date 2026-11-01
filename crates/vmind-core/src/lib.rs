@@ -1,4 +1,6 @@
 mod checks;
+mod maintenance;
+pub use maintenance::{BackupReport, DoctorReport, backup_database, inspect_database};
 mod project;
 pub use checks::{Applied, Check, CheckResult, CheckRun, Outcome};
 pub use project::{ChatMessage, Conversation, JournalEntry, Resume};
@@ -149,6 +151,13 @@ impl MemoryStore {
         let mut version: i64 = tx.query_row("PRAGMA user_version", [], |r| r.get(0))?;
         if !(0..=SCHEMA_VERSION).contains(&version) {
             return Err(invalid("Unbekannte Datenbankversion"));
+        }
+        // The IMMEDIATE transaction serializes migrations and freezes the committed
+        // source while a separate read-only connection makes the safety snapshot.
+        if (1..SCHEMA_VERSION).contains(&version)
+            && let Some(path) = tx.path().filter(|p| !p.is_empty())
+        {
+            maintenance::backup_before_migration(Path::new(path))?;
         }
         if version == 0 {
             tx.execute_batch(include_str!("../../../migrations/0001_memory.sql"))?;
