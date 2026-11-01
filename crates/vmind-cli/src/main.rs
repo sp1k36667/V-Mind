@@ -3,6 +3,7 @@ mod mcp;
 mod ollama;
 mod prompt;
 mod protocol;
+mod report;
 mod runner;
 
 use serde::Serialize;
@@ -36,6 +37,7 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
   task DB SCHLÜSSEL open|in_progress|done|blocked TEXT QUELLE
   resume DB                     (Fortsetzungsstand des Projektbereichs)
   resume DB GESPRÄCH_ID
+  report DB                     (lesbarer Projektbericht in Markdown, nur lesen)
   sessions DB
   session-new DB TITEL
   messages DB GESPRÄCH_ID [NACH_ID]
@@ -229,6 +231,11 @@ fn run() -> Result<()> {
             if !healthy {
                 return Err(io::Error::other("Datenbankprüfung fehlgeschlagen").into());
             }
+        }
+        [cmd, db] if cmd == "report" => {
+            let report = report::build(&MemoryStore::open_existing(db)?, &scope)?;
+            let text = report::markdown(&report);
+            emit(report, text, json_mode)?;
         }
         [cmd, db, destination] if cmd == "backup" => {
             let report = vmind_core::backup_database(db, destination)?;

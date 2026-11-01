@@ -176,6 +176,11 @@ vmind validate vmind.db 1 'Your name' 'Which test ran and what the result was'
 
 Or let a real test decide, see the next section.
 
+To see where the project stands without asking an AI, `vmind --scope my-project report
+vmind.db` prints a readable Markdown report: goal, next step, tasks, recent decisions,
+verified knowledge with its last check, and unverified proposals listed separately
+(development version after 0.2.0).
+
 ### Checks: tests decide what counts
 
 An entry can get an executable **check**, for example the test that found the error. If it

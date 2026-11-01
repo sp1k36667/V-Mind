@@ -194,6 +194,18 @@ Für die nächste Seite die letzte ausgegebene Ereignis-ID als weiteres Argument
 angeben. Dasselbe Cursorverfahren gilt für `messages DB GESPRÄCH_ID [NACH_ID]`.
 Eine Übersicht allein enthält also nicht jede Zeile eines monatelangen Projekts.
 
+Für Menschen gibt es einen lesbaren Bericht in Markdown:
+
+```sh
+vmind --scope v-mind report vmind.db > projektbericht.md
+```
+
+Er zeigt Ziel, nächsten Schritt, Aufgaben (blockierte und laufende zuerst), die letzten
+Entscheidungen, bis zu 20 geprüfte Einträge mit Bestätigung und letztem Prüflauf sowie
+ungeprüfte Vorschläge getrennt davon. Er liest nur und enthält nichts, was nicht
+gespeichert ist; Lücken stehen ausdrücklich als „noch nicht gespeichert“ da. Mit `--json`
+kommen dieselben Daten als JSON.
+
 Mit `session-new DB TITEL` ein separates Gespräch anlegen, mit `chat DB ID FRAGE`
 fortsetzen. `sessions DB` zeigt die letzten 100 Gespräche des Bereichs. Explizite
 Gespräche benötigen den passenden Projektbereich bei `chat` und `resume`.

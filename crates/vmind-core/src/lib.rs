@@ -344,6 +344,21 @@ impl MemoryStore {
         ))?;
         stmt.query_map([scope], record)?.collect()
     }
+    /// Validierte aktive Einträge im Bereich plus global, neueste zuerst.
+    pub fn validated(&self, scope: &str, limit: usize) -> Result<Vec<Record>> {
+        nonblank(scope)?;
+        if !(1..=100).contains(&limit) {
+            return Err(invalid("Limit muss 1 bis 100 sein"));
+        }
+        let mut stmt = self.conn.prepare(&format!(
+            "SELECT {FIELDS} FROM memories m
+            LEFT JOIN invalidations i ON i.memory_id=m.id
+            WHERE m.status='validated' AND i.memory_id IS NULL AND m.scope IN ('global', ?1)
+            ORDER BY m.id DESC LIMIT ?2"
+        ))?;
+        stmt.query_map(params![scope, limit as i64], record)?
+            .collect()
+    }
     pub fn stats(&self, scope: &str) -> Result<Stats> {
         nonblank(scope)?;
         self.conn.query_row(
