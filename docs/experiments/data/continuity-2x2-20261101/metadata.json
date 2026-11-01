@@ -1,0 +1,71 @@
+{
+  "git_commit": "83114c692ce16e0c976a40a7054d17c1bcdcc23c",
+  "model": "hf.co/google/gemma-4-12B-it-qat-q4_0-gguf:Q4_0",
+  "digest": "18a4d9511d9965d973356e62310a2793771c22456be408cc06a05f04a6376acd",
+  "seeds": [
+    4101,
+    4102,
+    4103,
+    4104,
+    4105
+  ],
+  "order_seed": 314159,
+  "temperature": 0.7,
+  "num_ctx": 8192,
+  "num_predict": 512,
+  "format": {
+    "type": "object",
+    "properties": {
+      "release": {
+        "type": "string"
+      },
+      "folder": {
+        "type": "string"
+      },
+      "backend": {
+        "type": "string"
+      },
+      "schema": {
+        "type": "string"
+      },
+      "search": {
+        "type": "string"
+      },
+      "next": {
+        "type": "string"
+      },
+      "assistant": {
+        "type": "string"
+      },
+      "gpu": {
+        "type": "string"
+      },
+      "archive_port": {
+        "type": "string"
+      },
+      "password": {
+        "type": "string"
+      },
+      "production_date": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "release",
+      "folder",
+      "backend",
+      "schema",
+      "search",
+      "next",
+      "assistant",
+      "gpu",
+      "archive_port",
+      "password",
+      "production_date"
+    ],
+    "additionalProperties": false
+  },
+  "source_sha256": "26e717ccb2eed069438d7bcaf712bd16b1e0ef76bb6ca583f8a711f7e61106dd",
+  "binary_sha256": "c59f3ac66a92f4065768b78b67c519b414156e83b753f99260b790953125f20f",
+  "binary_old_sha256": "797065773e0a74bfe81f9888272c08b8a72f054adf68fd7bd2819f7209edbf45"
+}
