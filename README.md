@@ -249,10 +249,24 @@ with V-Mind. The store contained a solution previously generated and verified wi
 
 **Honest assessment:** this shows that a small model can reliably reuse a stored, verified
 solution. The output was byte-identical to the reference. It does *not* show that the model
-learns or solves new tasks. A pre-registered follow-up experiment is in progress: does a
-small model get better over a series of *different* tasks when it stores its own fixed
-errors as lessons that only count after a passing check?
+learns or solves new tasks.
 [Setup, measurements and limits (German)](docs/experiments/e2b-pilot.md).
+
+## Second experiment: does a model improve from its own checked lessons?
+
+Over a series of six *different* tasks, the model stored the errors it fixed as lessons.
+In condition B a lesson counted only after a passing check, in C it counted unchecked.
+**Result: no learning curve.** Gemma 4 E2B (pre-registered) solved none of 108 task runs;
+the hypotheses are not supported. Gemma 4 12B (exploratory) solved some tasks but showed no
+improvement from checked lessons either.
+
+What the runs did show: unchecked memory collects wrong lessons when the model is weak
+(about one in five sampled E2B lessons was clearly wrong), and confirming a lesson with
+"the check that failed before now passes" is too coarse, because one fix often flips many
+checks at once. A smaller follow-up that measures transfer of a single verified lesson is
+drafted but not run.
+[Report (German)](docs/experiments/lernkurve.md),
+[follow-up draft (German)](docs/experiments/transfer-pilot-plan.md).
 
 ## Limits
 
@@ -274,6 +288,7 @@ Full list (German): [docs/cli.md](docs/cli.md#konfiguration-und-grenzen).
 | [docs/design.md](docs/design.md) | Architecture and decisions |
 | [docs/start-prompt.md](docs/start-prompt.md) | Start prompt for AI clients |
 | [AGENTS.md](AGENTS.md) | Working rules for AIs that work on V-Mind itself |
+| [CHANGELOG.md](CHANGELOG.md) | Changes per release (English) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contributions and checks |
 
 Layout: `crates/vmind-core` (SQLite store and retrieval, no model dependency) and
