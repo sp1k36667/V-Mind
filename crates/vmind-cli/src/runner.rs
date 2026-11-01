@@ -69,6 +69,21 @@ pub fn run(check: &Check, timeout: Duration) -> CheckResult {
     loop {
         match child.try_wait() {
             Ok(Some(status)) => {
+                // Auch nach dem Ende des Elternprozesses kann ein Kind dessen Pipes
+                // offen halten. Das ursprüngliche Zeitlimit gilt bis zum vollständigen
+                // Lesen der Ausgabe; ein blockierendes join würde es sonst umgehen.
+                while !stdout.is_finished() || !stderr.is_finished() {
+                    if started.elapsed() >= timeout {
+                        return error(
+                            started,
+                            format!(
+                                "Zeitlimit von {} s beim Lesen der Prüfausgabe überschritten",
+                                timeout.as_secs()
+                            ),
+                        );
+                    }
+                    thread::sleep(POLL);
+                }
                 let output = format!("{}{}", collect(stdout), collect(stderr));
                 let outcome = if status.success() {
                     Outcome::Passed
@@ -164,5 +179,20 @@ mod tests {
         assert_eq!(result.outcome, Outcome::Passed);
         assert!(result.output.len() <= CAPTURE_BYTES);
         assert!(result.output.trim_end().ends_with("ENDE"));
+    }
+    #[cfg(unix)]
+    #[test]
+    fn descendant_open_stdout_respects_timeout() {
+        // Der Elternprozess beendet sich erfolgreich; sein Kind hält stdout offen.
+        let result = run(
+            &check(&["sh", "-c", "sleep 3 & echo parent-done"]),
+            Duration::from_millis(200),
+        );
+        assert_eq!(result.outcome, Outcome::Error);
+        assert!(result.output.contains("Zeitlimit"));
+        assert!(
+            result.duration_ms < 2000,
+            "Ausgabe darf das Zeitlimit nicht umgehen"
+        );
     }
 }

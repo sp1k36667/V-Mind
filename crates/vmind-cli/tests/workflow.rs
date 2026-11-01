@@ -367,3 +367,45 @@ fn check_set_rejects_missing_directory_and_unknown_entry() {
     let (ok, _) = cli_status(&["check-set", db, "1", "T", temp.0.to_str().unwrap(), "true"]);
     assert!(!ok);
 }
+
+#[cfg(unix)]
+#[test]
+fn output_timeout_never_validates_an_entry() {
+    let temp = Temp::new();
+    let path = temp.0.join("output-timeout.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    let added = cli(&[
+        "add",
+        db,
+        "error_solution",
+        "Prüfung hängt",
+        "Zeitlimit anwenden",
+        "Regressionstest",
+    ]);
+    let id = added["id"].as_i64().unwrap().to_string();
+    cli(&[
+        "check-set",
+        db,
+        &id,
+        "Test",
+        temp.0.to_str().unwrap(),
+        "sh",
+        "-c",
+        "sleep 3 & echo parent-done",
+    ]);
+    let started = std::time::Instant::now();
+    let output = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .env("VMIND_CHECK_TIMEOUT", "1")
+        .args(["--json", "check", db, &id])
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    assert!(started.elapsed() < std::time::Duration::from_secs(2));
+    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["applied"]["outcome"], "error");
+    assert_eq!(report["applied"]["status_after"], "pending");
+    let stored = cli(&["show", db, &id]);
+    assert_eq!(stored["memory"]["status"], "pending");
+    assert_eq!(stored["check_runs"][0]["outcome"], "error");
+}
