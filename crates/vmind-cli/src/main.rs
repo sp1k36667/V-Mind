@@ -46,6 +46,7 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
   chat DB GESPRÄCH_ID FRAGE
   serve DB                      (JSONL-Protokoll v1 über stdin/stdout)
   mcp DB                        (MCP-Server über stdio; --scope = Standardbereich)
+DB bezeichnet einen Dateipfad, keine SQLite-URI.
 Standardbereich: VMIND_SCOPE oder global.
 Ollama: VMIND_OLLAMA_URL oder http://127.0.0.1:11434
 Modell: VMIND_MODEL oder vmind-gemma4:e2b
@@ -281,7 +282,7 @@ fn run() -> Result<()> {
             emit(report, human, json_mode)?;
         }
         [cmd, db] if cmd == "init" => {
-            let stats = MemoryStore::open(db)?.stats(&scope)?;
+            let stats = MemoryStore::open_file(db)?.stats(&scope)?;
             emit(
                 json!({"database":db,"schema_version":stats.schema_version}),
                 format!("Datenbank bereit: {db} (Schema {})", stats.schema_version),

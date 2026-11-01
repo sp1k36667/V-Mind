@@ -89,3 +89,14 @@ MCP-Prozess muss ausdrücklich neu gestartet werden; ein Austausch der Programmd
 ersetzt nicht den Code im Speicher. Eine Sicherung ist keine Garantie für ein
 funktionsfähiges Restore: diesen Ablauf mit eigenen Daten regelmäßig an einer Kopie
 prüfen.
+
+
+## Dateinamen und SQLite-URIs
+
+CLI-Befehle, MCP/JSONL-Server, Hooks und Wartungsfunktionen behandeln DB-Argumente
+immer als Dateipfade. Ein Name wie `file:projekt.db?mode=memory` wird nicht als
+flüchtige SQLite-Datenbank oder als Umleitung interpretiert. Leere Dateipfade sind
+Fehler; auch `:memory:` ist in der CLI ein Dateiname (auf Systemen, die ihn erlauben).
+Für Rust-Bibliotheksnutzer bleibt die ausdrücklich gewählte SQLite-Semantik von
+`MemoryStore::open` bestehen; für persistente Nutzereingaben `open_file` bzw. die
+Datei-Öffner verwenden. `MemoryStore::in_memory` bleibt für Tests verfügbar.
