@@ -158,7 +158,7 @@ im Repository):
 | 4 | Kann eine frische Sitzung ein Projekt aus `resume` fortsetzen? | Gemma 4 12B | durchgeführt, vorab geplant | Kriterien verfehlt: 117/165 gegen 133/165 für dieselben Daten als flache Liste; Ursache gefunden und behoben. [Bericht](docs/experiments/continuity-pilot.md) |
 | 5 | Hilft die Korrektur, und spielt das Format eine Rolle? | Gemma 4 12B | durchgeführt, 80 vorab geplante Aufrufe | Alte nächste Schritte: JSON 1→0, Text 2→0 (von je 15); Gesamtgenauigkeit steigt nicht. [Bericht](docs/experiments/continuity-2x2.md) |
 | 6 | Hilft eine richtige, geprüfte Lehre bei *neuen* Aufgaben? | Gemma 4 12B | Entwurf | – [Entwurf](docs/experiments/transfer-pilot-plan.md) |
-| 7 | Findet `recall` das Richtige und hält es Bereichs- und Statusgrenzen ein? | kein Modell | durchgeführt, vorab geplant, synthetischer Korpus | Grenzen ohne Ausnahme gehalten; wortgleiche Fragen 10/10 auf Platz 1; längere gebeugte Formen 0/5 erkannt; im Mittel 2,6 unpassende Treffer je Frage. [Bericht](docs/experiments/abruf-korpus.md) |
+| 7 | Findet `recall` das Richtige und hält es Bereichs- und Statusgrenzen ein? | kein Modell | durchgeführt, vorab geplant, synthetischer Korpus | Grenzen ohne Ausnahme gehalten; wortgleiche Fragen 10/10 auf Platz 1; Wortform-Fragen 3/5; nachträgliche Einzelwortprobe 0/5; im Mittel 2,6 unpassende Zusatztreffer je Frage mit erwartetem Eintrag. [Bericht](docs/experiments/abruf-korpus.md) |
 
 Neue Versuche laufen **nur noch mit Gemma 4 12B**. In den Versuchen 2 und 3 hat 12B seine
 Fehler viel öfter selbst behoben und viel seltener falsche Lehren geschrieben als E2B; es ist

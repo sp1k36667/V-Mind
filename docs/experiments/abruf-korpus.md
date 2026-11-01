@@ -4,7 +4,7 @@ Ausgeführt am 1. November 2026 nach dem vorab festgelegten
 [Plan](abruf-korpus-plan.md) (Commit `be4ff0c`, vor der ersten Abfrage veröffentlicht).
 [Korpus](../../examples/retrieval/corpus.json),
 [Auswerteskript](../../examples/retrieval/run.py),
-[alle Trefferlisten](data/abruf-korpus-20261101/results.jsonl),
+[Trefferlisten des ersten Laufs](data/abruf-korpus-20261101/results.jsonl),
 [Zusammenfassung](data/abruf-korpus-20261101/summary.json).
 
 Geprüft wurde `vmind recall` von main `cefd87d`, gebaut mit `cargo build --release --locked`
@@ -111,3 +111,17 @@ aber diese Einträge mit in den Kontext.
   Antworten wurden nicht geprüft.
 - Gemessen wurde die CLI. MCP und JSONL rufen dieselbe Kernfunktion auf, wurden hier
   aber nicht eigens durchlaufen.
+
+## Unabhängige Gegenprüfung durch Codex
+
+Codex hat Plan, unveränderten Korpus und Auswerteskript gelesen, die Summen direkt
+über die Rohdaten unabhängig von `score()` nachgerechnet und den vollständigen
+CLI-Ablauf mit zwei neuen temporären Datenbanken wiederholt. Die erneut erzeugten
+`results.jsonl` und `summary.json` sind bytegleich mit den hier archivierten Dateien.
+Bestätigt: 33 Positivfragen, 114 Treffer, 28 erwartete und 86 zusätzliche Treffer;
+alle Kategorien und die Nullwerte der Filterverletzungen stimmen überein.
+
+Archiviert sind die 45 Rohlisten des ersten ursprünglichen Laufs. Das Skript prüft
+die IDs/Reihenfolge und Filter beider Läufe, speichert den zweiten aber nicht als
+eigene Rohdatendatei. Die Wiederholung bestätigt das Ergebnis; sie ersetzt kein
+nachträglich erfundenes Archiv des ursprünglichen zweiten Laufs.
