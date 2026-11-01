@@ -50,6 +50,11 @@ fn evidence_tracks_the_active_definition_without_changing_validation_status() {
     assert_eq!(failed["status"], "validated");
     assert_eq!(failed["check"]["state"], "failed");
     assert_eq!(failed["check"]["last_verdict"]["outcome"], "failed");
+    run(&s, &check, Outcome::Error);
+    let after_error = record(&s, id);
+    assert_eq!(after_error["check"]["state"], "error");
+    assert_eq!(after_error["check"]["last_verdict"]["outcome"], "failed");
+
     assert_eq!(
         s.recall("Prüfzustand", "p", 5).unwrap().len(),
         1,
@@ -66,7 +71,7 @@ fn evidence_tracks_the_active_definition_without_changing_validation_status() {
     );
     assert_eq!(
         s.check_runs(id, 10).unwrap().len(),
-        3,
+        4,
         "old runs remain in history"
     );
 }

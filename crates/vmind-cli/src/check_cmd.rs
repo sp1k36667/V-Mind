@@ -161,7 +161,10 @@ pub(crate) fn evidence_note(check: &vmind_core::CheckEvidence) -> String {
         CheckState::Error => {
             let verdict = check.last_verdict.as_ref().map_or(String::new(), |v|
                 format!("; letzter Pass/Fail-Befund dieser Definition: {} am {}", v.outcome, v.run_at));
-            format!("Hinweis: Ausführungsfehler am {at}, keine neue Gültigkeitsaussage{verdict}")
+            let label = if check.last_verdict.as_ref().is_some_and(|v| v.outcome == "failed") {
+                "WARNUNG"
+            } else { "Hinweis" };
+            format!("{label}: Ausführungsfehler am {at}, keine neue Gültigkeitsaussage{verdict}")
         }
     }
 }
