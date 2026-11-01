@@ -181,7 +181,7 @@ vmind --scope v-mind resume vmind.db
 
 Die Übersicht enthält das aktuelle Ziel, den nächsten Schritt, den aktuellen Stand aller
 unerledigten Aufgaben (höchstens 20) und der fünf zuletzt erledigten, fünf Entscheidungen,
-fünf letzte Projektereignisse, die nicht schon darüber stehen, und zehn letzte
+fünf letzte ergänzende Ereignisse wie Notizen, die nicht schon darüber stehen, und zehn letzte
 Chatnachrichten. Texte werden nicht gekürzt. Gesamtzahlen zeigen, ob weitere Daten
 vorhanden sind.
 Die vollständige Historie bleibt seitenweise verfügbar, jeweils maximal 100 Einträge:
@@ -193,6 +193,12 @@ vmind --scope v-mind journal vmind.db
 Für die nächste Seite die letzte ausgegebene Ereignis-ID als weiteres Argument
 angeben. Dasselbe Cursorverfahren gilt für `messages DB GESPRÄCH_ID [NACH_ID]`.
 Eine Übersicht allein enthält also nicht jede Zeile eines monatelangen Projekts.
+
+Im Entwicklungsstand nach 0.2.0 enthält `resume.recent_events` keine überholten
+Ziel-, Aufgaben- oder nächste-Schritt-Meldungen mehr. Der aktuelle Zustand steht in
+den dafür vorgesehenen Feldern; vollständige frühere Versionen bleiben in `journal`.
+Dies verhindert widersprüchliche Zustandsdarstellungen, garantiert aber keine richtige
+Interpretation durch ein Modell.
 
 Für Menschen gibt es einen lesbaren Bericht in Markdown:
 
@@ -317,4 +323,3 @@ laufende Datenbank blind als Einzeldatei kopieren.
 Architektur und Arbeitsablauf: [docs/design.md](design.md).
 GPU-residente Suchindizes mit ROCm/HIP sind geplant; die systemweite ROCm-Installation
 wird dafür aktuell nicht verändert.
-
