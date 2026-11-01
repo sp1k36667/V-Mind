@@ -1,0 +1,217 @@
+{
+  "snapshot": {
+    "scope": "continuity",
+    "goal": {
+      "id": 1,
+      "scope": "continuity",
+      "kind": "goal",
+      "task_key": null,
+      "task_status": null,
+      "body": "Release-Kennung: R8-Delta. Datenordner: /srv/projekt-1.",
+      "source": "synthetische Vorgabe",
+      "created_at": "2026-11-01T09:02:23.177Z"
+    },
+    "next_step": {
+      "id": 41,
+      "scope": "continuity",
+      "kind": "next_step",
+      "task_key": null,
+      "task_status": null,
+      "body": "negative-cases-1",
+      "source": "fixture",
+      "created_at": "2026-11-01T09:02:26.131Z"
+    },
+    "tasks": [
+      {
+        "id": 34,
+        "scope": "continuity",
+        "kind": "task",
+        "task_key": "release",
+        "task_status": "open",
+        "body": "Aufgabe release",
+        "source": "fixture",
+        "created_at": "2026-11-01T09:02:25.629Z"
+      },
+      {
+        "id": 32,
+        "scope": "continuity",
+        "kind": "task",
+        "task_key": "docs",
+        "task_status": "open",
+        "body": "Aufgabe docs",
+        "source": "fixture",
+        "created_at": "2026-11-01T09:02:25.485Z"
+      },
+      {
+        "id": 31,
+        "scope": "continuity",
+        "kind": "task",
+        "task_key": "gpu-index",
+        "task_status": "blocked",
+        "body": "Aufgabe gpu-index",
+        "source": "fixture",
+        "created_at": "2026-11-01T09:02:25.413Z"
+      },
+      {
+        "id": 30,
+        "scope": "continuity",
+        "kind": "task",
+        "task_key": "search",
+        "task_status": "in_progress",
+        "body": "Aufgabe search",
+        "source": "fixture",
+        "created_at": "2026-11-01T09:02:25.342Z"
+      },
+      {
+        "id": 33,
+        "scope": "continuity",
+        "kind": "task",
+        "task_key": "packaging",
+        "task_status": "done",
+        "body": "Aufgabe packaging",
+        "source": "fixture",
+        "created_at": "2026-11-01T09:02:25.557Z"
+      },
+      {
+        "id": 29,
+        "scope": "continuity",
+        "kind": "task",
+        "task_key": "schema",
+        "task_status": "done",
+        "body": "Aufgabe schema",
+        "source": "fixture",
+        "created_at": "2026-11-01T09:02:25.270Z"
+      }
+    ],
+    "task_count": 6,
+    "decisions": [
+      {
+        "id": 38,
+        "scope": "continuity",
+        "kind": "decision",
+        "task_key": null,
+        "task_status": null,
+        "body": "D2 ersetzt D1 vollständig: Backend SQLite statt PostgreSQL.",
+        "source": "fixture",
+        "created_at": "2026-11-01T09:02:25.915Z"
+      },
+      {
+        "id": 37,
+        "scope": "continuity",
+        "kind": "decision",
+        "task_key": null,
+        "task_status": null,
+        "body": "Entscheidung Zusatz2: lokale Dateien behalten.",
+        "source": "fixture",
+        "created_at": "2026-11-01T09:02:25.844Z"
+      },
+      {
+        "id": 36,
+        "scope": "continuity",
+        "kind": "decision",
+        "task_key": null,
+        "task_status": null,
+        "body": "Entscheidung Zusatz1: lokale Dateien behalten.",
+        "source": "fixture",
+        "created_at": "2026-11-01T09:02:25.772Z"
+      },
+      {
+        "id": 35,
+        "scope": "continuity",
+        "kind": "decision",
+        "task_key": null,
+        "task_status": null,
+        "body": "Entscheidung Zusatz0: lokale Dateien behalten.",
+        "source": "fixture",
+        "created_at": "2026-11-01T09:02:25.700Z"
+      },
+      {
+        "id": 3,
+        "scope": "continuity",
+        "kind": "decision",
+        "task_key": null,
+        "task_status": null,
+        "body": "D1: Backend PostgreSQL.",
+        "source": "synthetische Vorgabe",
+        "created_at": "2026-11-01T09:02:23.308Z"
+      }
+    ],
+    "recent_events": [
+      {
+        "id": 26,
+        "scope": "continuity",
+        "kind": "note",
+        "task_key": null,
+        "task_status": null,
+        "body": "Arbeitsschritt 21 abgeschlossen.",
+        "source": "fixture",
+        "created_at": "2026-11-01T09:02:25.055Z"
+      },
+      {
+        "id": 27,
+        "scope": "continuity",
+        "kind": "note",
+        "task_key": null,
+        "task_status": null,
+        "body": "Arbeitsschritt 22 abgeschlossen.",
+        "source": "fixture",
+        "created_at": "2026-11-01T09:02:25.127Z"
+      },
+      {
+        "id": 28,
+        "scope": "continuity",
+        "kind": "note",
+        "task_key": null,
+        "task_status": null,
+        "body": "Arbeitsschritt 23 abgeschlossen.",
+        "source": "fixture",
+        "created_at": "2026-11-01T09:02:25.199Z"
+      },
+      {
+        "id": 39,
+        "scope": "continuity",
+        "kind": "next_step",
+        "task_key": null,
+        "task_status": null,
+        "body": "old-tests",
+        "source": "fixture",
+        "created_at": "2026-11-01T09:02:25.987Z"
+      },
+      {
+        "id": 40,
+        "scope": "continuity",
+        "kind": "next_step",
+        "task_key": null,
+        "task_status": null,
+        "body": "old-packaging",
+        "source": "fixture",
+        "created_at": "2026-11-01T09:02:26.059Z"
+      }
+    ],
+    "total_events": 41,
+    "conversation_id": "dd4846bd53715b55f77e8a17cb024315",
+    "chat_tail": [
+      {
+        "id": 1,
+        "conversation_id": "dd4846bd53715b55f77e8a17cb024315",
+        "role": "assistant",
+        "content": "Checkpoint K42",
+        "created_at": "2026-11-01T09:02:26.282Z"
+      }
+    ],
+    "message_count": 1
+  },
+  "expected": {
+    "release": "R8-Delta",
+    "folder": "/srv/projekt-1",
+    "backend": "SQLite",
+    "schema": "done",
+    "search": "in_progress",
+    "next": "negative-cases-1",
+    "assistant": "Checkpoint K42",
+    "gpu": "blocked",
+    "archive_port": "6101",
+    "password": "unbekannt",
+    "production_date": "unbekannt"
+  }
+}
