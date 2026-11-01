@@ -77,8 +77,10 @@ fn record(row: &rusqlite::Row<'_>) -> Result<Record> {
     })
 }
 
+/// Eigene Prüffehler. Diese rusqlite-Variante zeigt nur unsere Meldung an, ohne das
+/// irreführende „Invalid parameter name:“ davor.
 fn invalid(message: &str) -> rusqlite::Error {
-    rusqlite::Error::InvalidParameterName(message.into())
+    rusqlite::Error::ToSqlConversionFailure(message.into())
 }
 
 fn nonblank(value: &str) -> Result<()> {
