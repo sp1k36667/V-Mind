@@ -530,3 +530,19 @@ fn report_prints_markdown_and_leaves_the_database_unchanged() {
     );
     assert_eq!(std::fs::read(&path).unwrap(), before);
 }
+
+#[test]
+fn validation_errors_are_shown_without_sqlite_jargon() {
+    let temp = Temp::new();
+    let path = temp.0.join("fehler.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    let output = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(["--scope", "p", "log", db, "note", " ", "Quelle"])
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let message = String::from_utf8_lossy(&output.stderr);
+    assert!(message.starts_with("V-Mind: "), "{message}");
+    assert!(!message.contains("Invalid parameter name"), "{message}");
+}
