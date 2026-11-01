@@ -167,3 +167,18 @@ Pro Terminalschritt einen Befehl ausführen. Aktuelle Hilfe: `vmind --help`.
 V-Mind ersetzt weder das Denken noch die Prüfung durch die KI. Nutze es, um
 vorhandene Arbeit wiederzufinden, eigene Schritte nachvollziehbar zu hinterlassen
 und nach einem Neustart gezielt am tatsächlichen Projektstand anzuknüpfen.
+
+
+## Aktueller Prüfzustand eines Wissenseintrags
+
+Abgerufene Einträge enthalten zusätzlich `check`: `state`, aktive `check_id`, letzte
+`run_id`/`run_at` und `last_verdict` (letztes Pass/Fail-Ergebnis derselben Definition).
+`none` ist neutral: kein Prüfbefehl konfiguriert, manuelle Quellen/Nachweise prüfen.
+`not_run` heißt: Die aktive Definition wurde noch nicht ausgeführt; ein Pass einer
+ersetzten Definition gilt dafür nicht. `failed` verlangt sichtbaren Hinweis und
+Neuprüfung vor ungeprüfter Übernahme, ändert aber den gespeicherten Validierungsstatus
+nicht automatisch. `error` ist ein Ausführungsproblem, keine neue Aussage zur Wahrheit;
+`last_verdict` bleibt deshalb sichtbar. `passed` heißt nur, dass dieser Lauf zum
+angegebenen Zeitpunkt bestand. Es beweist keine Gültigkeit am heutigen Code-/Projektstand
+und keine Wahrheit einer beliebigen Erklärung. V-Mind führt beim Abruf nichts aus und
+prüft hierbei weder Git-Commit noch Umgebung oder Prüfbefehle erneut.
