@@ -1,0 +1,75 @@
+{
+  "J0": {
+    "runs": 20,
+    "correct": 199,
+    "correct_mild": 199,
+    "facts": 159,
+    "facts_mild": 159,
+    "unknown_mild": 40,
+    "stale": 1,
+    "stale_next_main": 1,
+    "stale_control": 0,
+    "invented": 0,
+    "errors": 0,
+    "invalid_format": 0,
+    "archive_unknown": 20
+  },
+  "T0": {
+    "runs": 20,
+    "correct": 192,
+    "correct_mild": 192,
+    "facts": 152,
+    "facts_mild": 152,
+    "unknown_mild": 40,
+    "stale": 2,
+    "stale_next_main": 2,
+    "stale_control": 0,
+    "invented": 0,
+    "errors": 0,
+    "invalid_format": 0,
+    "archive_unknown": 20
+  },
+  "Ja": {
+    "runs": 20,
+    "correct": 196,
+    "correct_mild": 196,
+    "facts": 156,
+    "facts_mild": 156,
+    "unknown_mild": 40,
+    "stale": 0,
+    "stale_next_main": 0,
+    "stale_control": 0,
+    "invented": 0,
+    "errors": 0,
+    "invalid_format": 0,
+    "archive_unknown": 20
+  },
+  "Ta": {
+    "runs": 20,
+    "correct": 184,
+    "correct_mild": 184,
+    "facts": 144,
+    "facts_mild": 144,
+    "unknown_mild": 40,
+    "stale": 0,
+    "stale_next_main": 0,
+    "stale_control": 0,
+    "invented": 0,
+    "errors": 0,
+    "invalid_format": 0,
+    "archive_unknown": 20
+  },
+  "acceptance": {
+    "floors": {
+      "Ja": true,
+      "Ta": true
+    },
+    "filter_effects": {
+      "J": "besser",
+      "T": "besser"
+    },
+    "filter_result": "bestanden",
+    "format_json_not_worse": true,
+    "passed": true
+  }
+}

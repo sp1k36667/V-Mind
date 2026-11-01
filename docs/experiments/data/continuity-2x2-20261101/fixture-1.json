@@ -1,0 +1,425 @@
+{
+  "project": {
+    "name": "fluss",
+    "notes": 5,
+    "notes_after_state": false,
+    "tasks": 8
+  },
+  "snapshots": {
+    "0": {
+      "scope": "continuity",
+      "goal": {
+        "id": 18,
+        "scope": "continuity",
+        "kind": "goal",
+        "task_key": null,
+        "task_status": null,
+        "body": "Release-Kennung FLUSS-4 als Ziel; Datenordner /daten/fluss/lauf-5 für alle Läufe",
+        "source": "fixture",
+        "created_at": "2026-11-01T14:51:03.247Z"
+      },
+      "next_step": {
+        "id": 23,
+        "scope": "continuity",
+        "kind": "next_step",
+        "task_key": null,
+        "task_status": null,
+        "body": "fluss-abnahme",
+        "source": "fixture",
+        "created_at": "2026-11-01T14:51:03.616Z"
+      },
+      "tasks": [
+        {
+          "id": 21,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "gpu-index",
+          "task_status": "blocked",
+          "body": "GPU-Index zurückgestellt",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:03.468Z"
+        },
+        {
+          "id": 20,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "search",
+          "task_status": "in_progress",
+          "body": "Suche baut Index",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:03.394Z"
+        },
+        {
+          "id": 16,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "aufgabe-4",
+          "task_status": "open",
+          "body": "Weitere Aufgabe aufgabe-4",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:03.099Z"
+        },
+        {
+          "id": 15,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "aufgabe-3",
+          "task_status": "open",
+          "body": "Weitere Aufgabe aufgabe-3",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:03.026Z"
+        },
+        {
+          "id": 14,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "aufgabe-2",
+          "task_status": "open",
+          "body": "Weitere Aufgabe aufgabe-2",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.951Z"
+        },
+        {
+          "id": 13,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "aufgabe-1",
+          "task_status": "open",
+          "body": "Weitere Aufgabe aufgabe-1",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.870Z"
+        },
+        {
+          "id": 12,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "aufgabe-0",
+          "task_status": "open",
+          "body": "Weitere Aufgabe aufgabe-0",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.788Z"
+        },
+        {
+          "id": 19,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "schema",
+          "task_status": "done",
+          "body": "Schema anlegen",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:03.320Z"
+        }
+      ],
+      "task_count": 8,
+      "decisions": [
+        {
+          "id": 22,
+          "scope": "continuity",
+          "kind": "decision",
+          "task_key": null,
+          "task_status": null,
+          "body": "D2 ersetzt D1 vollständig: Backend SQLite statt PostgreSQL",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:03.542Z"
+        },
+        {
+          "id": 3,
+          "scope": "continuity",
+          "kind": "decision",
+          "task_key": null,
+          "task_status": null,
+          "body": "D1: Backend PostgreSQL für alle Läufe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.115Z"
+        }
+      ],
+      "recent_events": [
+        {
+          "id": 8,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 2 zu fluss ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.492Z"
+        },
+        {
+          "id": 9,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 3 zu fluss ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.566Z"
+        },
+        {
+          "id": 10,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 4 zu fluss ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.640Z"
+        },
+        {
+          "id": 11,
+          "scope": "continuity",
+          "kind": "next_step",
+          "task_key": null,
+          "task_status": null,
+          "body": "fluss-entwurf",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.713Z"
+        },
+        {
+          "id": 17,
+          "scope": "continuity",
+          "kind": "next_step",
+          "task_key": null,
+          "task_status": null,
+          "body": "fluss-messen",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:03.173Z"
+        }
+      ],
+      "total_events": 23,
+      "conversation_id": "eb43ecfb8ea6c733a04968502b460d19",
+      "chat_tail": [
+        {
+          "id": 1,
+          "conversation_id": "eb43ecfb8ea6c733a04968502b460d19",
+          "role": "assistant",
+          "content": "Zwischenstand fluss 62 gesichert",
+          "created_at": "2026-11-01T14:51:03.785Z"
+        }
+      ],
+      "message_count": 1
+    },
+    "a": {
+      "scope": "continuity",
+      "goal": {
+        "id": 18,
+        "scope": "continuity",
+        "kind": "goal",
+        "task_key": null,
+        "task_status": null,
+        "body": "Release-Kennung FLUSS-4 als Ziel; Datenordner /daten/fluss/lauf-5 für alle Läufe",
+        "source": "fixture",
+        "created_at": "2026-11-01T14:51:03.247Z"
+      },
+      "next_step": {
+        "id": 23,
+        "scope": "continuity",
+        "kind": "next_step",
+        "task_key": null,
+        "task_status": null,
+        "body": "fluss-abnahme",
+        "source": "fixture",
+        "created_at": "2026-11-01T14:51:03.616Z"
+      },
+      "tasks": [
+        {
+          "id": 21,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "gpu-index",
+          "task_status": "blocked",
+          "body": "GPU-Index zurückgestellt",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:03.468Z"
+        },
+        {
+          "id": 20,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "search",
+          "task_status": "in_progress",
+          "body": "Suche baut Index",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:03.394Z"
+        },
+        {
+          "id": 16,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "aufgabe-4",
+          "task_status": "open",
+          "body": "Weitere Aufgabe aufgabe-4",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:03.099Z"
+        },
+        {
+          "id": 15,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "aufgabe-3",
+          "task_status": "open",
+          "body": "Weitere Aufgabe aufgabe-3",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:03.026Z"
+        },
+        {
+          "id": 14,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "aufgabe-2",
+          "task_status": "open",
+          "body": "Weitere Aufgabe aufgabe-2",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.951Z"
+        },
+        {
+          "id": 13,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "aufgabe-1",
+          "task_status": "open",
+          "body": "Weitere Aufgabe aufgabe-1",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.870Z"
+        },
+        {
+          "id": 12,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "aufgabe-0",
+          "task_status": "open",
+          "body": "Weitere Aufgabe aufgabe-0",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.788Z"
+        },
+        {
+          "id": 19,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "schema",
+          "task_status": "done",
+          "body": "Schema anlegen",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:03.320Z"
+        }
+      ],
+      "task_count": 8,
+      "decisions": [
+        {
+          "id": 22,
+          "scope": "continuity",
+          "kind": "decision",
+          "task_key": null,
+          "task_status": null,
+          "body": "D2 ersetzt D1 vollständig: Backend SQLite statt PostgreSQL",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:03.542Z"
+        },
+        {
+          "id": 3,
+          "scope": "continuity",
+          "kind": "decision",
+          "task_key": null,
+          "task_status": null,
+          "body": "D1: Backend PostgreSQL für alle Läufe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.115Z"
+        }
+      ],
+      "recent_events": [
+        {
+          "id": 6,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 0 zu fluss ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.337Z"
+        },
+        {
+          "id": 7,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 1 zu fluss ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.410Z"
+        },
+        {
+          "id": 8,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 2 zu fluss ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.492Z"
+        },
+        {
+          "id": 9,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 3 zu fluss ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.566Z"
+        },
+        {
+          "id": 10,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 4 zu fluss ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:02.640Z"
+        }
+      ],
+      "total_events": 23,
+      "conversation_id": "eb43ecfb8ea6c733a04968502b460d19",
+      "chat_tail": [
+        {
+          "id": 1,
+          "conversation_id": "eb43ecfb8ea6c733a04968502b460d19",
+          "role": "assistant",
+          "content": "Zwischenstand fluss 62 gesichert",
+          "created_at": "2026-11-01T14:51:03.785Z"
+        }
+      ],
+      "message_count": 1
+    }
+  },
+  "expected": {
+    "release": "FLUSS-4",
+    "folder": "/daten/fluss/lauf-5",
+    "backend": "SQLite",
+    "schema": "done",
+    "search": "in_progress",
+    "next": "fluss-abnahme",
+    "assistant": "Zwischenstand fluss 62 gesichert",
+    "gpu": "blocked",
+    "archive_port": "7211",
+    "password": "unbekannt",
+    "production_date": "unbekannt"
+  },
+  "superseded": {
+    "release": [
+      "FLUSS-2"
+    ],
+    "backend": [
+      "PostgreSQL"
+    ],
+    "schema": [
+      "in_progress"
+    ],
+    "search": [
+      "blocked"
+    ],
+    "next": [
+      "fluss-entwurf",
+      "fluss-messen"
+    ]
+  }
+}
