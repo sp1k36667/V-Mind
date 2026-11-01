@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased (on `main`)
+
+### Added
+
+- `vmind doctor DB`: read-only check of schema version, integrity, foreign keys and
+  required tables; never creates or upgrades a database. (#10)
+- `vmind backup DB TARGET`: consistent SQLite backup that never overwrites an existing
+  file and is verified before it counts as done. (#10)
+- Automatic verified backup before every schema upgrade; if it cannot be written or
+  checked, the upgrade does not happen. `VMIND_BACKUP_DIR` chooses another folder. (#10)
+- `vmind report DB`: readable Markdown project report for people, strictly read-only,
+  verified knowledge and unverified proposals in separate sections. (#12)
+
+### Changed
+
+- `resume` no longer lists superseded goals, next steps and task states among the recent
+  events; the full history stays in `journal`. Found through the continuity pilot. (#14)
+
+### Experiments
+
+- Continuity pilot with Gemma 4 12B: pre-registered criteria missed, published with all
+  raw data and a re-check of every lost point. (#13)
+
 ## 0.2.0 – 2026-11-01
 
 First tagged release. Requires a database migration to schema 5; back up `vmind.db`

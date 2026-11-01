@@ -19,8 +19,9 @@ and find them again later:
 V-Mind is model-agnostic. It works as an **MCP server** (e.g. with Claude), from the command
 line, through a simple JSONL protocol, and with local models via Ollama.
 
-> Status: experimental prototype, MIT license. Detailed docs, CLI help texts and the AI
-> start prompt are currently in German.
+> Status: experimental prototype, version 0.2.0, MIT license. What is built and how it was
+> tested: [project status](#project-status-what-is-built-and-how-it-was-tested). Detailed
+> docs, CLI help texts and the AI start prompt are currently in German.
 
 ## What makes V-Mind different
 
@@ -61,6 +62,103 @@ confirmed it, and the confirmation is kept with the entry.
 - **Turning small local models into specialists:** a general model plus verified domain
   knowledge, e.g. for science, with sources and without training. This is a hypothesis so
   far; [opportunities and limits (German)](docs/design.md#spezialisierung-kleiner-lokaler-modelle).
+
+## Is it useful today? An honest answer
+
+**Yes, for one thing: keeping an AI's project state reliable across sessions and between
+different AI tools. The bigger promise, that an AI learns from experience, is not proven.**
+
+What works in daily use, not only in tests:
+
+- **Continuing a project after a restart.** A session-start hook hands the AI the goal, open
+  tasks and decisions, so it picks up where it stopped. V-Mind is developed this way itself.
+- **Two different AIs sharing one working state.** Claude and Codex coordinated the work on
+  V-Mind through a V-Mind conversation, with almost 70 messages, handovers and mutual
+  reviews. Normally two AI tools know nothing about each other.
+- **Knowledge with provenance.** An entry only counts after a test or a person confirmed
+  it, and you can always see who confirmed it, when and how.
+- **Solid basics:** local, one file, automated tests, verified backups before every
+  upgrade, ready-made programs for Linux, macOS and Windows.
+
+What is not there yet:
+
+- **Learning is not shown.** Our experiments found no learning curve on new tasks.
+- **Continuation by a small local model is not shown either.** In our test, Gemma 4 12B
+  did worse with `resume` than with the same data as a plain list; the main cause is fixed,
+  the follow-up test has not run yet.
+- **Logging still depends on the AI.** It has to remember to record what it did; automatic
+  logging through a Claude Code hook is built but not merged.
+- **Search finds words and word parts, not meanings.** Most detailed docs are in German.
+
+**In short:** if you work with Claude Code or similar tools on longer projects, V-Mind is
+useful today to make continuing and handing over work more reliable and traceable. It is
+not yet a finished product for a broad audience.
+
+## Project status: what is built and how it was tested
+
+*As of 1 November 2026.* Every point below comes with the test or check behind it. Open
+questions are listed as open.
+
+**Released: [version 0.2.0](https://github.com/sp1k36667/V-Mind/releases/tag/v0.2.0)**
+with ready-made programs for Linux x86_64, macOS arm64 and Windows x86_64 and SHA-256
+checksums. Contents: MCP server, check commands with `revalidate`, partial-word search,
+compact `resume`, bundled SQLite. See the [changelog](CHANGELOG.md).
+
+**On `main` since 0.2.0, not released yet:**
+
+| Feature | What it does |
+|---|---|
+| `vmind doctor DB` | Read-only check of schema, integrity, foreign keys and required tables |
+| `vmind backup DB TARGET` | Verified SQLite backup that never overwrites an existing file |
+| Automatic backup before upgrades | Every schema upgrade first writes and verifies a backup; if that fails, nothing is changed |
+| `vmind report DB` | Readable Markdown report for people; strictly read-only, verified knowledge and unverified proposals kept apart |
+| Cleaner `resume` | Superseded goals, next steps and task states no longer appear next to the current ones |
+
+**Automated tests:** 75 tests run on every change in GitHub Actions on Linux, together with
+Clippy (all warnings are errors) and a formatting check; macOS and Windows builds are
+checked too. Among other things they cover:
+
+- upgrades from older schemas without data loss, and failed upgrades that leave the
+  database untouched;
+- backups that never overwrite, and an automatic backup whose failure blocks the upgrade;
+- 16 separate processes writing at the same time without losing an entry;
+- check commands: no shell, time limit also while reading output, a timeout or error never
+  validates an entry;
+- scope and status filters for every search path, including partial-word search;
+- the MCP and JSONL protocols, including malformed and oversized input;
+- `report` leaving the database byte for byte unchanged, also on an older schema.
+
+**Checked by hand:** the published Linux download (checksum and first start); the upgrade of
+a real project database from schema 4 to 5 with a verified backup, integrity check and
+matching row counts; installation from the release on a fresh user profile without Rust or
+SQLite tools.
+
+**Test list: all experiments, done and planned** (details below, all raw data in the
+repository):
+
+| # | Question | Model | Status | Result |
+|---|---|---|---|---|
+| 1 | Does a stored, verified solution help a small model? | Gemma 4 E2B | done | Yes for reuse of the same solution (7/7 instead of 2/7 checks); says nothing about learning. [Report](docs/experiments/e2b-pilot.md) |
+| 2 | Does a model get better from its own checked lessons? | Gemma 4 E2B | done, pre-registered | No learning curve; 0 of 108 task runs solved; about one in five unchecked lessons clearly wrong. [Report](docs/experiments/lernkurve.md) |
+| 3 | Same question as 2 | Gemma 4 12B | done, exploratory | No learning curve either, but 12B fixed errors itself and its unchecked lessons were rarely wrong. [Report](docs/experiments/lernkurve.md#explorativer-lauf-mit-gemma-4-12b) |
+| 4 | Can a fresh session continue a project from `resume`? | Gemma 4 12B | done, pre-registered | Criteria missed: 117/165 vs. 133/165 for the same data as a flat list; cause found and fixed. [Report](docs/experiments/continuity-pilot.md) |
+| 5 | Does the fix help, and does the format matter? | Gemma 4 12B | pre-registered and frozen, not run yet | – [Plan](https://github.com/sp1k36667/V-Mind/blob/exp/continuity-2x2/docs/experiments/continuity-2x2-plan.md) |
+| 6 | Does one correct, verified lesson help on *new* tasks? | Gemma 4 12B | draft | – [Draft](docs/experiments/transfer-pilot-plan.md) |
+
+New experiments use **Gemma 4 12B only**. In tests 2 and 3, 12B fixed its own errors far more
+often and wrote far fewer wrong lessons than E2B, so it is the better basis for testing
+whether lessons help at all. Test 6 starts with a hand-written correct lesson: if even that
+does not help, self-written lessons cannot be the answer.
+
+**In progress** (open pull requests, under review): observing Claude Code tool calls through
+a hook (only tool, result and project path; never commands, output or file contents), new
+database files readable only by their owner, clearer error messages, and the follow-up
+continuity test. [Open pull requests](https://github.com/sp1k36667/V-Mind/pulls).
+
+**How it is developed:** the maintainer sets goals and priorities. Two AI assistants, Claude
+(Anthropic) and Codex (OpenAI), write and review the code. Only one of them writes code at a
+time; the other reviews every change and re-checks reported numbers independently. They
+coordinate through a V-Mind conversation, so V-Mind is used to build V-Mind.
 
 ## Use it with Claude (Claude Desktop / Claude Code)
 
@@ -317,6 +415,27 @@ drafted but not run.
 [Report (German)](docs/experiments/lernkurve.md),
 [follow-up draft (German)](docs/experiments/transfer-pilot-plan.md).
 
+## Third experiment: can a fresh session continue a project?
+
+This tests what V-Mind is mainly used for. Gemma 4 12B answered eleven fixed questions about
+three synthetic projects (current goal, task states, the replaced backend decision, the
+next step, two questions with no answer in the data), in 45 pre-registered runs: without any
+history, with the same data as a flat field list, and with V-Mind's `resume` output.
+
+| | No history | Flat list | V-Mind `resume` |
+|---|---:|---:|---:|
+| Correct answers (strict, of 165) | 6 | 133 | 117 |
+
+**Result: the pre-registered criteria were missed**, and the result is published as is.
+Re-checking the raw answers showed where the 16 points went: 7 were real errors, because
+`resume` showed old "next step" entries next to the current one and the model sometimes
+picked an old one; most of the rest were correct facts in the wrong form (a quoted folder
+with a trailing full stop, "Backend SQLite" instead of "SQLite"). The old entries are now
+filtered out of `resume`. A follow-up that separates this fix from the presentation format
+is pre-registered with new projects and seeds, but has not been run yet.
+[Report (German)](docs/experiments/continuity-pilot.md),
+[follow-up plan (German)](https://github.com/sp1k36667/V-Mind/blob/exp/continuity-2x2/docs/experiments/continuity-2x2-plan.md).
+
 ## Trust, privacy and backups
 
 **What V-Mind guarantees:** only entries marked *validated* are retrieved; every
@@ -340,7 +459,10 @@ to the SQLite file directly bypasses them, and the history itself is not tamper-
 journal and conversations. The store stays on your machine. `ask` sends the question and
 the retrieved context to the Ollama endpoint in `VMIND_OLLAMA_URL` (by default a local
 server; any other address you set receives that data). MCP clients pass what they read from
-V-Mind to their model, which may run in the cloud. Do not store passwords or keys. There is currently no command to
+V-Mind to their model, which may run in the cloud. From the development version after
+0.2.0, a new database file is created readable only by its owner on Linux and macOS (0600);
+existing files keep their permissions, and on Windows the folder permissions apply. Do not
+store passwords or keys. There is currently no command to
 delete an entry's content; if a secret ends up in the file, restore an earlier backup or
 remove it with SQLite tools, and treat the secret as exposed.
 

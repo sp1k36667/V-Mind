@@ -79,8 +79,10 @@ fn record(row: &rusqlite::Row<'_>) -> Result<Record> {
     })
 }
 
+/// Eigene Prüffehler. Diese rusqlite-Variante zeigt nur unsere Meldung an, ohne das
+/// irreführende „Invalid parameter name:“ davor.
 fn invalid(message: &str) -> rusqlite::Error {
-    rusqlite::Error::InvalidParameterName(message.into())
+    rusqlite::Error::ToSqlConversionFailure(message.into())
 }
 
 fn nonblank(value: &str) -> Result<()> {
@@ -125,8 +127,35 @@ fn match_expression<'a>(terms: impl Iterator<Item = &'a String>) -> String {
 /// Der Trigramm-Index braucht mindestens drei Zeichen je Begriff.
 const MIN_PARTIAL_TERM_CHARS: usize = 3;
 
+/// Legt eine noch nicht vorhandene Datenbankdatei unter Unix nur für den Besitzer
+/// lesbar an (0600). Vorhandene Dateien, `:memory:` und SQLite-URIs bleiben unberührt.
+fn create_private(path: &Path) -> Result<()> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        let name = path.to_string_lossy();
+        if name.is_empty() || name == ":memory:" || name.starts_with("file:") {
+            return Ok(());
+        }
+        let created = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(path);
+        match created {
+            Ok(_) => {}
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
+            Err(e) => return Err(invalid(&format!("Datenbankdatei nicht anlegbar: {e}"))),
+        }
+    }
+    #[cfg(not(unix))]
+    let _ = path;
+    Ok(())
+}
+
 impl MemoryStore {
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
+        create_private(path.as_ref())?;
         Self::from_connection(Connection::open(path)?)
     }
     /// Öffnet nur eine vorhandene Datei, verhindert versehentliche neue Datenbanken bei Tippfehlern.

@@ -21,7 +21,8 @@ V-Mind ist modellunabhängig. Es funktioniert als **MCP-Server** (z. B. mit Clau
 über die Kommandozeile, über ein einfaches JSONL-Protokoll und mit lokalen Modellen
 über Ollama.
 
-> Status: experimenteller Prototyp. 59 automatische Tests, MIT-Lizenz.
+> Status: experimenteller Prototyp, Version 0.2.0, MIT-Lizenz. Was gebaut ist und wie es
+> geprüft wurde: [Projektstand](#projektstand-was-gebaut-ist-und-wie-es-geprüft-wurde).
 
 ## Was V-Mind anders macht
 
@@ -66,6 +67,111 @@ ausführbarer Prüfbefehl sie bestätigt hat; die Bestätigung bleibt am Eintrag
 - **Kleine lokale Modelle zu Spezialisten machen:** ein allgemeines Modell plus
   geprüftes Fachwissen, z. B. für die Wissenschaft, mit Quellen und ohne Training.
   Das ist bisher eine Hypothese; [Chancen und Grenzen](docs/design.md#spezialisierung-kleiner-lokaler-modelle).
+
+## Taugt es heute schon etwas? Eine ehrliche Antwort
+
+**Ja, für eine Sache: den Projektstand einer KI über Sitzungen hinweg und zwischen
+verschiedenen KI-Werkzeugen zuverlässig zu halten. Das größere Versprechen, dass eine KI
+aus Erfahrung lernt, ist nicht belegt.**
+
+Was im Alltag funktioniert, nicht nur im Test:
+
+- **Ein Projekt nach einem Neustart fortsetzen.** Ein Start-Hook gibt der KI Ziel, offene
+  Aufgaben und Entscheidungen mit, sie macht dort weiter, wo sie aufgehört hat. V-Mind wird
+  selbst so entwickelt.
+- **Zwei verschiedene KIs teilen sich einen Arbeitsstand.** Claude und Codex haben die
+  Arbeit an V-Mind über ein V-Mind-Gespräch abgestimmt, mit fast 70 Nachrichten,
+  Übergaben und gegenseitigen Prüfungen. Normalerweise wissen zwei KI-Programme nichts
+  voneinander.
+- **Wissen mit Herkunft.** Ein Eintrag gilt erst, wenn ein Test oder ein Mensch ihn
+  bestätigt hat, und man sieht immer, wer, wann und womit.
+- **Solide Grundlagen:** lokal, eine Datei, automatische Tests, geprüfte Sicherungen vor
+  jedem Upgrade, fertige Programme für Linux, macOS und Windows.
+
+Was noch fehlt:
+
+- **Lernen ist nicht gezeigt.** Unsere Versuche fanden bei neuen Aufgaben keine Lernkurve.
+- **Fortsetzung durch ein kleines lokales Modell ebenfalls nicht.** Im Test schnitt
+  Gemma 4 12B mit `resume` schlechter ab als mit denselben Daten als einfache Liste; die
+  Hauptursache ist behoben, der Folgetest läuft noch nicht.
+- **Mitschreiben hängt noch an der KI.** Sie muss selbst daran denken einzutragen, was sie
+  getan hat; ein automatisches Protokoll über einen Claude-Code-Hook ist gebaut, aber noch
+  nicht gemergt.
+- **Die Suche findet Wörter und Wortteile, keine Bedeutungen.**
+
+**Kurz:** Wer mit Claude Code oder ähnlichen Werkzeugen an längeren Projekten arbeitet,
+macht mit V-Mind heute schon das Fortsetzen und Übergeben zuverlässiger und
+nachvollziehbarer. Ein fertiges Produkt für die breite Masse ist es noch nicht.
+
+## Projektstand: was gebaut ist und wie es geprüft wurde
+
+*Stand 1. November 2026.* Zu jedem Punkt steht, womit er geprüft wurde. Offene Fragen
+stehen als offen da.
+
+**Veröffentlicht: [Version 0.2.0](https://github.com/sp1k36667/V-Mind/releases/tag/v0.2.0)**
+mit fertigen Programmen für Linux x86_64, macOS arm64 und Windows x86_64 samt
+SHA-256-Prüfsummen. Inhalt: MCP-Server, Prüfbefehle mit `revalidate`, Teilwortsuche,
+kompaktes `resume`, eingebautes SQLite. Siehe [Changelog](CHANGELOG.md).
+
+**Auf `main` seit 0.2.0, noch nicht veröffentlicht:**
+
+| Funktion | Was sie tut |
+|---|---|
+| `vmind doctor DB` | Prüft Schema, Integrität, Fremdschlüssel und nötige Tabellen, nur lesend |
+| `vmind backup DB ZIEL` | Geprüfte SQLite-Sicherung, die nie eine vorhandene Datei überschreibt |
+| Automatische Sicherung vor Upgrades | Jede Schemaumstellung schreibt und prüft zuerst eine Sicherung; scheitert sie, bleibt alles unverändert |
+| `vmind report DB` | Lesbarer Bericht in Markdown für Menschen; strikt nur lesend, geprüftes Wissen und ungeprüfte Vorschläge getrennt |
+| Aufgeräumtes `resume` | Überholte Ziele, nächste Schritte und Aufgabenstände erscheinen nicht mehr neben den aktuellen |
+
+**Automatische Tests:** 75 Tests laufen bei jeder Änderung in GitHub Actions unter Linux,
+zusammen mit Clippy (jede Warnung ist ein Fehler) und einer Formatprüfung; die Builds für
+macOS und Windows werden ebenfalls geprüft. Abgedeckt sind unter anderem:
+
+- Upgrades älterer Schemas ohne Datenverlust; fehlgeschlagene Upgrades lassen die
+  Datenbank unverändert;
+- Sicherungen überschreiben nie, und eine fehlgeschlagene automatische Sicherung
+  verhindert das Upgrade;
+- 16 getrennte Prozesse schreiben gleichzeitig, ohne dass ein Eintrag verloren geht;
+- Prüfbefehle: keine Shell, Zeitlimit auch beim Lesen der Ausgabe, Zeitüberschreitung
+  oder Fehler bestätigen nie einen Eintrag;
+- Bereichs- und Statusfilter in allen Suchwegen, auch in der Teilwortsuche;
+- MCP- und JSONL-Protokoll, auch mit kaputten und übergroßen Eingaben;
+- `report` lässt die Datenbank Byte für Byte unverändert, auch bei älterem Schema.
+
+**Von Hand geprüft:** der veröffentlichte Linux-Download (Prüfsumme und erster Start); das
+Upgrade einer echten Projektdatenbank von Schema 4 auf 5 mit geprüfter Sicherung,
+Integritätsprüfung und gleichen Zeilenzahlen; die Installation aus dem Release auf einem
+frischen Benutzerprofil ohne Rust- oder SQLite-Werkzeuge.
+
+**Testliste: alle Versuche, durchgeführt und geplant** (Einzelheiten unten, alle Rohdaten
+im Repository):
+
+| # | Frage | Modell | Stand | Ergebnis |
+|---|---|---|---|---|
+| 1 | Hilft eine gespeicherte, geprüfte Lösung einem kleinen Modell? | Gemma 4 E2B | durchgeführt | Ja beim Wiederverwenden derselben Lösung (7/7 statt 2/7 Prüfungen); sagt nichts über Lernen. [Bericht](docs/experiments/e2b-pilot.md) |
+| 2 | Wird ein Modell durch eigene geprüfte Lehren besser? | Gemma 4 E2B | durchgeführt, vorab geplant | Keine Lernkurve; 0 von 108 Aufgabenläufen gelöst; etwa jede fünfte ungeprüfte Lehre eindeutig falsch. [Bericht](docs/experiments/lernkurve.md) |
+| 3 | Gleiche Frage wie 2 | Gemma 4 12B | durchgeführt, explorativ | Ebenfalls keine Lernkurve, aber 12B behob Fehler selbst, und seine ungeprüften Lehren waren selten falsch. [Bericht](docs/experiments/lernkurve.md#explorativer-lauf-mit-gemma-4-12b) |
+| 4 | Kann eine frische Sitzung ein Projekt aus `resume` fortsetzen? | Gemma 4 12B | durchgeführt, vorab geplant | Kriterien verfehlt: 117/165 gegen 133/165 für dieselben Daten als flache Liste; Ursache gefunden und behoben. [Bericht](docs/experiments/continuity-pilot.md) |
+| 5 | Hilft die Korrektur, und spielt das Format eine Rolle? | Gemma 4 12B | vorab geplant und eingefroren, noch nicht gelaufen | – [Plan](https://github.com/sp1k36667/V-Mind/blob/exp/continuity-2x2/docs/experiments/continuity-2x2-plan.md) |
+| 6 | Hilft eine richtige, geprüfte Lehre bei *neuen* Aufgaben? | Gemma 4 12B | Entwurf | – [Entwurf](docs/experiments/transfer-pilot-plan.md) |
+
+Neue Versuche laufen **nur noch mit Gemma 4 12B**. In den Versuchen 2 und 3 hat 12B seine
+Fehler viel öfter selbst behoben und viel seltener falsche Lehren geschrieben als E2B; es ist
+damit die bessere Grundlage, um zu prüfen, ob Lehren überhaupt helfen. Versuch 6 beginnt mit
+einer von Hand geschriebenen, richtigen Lehre: Hilft selbst die nicht, können selbst
+geschriebene Lehren nicht die Lösung sein.
+
+**In Arbeit** (offene Pull Requests, in Prüfung): Beobachtung von Claude-Code-Werkzeugaufrufen
+über einen Hook (nur Werkzeug, Ergebnis und Projektpfad; nie Befehle, Ausgaben oder
+Dateiinhalte), neue Datenbankdateien nur für den Besitzer lesbar, verständlichere
+Fehlermeldungen und der Fortsetzungs-Folgeversuch.
+[Offene Pull Requests](https://github.com/sp1k36667/V-Mind/pulls).
+
+**Wie entwickelt wird:** Der Projektinhaber legt Ziele und Prioritäten fest. Zwei
+KI-Assistenten, Claude (Anthropic) und Codex (OpenAI), schreiben und prüfen den Code. Immer
+nur einer schreibt Code; der andere prüft jede Änderung und rechnet berichtete Zahlen
+unabhängig nach. Abgestimmt wird über ein V-Mind-Gespräch – V-Mind wird also mit V-Mind
+gebaut.
 
 ## In Claude nutzen (Claude Desktop / Claude Code)
 
@@ -325,6 +431,29 @@ ein Fix oft viele Prüfungen gleichzeitig umschaltet. Ein kleinerer Folgeversuch
 Transfer einer einzelnen geprüften Lehre misst, ist entworfen, aber nicht gelaufen.
 [Bericht](docs/experiments/lernkurve.md), [Entwurf Folgeversuch](docs/experiments/transfer-pilot-plan.md).
 
+## Dritter Versuch: Kann eine frische Sitzung ein Projekt fortsetzen?
+
+Das prüft, wofür V-Mind vor allem gedacht ist. Gemma 4 12B beantwortete elf feste Fragen
+zu drei synthetischen Projekten (aktuelles Ziel, Aufgabenstände, die ersetzte
+Backend-Entscheidung, der nächste Schritt, zwei Fragen ohne Antwort in den Daten), in 45
+vorab festgelegten Läufen: ohne Verlauf, mit denselben Daten als flache Feldliste und mit
+der `resume`-Ausgabe von V-Mind.
+
+| | Ohne Verlauf | Flache Liste | V-Mind `resume` |
+|---|---:|---:|---:|
+| Richtige Antworten (streng, von 165) | 6 | 133 | 117 |
+
+**Ergebnis: Die vorab festgelegten Kriterien wurden verfehlt**, und das Ergebnis ist
+unverändert veröffentlicht. Die Nachprüfung der Rohantworten zeigt, woher die 16 Punkte
+kommen: 7 waren echte Fehler, weil `resume` alte „nächste Schritte“ neben dem aktuellen
+zeigte und das Modell manchmal einen alten nannte; der größte Rest waren richtige Fakten in
+falscher Form (ein Ordner mit Satzpunkt, „Backend SQLite“ statt „SQLite“). Die alten
+Einträge filtert `resume` inzwischen heraus. Ein Folgeversuch, der diese Korrektur von der
+Darstellungsform trennt, ist mit neuen Projekten und Seeds vorab festgelegt, aber noch
+nicht gelaufen.
+[Bericht](docs/experiments/continuity-pilot.md),
+[Plan des Folgeversuchs](https://github.com/sp1k36667/V-Mind/blob/exp/continuity-2x2/docs/experiments/continuity-2x2-plan.md).
+
 ## Vertrauen, Datenschutz und Sicherung
 
 **Was V-Mind zusichert:** Nur als *validiert* markierte Einträge werden abgerufen. Jede
@@ -351,7 +480,10 @@ selbst ist nicht fälschungssicher.
 Projekttagebuch und Gespräche. Der Speicher bleibt auf deinem Rechner. `ask` schickt Frage
 und abgerufenen Kontext an den Ollama-Endpunkt in `VMIND_OLLAMA_URL` (standardmäßig ein
 lokaler Server; jede andere eingestellte Adresse erhält diese Daten). MCP-Clients geben,
-was sie aus V-Mind lesen, an ihr Modell weiter, das in der Cloud laufen kann. Keine Passwörter oder Schlüssel speichern. Einen
+was sie aus V-Mind lesen, an ihr Modell weiter, das in der Cloud laufen kann. Ab dem
+Entwicklungsstand nach 0.2.0 wird eine neue Datenbankdatei unter Linux und macOS nur für
+den Besitzer lesbar angelegt (0600); vorhandene Dateien behalten ihre Rechte, unter
+Windows gelten die Rechte des Ordners. Keine Passwörter oder Schlüssel speichern. Einen
 Befehl zum Löschen von Inhalten gibt es derzeit nicht; ist ein Geheimnis in der Datei
 gelandet, ein früheres Backup zurückspielen oder es mit SQLite-Werkzeugen entfernen und
 das Geheimnis als offengelegt behandeln.
