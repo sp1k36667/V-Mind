@@ -39,8 +39,8 @@ Most AI memories store whatever the model considers important. V-Mind strictly s
   as an MCP tool, only on the command line or through an executable check. An AI that can
   also run shell commands can call that command line too; see
   [Trust, privacy and backups](#trust-privacy-and-backups).
-- **Nothing is silently overwritten.** Outdated entries are withdrawn; every change stays
-  traceable in the history.
+- **V-Mind's commands never silently overwrite.** Outdated entries are withdrawn; every
+  change made through V-Mind stays traceable in the history.
 - **Scopes** (`--scope`) keep projects apart; the `global` scope applies to all of them.
 - **Fully local:** one SQLite file, no cloud service, no GPU required.
 
@@ -50,9 +50,9 @@ runs can retrieve it. Whether that makes a model avoid the mistake on *new* task
 shown yet; our experiments so far did not find a learning curve (see below). What works
 today is reliable continuation of projects and reuse of verified solutions.
 
-Related approaches such as Reflexion, Voyager or mem0 mostly store what the model
-*believes*. V-Mind stores what *verifiably worked*.
-[Detailed comparison (German)](docs/design.md#abgrenzung-zu-ähnlichen-ansätzen).
+In V-Mind, a stored lesson is not used until a person or an executable check has
+confirmed it, and the confirmation is kept with the entry.
+[How this relates to other approaches (German)](docs/design.md#abgrenzung-zu-ähnlichen-ansätzen).
 
 ## What is it for?
 
@@ -140,7 +140,8 @@ be used. After that Claude has these tools:
 **Claude desktop app, chat (outside the Code tab):** chat sessions do not read
 `.mcp.json`. Add the server to `claude_desktop_config.json` (Settings → Developer → Edit
 Config; on macOS `~/Library/Application Support/Claude/`, on Windows `%APPDATA%\Claude\`)
-and use **absolute paths**, because the app does not start in your project folder:
+and use **absolute paths**, because the app does not start in your project folder. This is
+a manual example; we have not tested it on every platform yet:
 
 ```json
 {
@@ -307,8 +308,10 @@ drafted but not run.
 ## Trust, privacy and backups
 
 **What V-Mind guarantees:** only entries marked *validated* are retrieved; every
-validation, withdrawal and check run is recorded with who, when and with what evidence;
-nothing is silently overwritten; a failed migration leaves the database unchanged.
+validation, withdrawal and check run made through V-Mind is recorded with who, when and
+with what evidence; V-Mind's commands never silently overwrite; a failed migration leaves
+the database unchanged. These guarantees cover V-Mind's own commands. A program that writes
+to the SQLite file directly bypasses them, and the history itself is not tamper-proof.
 
 **What it does not guarantee:**
 
@@ -322,9 +325,10 @@ nothing is silently overwritten; a failed migration leaves the database unchange
 - **Scopes are not access control.** Anyone who can read the file can read all scopes.
 
 **Privacy:** everything is stored unencrypted in one local SQLite file: knowledge, project
-journal and conversations. V-Mind sends nothing anywhere by itself; `ask` sends the question
-and retrieved context to the local Ollama server you configured, and MCP clients pass what
-they read to their model. Do not store passwords or keys. There is currently no command to
+journal and conversations. The store stays on your machine. `ask` sends the question and
+the retrieved context to the Ollama endpoint in `VMIND_OLLAMA_URL` (by default a local
+server; any other address you set receives that data). MCP clients pass what they read from
+V-Mind to their model, which may run in the cloud. Do not store passwords or keys. There is currently no command to
 delete an entry's content; if a secret ends up in the file, restore an earlier backup or
 remove it with SQLite tools, and treat the secret as exposed.
 

@@ -40,11 +40,11 @@ V-Mind trennt dagegen streng zwischen *vermutet* und *geprüft*:
   MCP-Werkzeug, sondern nur über die Kommandozeile oder einen Prüfbefehl möglich. Eine KI,
   die zusätzlich Shell-Befehle ausführen darf, kann auch diese Kommandozeile aufrufen;
   siehe [Vertrauen, Datenschutz und Sicherung](#vertrauen-datenschutz-und-sicherung).
-- **Nichts wird still überschrieben.** Veraltetes wird zurückgezogen, jede Änderung
-  bleibt in der Historie nachvollziehbar.
+- **V-Minds Befehle überschreiben nichts still.** Veraltetes wird zurückgezogen, jede
+  Änderung über V-Mind bleibt in der Historie nachvollziehbar.
 - **Projektbereiche** (`--scope`) halten Projekte getrennt; der Bereich `global`
   gilt für alle.
-- **Alles lokal:** eine SQLite-Datei, kein Cloud-Dienst, keine GPU nötig.
+- **Alles lokal:** eine SQLite-Datei, kein Cloud-Dienst und keine GPU nötig.
 
 **Die Idee dahinter: Lernen über Läufe, ohne Training.** Ein Modell findet über einen
 echten Test einen Fehler, behebt ihn und schlägt die Erfahrung vor. Sobald die Prüfung
@@ -53,9 +53,9 @@ sie bestätigt, können spätere Läufe sie abrufen. Ob ein Modell dadurch den F
 keine Lernkurve (siehe unten). Was heute funktioniert: Projekte zuverlässig fortsetzen
 und geprüfte Lösungen wiederverwenden.
 
-Ähnliche Ansätze wie Reflexion, Voyager oder mem0 speichern meist, was das Modell
-*glaubt*. V-Mind speichert, was *nachweislich funktioniert hat*.
-[Abgrenzung im Detail](docs/design.md#abgrenzung-zu-ähnlichen-ansätzen).
+In V-Mind wird eine gespeicherte Erfahrung erst genutzt, wenn ein Mensch oder ein
+ausführbarer Prüfbefehl sie bestätigt hat; die Bestätigung bleibt am Eintrag.
+[Verhältnis zu anderen Ansätzen](docs/design.md#abgrenzung-zu-ähnlichen-ansätzen).
 
 ## Wofür?
 
@@ -147,7 +147,8 @@ erlaubt werden soll. Danach hat Claude diese Werkzeuge:
 Den Server in `claude_desktop_config.json` eintragen (Einstellungen → Entwickler →
 Konfiguration bearbeiten; unter macOS `~/Library/Application Support/Claude/`, unter
 Windows `%APPDATA%\Claude\`) und **absolute Pfade** verwenden, weil die App nicht im
-Projektordner startet:
+Projektordner startet. Das ist ein manuelles Beispiel, noch nicht auf allen Plattformen
+getestet:
 
 ```json
 {
@@ -315,9 +316,11 @@ Transfer einer einzelnen geprüften Lehre misst, ist entworfen, aber nicht gelau
 ## Vertrauen, Datenschutz und Sicherung
 
 **Was V-Mind zusichert:** Nur als *validiert* markierte Einträge werden abgerufen. Jede
-Validierung, jeder Rückzug und jeder Prüflauf wird mit wer, wann und welchem Nachweis
-festgehalten. Nichts wird still überschrieben. Eine fehlgeschlagene Migration lässt die
-Datenbank unverändert.
+Validierung, jeder Rückzug und jeder Prüflauf über V-Mind wird mit wer, wann und welchem
+Nachweis festgehalten. V-Minds Befehle überschreiben nichts still. Eine fehlgeschlagene
+Migration lässt die Datenbank unverändert. Das gilt für V-Minds eigene Befehle; ein
+Programm, das direkt in die SQLite-Datei schreibt, umgeht diese Zusagen, und die Historie
+selbst ist nicht fälschungssicher.
 
 **Was V-Mind nicht zusichert:**
 
@@ -333,9 +336,10 @@ Datenbank unverändert.
   Bereiche.
 
 **Datenschutz:** Alles liegt unverschlüsselt in einer lokalen SQLite-Datei: Wissen,
-Projekttagebuch und Gespräche. V-Mind sendet von sich aus nichts nach außen; `ask` schickt
-Frage und abgerufenen Kontext an den eingestellten lokalen Ollama-Server, und MCP-Clients
-geben Gelesenes an ihr Modell weiter. Keine Passwörter oder Schlüssel speichern. Einen
+Projekttagebuch und Gespräche. Der Speicher bleibt auf deinem Rechner. `ask` schickt Frage
+und abgerufenen Kontext an den Ollama-Endpunkt in `VMIND_OLLAMA_URL` (standardmäßig ein
+lokaler Server; jede andere eingestellte Adresse erhält diese Daten). MCP-Clients geben,
+was sie aus V-Mind lesen, an ihr Modell weiter, das in der Cloud laufen kann. Keine Passwörter oder Schlüssel speichern. Einen
 Befehl zum Löschen von Inhalten gibt es derzeit nicht; ist ein Geheimnis in der Datei
 gelandet, ein früheres Backup zurückspielen oder es mit SQLite-Werkzeugen entfernen und
 das Geheimnis als offengelegt behandeln.
