@@ -143,13 +143,23 @@ Upgrade einer echten Projektdatenbank von Schema 4 auf 5 mit geprüfter Sicherun
 Integritätsprüfung und gleichen Zeilenzahlen; die Installation aus dem Release auf einem
 frischen Benutzerprofil ohne Rust- oder SQLite-Werkzeuge.
 
-**Versuche** (Einzelheiten unten, alle Rohdaten im Repository):
+**Testliste: alle Versuche, durchgeführt und geplant** (Einzelheiten unten, alle Rohdaten
+im Repository):
 
-| Versuch | Ergebnis |
-|---|---|
-| Hilft eine gespeicherte, geprüfte Lösung einem kleinen Modell? | Ja beim Wiederverwenden derselben Lösung; sagt nichts über Lernen |
-| Wird ein Modell durch eigene geprüfte Lehren besser? | Keine Lernkurve (Gemma 4 E2B vorab geplant, 12B explorativ) |
-| Kann eine frische Modellsitzung ein Projekt aus `resume` fortsetzen? | Vorab festgelegte Kriterien verfehlt: 117/165 gegen 133/165 für dieselben Daten als flache Liste; Ursache gefunden und behoben, Folgeversuch vorbereitet |
+| # | Frage | Modell | Stand | Ergebnis |
+|---|---|---|---|---|
+| 1 | Hilft eine gespeicherte, geprüfte Lösung einem kleinen Modell? | Gemma 4 E2B | durchgeführt | Ja beim Wiederverwenden derselben Lösung (7/7 statt 2/7 Prüfungen); sagt nichts über Lernen. [Bericht](docs/experiments/e2b-pilot.md) |
+| 2 | Wird ein Modell durch eigene geprüfte Lehren besser? | Gemma 4 E2B | durchgeführt, vorab geplant | Keine Lernkurve; 0 von 108 Aufgabenläufen gelöst; etwa jede fünfte ungeprüfte Lehre eindeutig falsch. [Bericht](docs/experiments/lernkurve.md) |
+| 3 | Gleiche Frage wie 2 | Gemma 4 12B | durchgeführt, explorativ | Ebenfalls keine Lernkurve, aber 12B behob Fehler selbst, und seine ungeprüften Lehren waren selten falsch. [Bericht](docs/experiments/lernkurve.md#explorativer-lauf-mit-gemma-4-12b) |
+| 4 | Kann eine frische Sitzung ein Projekt aus `resume` fortsetzen? | Gemma 4 12B | durchgeführt, vorab geplant | Kriterien verfehlt: 117/165 gegen 133/165 für dieselben Daten als flache Liste; Ursache gefunden und behoben. [Bericht](docs/experiments/continuity-pilot.md) |
+| 5 | Hilft die Korrektur, und spielt das Format eine Rolle? | Gemma 4 12B | vorab geplant und eingefroren, noch nicht gelaufen | – [Plan](https://github.com/sp1k36667/V-Mind/blob/exp/continuity-2x2/docs/experiments/continuity-2x2-plan.md) |
+| 6 | Hilft eine richtige, geprüfte Lehre bei *neuen* Aufgaben? | Gemma 4 12B | Entwurf | – [Entwurf](docs/experiments/transfer-pilot-plan.md) |
+
+Neue Versuche laufen **nur noch mit Gemma 4 12B**. In den Versuchen 2 und 3 hat 12B seine
+Fehler viel öfter selbst behoben und viel seltener falsche Lehren geschrieben als E2B; es ist
+damit die bessere Grundlage, um zu prüfen, ob Lehren überhaupt helfen. Versuch 6 beginnt mit
+einer von Hand geschriebenen, richtigen Lehre: Hilft selbst die nicht, können selbst
+geschriebene Lehren nicht die Lösung sein.
 
 **In Arbeit** (offene Pull Requests, in Prüfung): Beobachtung von Claude-Code-Werkzeugaufrufen
 über einen Hook (nur Werkzeug, Ergebnis und Projektpfad; nie Befehle, Ausgaben oder
