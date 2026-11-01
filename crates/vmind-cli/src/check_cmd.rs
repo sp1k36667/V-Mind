@@ -154,7 +154,7 @@ pub(crate) fn evidence_note(check: &vmind_core::CheckEvidence) -> String {
     use vmind_core::CheckState;
     let at = check.run_at.as_deref().unwrap_or("unbekannt");
     match check.state {
-        CheckState::None => "kein Prüfbefehl ausgeführt".into(),
+        CheckState::None => "kein Prüfbefehl hinterlegt".into(),
         CheckState::NotRun => "Hinweis: aktiver Prüfbefehl noch nicht ausgeführt; frühere Läufe anderer Definitionen sind kein Nachweis".into(),
         CheckState::Passed => format!("letzter Lauf des aktiven Prüfbefehls bestanden am {at}; heutiger Stand nicht erneut geprüft"),
         CheckState::Failed => format!("WARNUNG: aktiver Prüfbefehl fehlgeschlagen am {at}; Validierungsstatus unverändert, Neuprüfung nötig"),

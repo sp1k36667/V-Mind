@@ -43,7 +43,9 @@ fn tools() -> Vec<Value> {
         tool(
             "recall",
             "Validiertes aktives Wissen per Volltextsuche (FTS5/BM25) finden. Ein \
-             Projektbereich schließt `global` ein. Leere Treffer sind ein gültiges Ergebnis.",
+             Projektbereich schließt `global` ein. Leere Treffer sind ein gültiges Ergebnis. \
+             `check` zeigt den Zustand der aktiven Prüfdefinition samt Zeit und letztem Pass/Fail; \
+             es wird beim Abruf nichts ausgeführt und keine heutige Gültigkeit garantiert.",
             json!({"query":{"type":"string"},"scope":scope,
                 "limit":{"type":"integer","minimum":1,"maximum":20,"default":5}}),
             &["query"],
@@ -51,7 +53,8 @@ fn tools() -> Vec<Value> {
         tool(
             "get",
             "Vollständigen Eintrag samt Historie, aktivem Prüfbefehl und letzten Prüfläufen \
-             laden, auch zurückgezogene Einträge.",
+             laden, auch zurückgezogene Einträge. `memory.check` beschreibt den letzten \
+             Prüfzustand der aktiven Definition, keine erneute Prüfung.",
             json!({"memory_id":{"type":"integer"}}),
             &["memory_id"],
         ),

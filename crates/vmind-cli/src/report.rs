@@ -10,6 +10,7 @@ const REPORT_KNOWLEDGE: usize = 20;
 pub struct Knowledge {
     #[serde(flatten)]
     pub record: Record,
+    /// JSON compatibility field; human-readable notes use record.check.
     pub last_check_run: Option<CheckRun>,
 }
 
@@ -257,7 +258,7 @@ mod tests {
         let pending_entry = text.find("Vermutung → ungeklärt").unwrap();
         assert!(knowledge < validated_entry && validated_entry < pending);
         assert!(pending < pending_entry);
-        assert!(text.contains("Bestätigt von Prüfer: Test bestanden. kein Prüfbefehl ausgeführt."));
+        assert!(text.contains("Bestätigt von Prüfer: Test bestanden. kein Prüfbefehl hinterlegt."));
         assert!(text.contains("noch nicht bestätigt"));
     }
 
