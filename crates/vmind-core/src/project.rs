@@ -2,6 +2,11 @@ use crate::{MemoryStore, invalid, nonblank};
 use rusqlite::{OptionalExtension, Result, params};
 use serde::Serialize;
 
+const RESUME_OPEN_TASKS: usize = 20;
+const RESUME_DONE_TASKS: usize = 5;
+const RESUME_DECISIONS: usize = 5;
+const RESUME_RECENT_EVENTS: usize = 5;
+
 #[derive(Debug, Serialize)]
 pub struct JournalEntry {
     pub id: i64,
@@ -194,29 +199,49 @@ impl MemoryStore {
         };
         let goal = latest("goal")?;
         let next_step = latest("next_step")?;
+        // Aktueller Stand je Aufgabe: alle unerledigten (bis 20), von den erledigten nur die
+        // letzten fünf. Lange Projekte hätten sonst den Kontext kleiner Modelle gefüllt.
         let mut stmt=tx.prepare(&format!("SELECT {JOURNAL} FROM project_journal j
-            WHERE scope=?1 AND kind='task' AND id=(SELECT max(id) FROM project_journal WHERE scope=j.scope AND task_key=j.task_key AND kind='task')
-            ORDER BY CASE WHEN task_status='done' THEN 1 ELSE 0 END,id DESC LIMIT 20"))?;
-        let tasks = stmt
-            .query_map([scope], entry)?
+            WHERE scope=?1 AND kind='task' AND (task_status='done')=?2
+            AND id=(SELECT max(id) FROM project_journal WHERE scope=j.scope AND task_key=j.task_key AND kind='task')
+            ORDER BY id DESC LIMIT ?3"))?;
+        let mut tasks = stmt
+            .query_map(params![scope, false, RESUME_OPEN_TASKS], entry)?
             .collect::<Result<Vec<_>>>()?;
+        tasks.extend(
+            stmt.query_map(params![scope, true, RESUME_DONE_TASKS], entry)?
+                .collect::<Result<Vec<_>>>()?,
+        );
         drop(stmt);
         let task_count = tx.query_row(
             "SELECT count(DISTINCT task_key) FROM project_journal WHERE scope=?1 AND kind='task'",
             [scope],
             |r| r.get(0),
         )?;
-        let mut stmt=tx.prepare(&format!("SELECT {JOURNAL} FROM project_journal WHERE scope=?1 AND kind='decision' ORDER BY id DESC LIMIT 10"))?;
+        let mut stmt=tx.prepare(&format!("SELECT {JOURNAL} FROM project_journal WHERE scope=?1 AND kind='decision' ORDER BY id DESC LIMIT ?2"))?;
         let decisions = stmt
-            .query_map([scope], entry)?
+            .query_map(params![scope, RESUME_DECISIONS], entry)?
             .collect::<Result<Vec<_>>>()?;
         drop(stmt);
+        // Letzte Ereignisse ohne die oben bereits gezeigten Einträge.
+        let shown: Vec<i64> = tasks
+            .iter()
+            .chain(&decisions)
+            .chain(goal.iter())
+            .chain(next_step.iter())
+            .map(|e| e.id)
+            .collect();
         let mut stmt = tx.prepare(&format!(
-            "SELECT {JOURNAL} FROM project_journal WHERE scope=?1 ORDER BY id DESC LIMIT 10"
+            "SELECT {JOURNAL} FROM project_journal WHERE scope=?1 ORDER BY id DESC LIMIT ?2"
         ))?;
-        let mut recent_events = stmt
-            .query_map([scope], entry)?
+        let candidates = stmt
+            .query_map(params![scope, RESUME_RECENT_EVENTS + shown.len()], entry)?
             .collect::<Result<Vec<_>>>()?;
+        let mut recent_events: Vec<JournalEntry> = candidates
+            .into_iter()
+            .filter(|e| !shown.contains(&e.id))
+            .take(RESUME_RECENT_EVENTS)
+            .collect();
         recent_events.reverse();
         drop(stmt);
         let total_events = tx.query_row(
