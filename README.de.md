@@ -159,6 +159,7 @@ im Repository):
 | 5 | Hilft die Korrektur, und spielt das Format eine Rolle? | Gemma 4 12B | durchgeführt, 80 vorab geplante Aufrufe | Alte nächste Schritte: JSON 1→0, Text 2→0 (von je 15); Gesamtgenauigkeit steigt nicht. [Bericht](docs/experiments/continuity-2x2.md) |
 | 6 | Hilft eine richtige, geprüfte Lehre bei *neuen* Aufgaben? | Gemma 4 12B | Entwurf | – [Entwurf](docs/experiments/transfer-pilot-plan.md) |
 | 7 | Findet `recall` das Richtige und hält es Bereichs- und Statusgrenzen ein? | kein Modell | durchgeführt, vorab geplant, synthetischer Korpus | Grenzen ohne Ausnahme gehalten; wortgleiche Fragen 10/10 auf Platz 1; Wortform-Fragen 3/5; nachträgliche Einzelwortprobe 0/5; im Mittel 2,6 unpassende Zusatztreffer je Frage mit erwartetem Eintrag. [Bericht](docs/experiments/abruf-korpus.md) |
+| 8 | Findet eine Suche mit Wortstämmen längere deutsche Wortformen bei weniger Beifang? | kein Modell | durchgeführt, vorab geplant, neuer synthetischer Korpus | Längere Wortformen 0/10 → 8/10, Beifang deutlich geringer, Grenzen gehalten; **ein Regressionskriterium verfehlt:** zwei v1-Fragen, die vorher nur über Füllwörter trafen, finden nichts mehr. [Bericht](docs/experiments/abruf-korpus-v2.md) |
 
 Neue Versuche laufen **nur noch mit Gemma 4 12B**. In den Versuchen 2 und 3 hat 12B seine
 Fehler viel öfter selbst behoben und viel seltener falsche Lehren geschrieben als E2B; es ist
