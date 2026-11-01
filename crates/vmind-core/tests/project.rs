@@ -209,3 +209,50 @@ fn resume_keeps_all_open_tasks_and_does_not_repeat_shown_events() {
     assert!(r.recent_events.iter().any(|e| e.body == "Notiz"));
     assert_eq!(r.total_events, 15);
 }
+
+#[test]
+fn resume_does_not_reintroduce_superseded_state_as_recent_events() {
+    let store = MemoryStore::in_memory().unwrap();
+    for goal in ["Überholtes Ziel", "Aktuelles Ziel"] {
+        store
+            .journal("p", "goal", None, None, goal, "Test")
+            .unwrap();
+    }
+    for next in ["old-packaging", "negative-cases"] {
+        store
+            .journal("p", "next_step", None, None, next, "Test")
+            .unwrap();
+    }
+    for status in ["open", "in_progress", "done"] {
+        store
+            .journal("p", "task", Some("schema"), Some(status), status, "Test")
+            .unwrap();
+    }
+    store
+        .journal("p", "note", None, None, "Beobachtung behalten", "Test")
+        .unwrap();
+    store
+        .journal("p", "decision", None, None, "Entscheidung behalten", "Test")
+        .unwrap();
+    let resume = store.resume("p", None).unwrap();
+    assert_eq!(resume.goal.unwrap().body, "Aktuelles Ziel");
+    assert_eq!(resume.next_step.unwrap().body, "negative-cases");
+    assert_eq!(resume.tasks[0].task_status.as_deref(), Some("done"));
+    assert!(
+        resume
+            .recent_events
+            .iter()
+            .all(|e| !["goal", "next_step", "task"].contains(&e.kind.as_str()))
+    );
+    assert!(
+        resume
+            .recent_events
+            .iter()
+            .any(|e| e.body == "Beobachtung behalten")
+    );
+    assert_eq!(resume.decisions[0].body, "Entscheidung behalten");
+    let journal = store.journal_page("p", 0, 100).unwrap();
+    assert_eq!(journal.len(), 9);
+    assert!(journal.iter().any(|e| e.body == "old-packaging"));
+    assert_eq!(resume.total_events, 9);
+}

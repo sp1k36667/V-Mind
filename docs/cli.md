@@ -318,3 +318,9 @@ Architektur und Arbeitsablauf: [docs/design.md](design.md).
 GPU-residente Suchindizes mit ROCm/HIP sind geplant; die systemweite ROCm-Installation
 wird dafür aktuell nicht verändert.
 
+
+Im Entwicklungsstand nach 0.2.0 enthält `resume.recent_events` keine überholten
+Ziel-, Aufgaben- oder nächste-Schritt-Meldungen mehr. Der aktuelle Zustand steht in
+den dafür vorgesehenen Feldern; vollständige frühere Versionen bleiben in `journal`.
+Dies verhindert widersprüchliche Zustandsdarstellungen, garantiert aber keine richtige
+Interpretation durch ein Modell.

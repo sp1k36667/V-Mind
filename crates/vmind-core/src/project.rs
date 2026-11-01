@@ -229,7 +229,9 @@ impl MemoryStore {
             .query_map(params![scope, RESUME_DECISIONS], entry)?
             .collect::<Result<Vec<_>>>()?;
         drop(stmt);
-        // Letzte Ereignisse ohne die oben bereits gezeigten Einträge.
+        // Ergänzende Ereignisse ohne bereits gezeigte Entscheidungen. Alte Ziel-,
+        // Aufgaben- und nächste-Schritt-Versionen sind Historie, kein aktueller
+        // Zustand; sie bleiben über journal vollständig lesbar.
         let shown: Vec<i64> = tasks
             .iter()
             .chain(&decisions)
@@ -238,7 +240,11 @@ impl MemoryStore {
             .map(|e| e.id)
             .collect();
         let mut stmt = conn.prepare(&format!(
-            "SELECT {JOURNAL} FROM project_journal WHERE scope=?1 ORDER BY id DESC LIMIT ?2"
+            "SELECT {JOURNAL} FROM project_journal j WHERE scope=?1
+             AND (kind NOT IN ('goal','task','next_step') OR
+                  (kind='task' AND id=(SELECT max(previous.id) FROM project_journal previous
+                   WHERE previous.scope=j.scope AND previous.kind='task' AND previous.task_key=j.task_key)))
+             ORDER BY id DESC LIMIT ?2"
         ))?;
         let candidates = stmt
             .query_map(params![scope, RESUME_RECENT_EVENTS + shown.len()], entry)?
