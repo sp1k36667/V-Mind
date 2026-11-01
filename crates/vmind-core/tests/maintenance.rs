@@ -191,3 +191,51 @@ fn failed_safety_backup_aborts_migration_without_changing_source() {
         4
     );
 }
+
+#[test]
+fn read_only_store_cannot_write_or_upgrade_legacy_files() {
+    let t = Temp::new();
+    let path = t.db();
+    legacy(&path);
+    let before = fs::read(&path).unwrap();
+    assert!(MemoryStore::open_read_only(&path).is_err());
+    assert_eq!(fs::read(&path).unwrap(), before);
+    assert_eq!(fs::read_dir(&t.0).unwrap().count(), 1);
+    let missing = t.0.join("missing.db");
+    assert!(MemoryStore::open_read_only(&missing).is_err());
+    assert!(!missing.exists());
+    let current = t.0.join("current.db");
+    MemoryStore::open(&current).unwrap();
+    let reader = MemoryStore::open_read_only(&current).unwrap();
+    assert!(
+        reader
+            .remember("long_term", "nicht", "schreiben", "Test")
+            .is_err()
+    );
+    assert_eq!(reader.stats("global").unwrap().pending, 0);
+}
+
+#[test]
+fn snapshot_keeps_counts_and_resume_consistent_while_another_connection_commits() {
+    let t = Temp::new();
+    let path = t.db();
+    let writer = MemoryStore::open(&path).unwrap();
+    let c = Connection::open(&path).unwrap();
+    c.pragma_update(None, "journal_mode", "WAL").unwrap();
+    let reader = MemoryStore::open_read_only(&path).unwrap();
+    reader
+        .read_snapshot(|s| {
+            assert_eq!(s.stats("p")?.pending, 0);
+            writer.remember_scoped("p", "long_term", "später", "sichtbar", "Test")?;
+            writer.journal("p", "goal", None, None, "Späterer Stand", "Test")?;
+            assert_eq!(s.stats("p")?.pending, 0);
+            assert!(s.resume("p", None)?.goal.is_none());
+            Ok(())
+        })
+        .unwrap();
+    assert_eq!(reader.stats("p").unwrap().pending, 1);
+    assert_eq!(
+        reader.resume("p", None).unwrap().goal.unwrap().body,
+        "Späterer Stand"
+    );
+}

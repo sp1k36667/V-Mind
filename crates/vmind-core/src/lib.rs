@@ -134,6 +134,27 @@ impl MemoryStore {
             OpenFlags::SQLITE_OPEN_READ_WRITE,
         )?)
     }
+    /// Reads only an existing current-schema database; never creates or upgrades.
+    pub fn open_read_only(path: impl AsRef<Path>) -> Result<Self> {
+        let conn = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+        conn.busy_timeout(std::time::Duration::from_secs(5))?;
+        let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
+        if version != SCHEMA_VERSION {
+            return Err(invalid(
+                "Lesender Zugriff benötigt das aktuelle Schema; zuerst doctor, backup und ein bewusstes Upgrade ausführen",
+            ));
+        }
+        conn.pragma_update(None, "foreign_keys", true)?;
+        Ok(Self { conn })
+    }
+    /// Keeps several reads in one consistent SQLite snapshot. The callback must
+    /// only read; use open_read_only when this must also be enforced by SQLite.
+    pub fn read_snapshot<T>(&self, read: impl FnOnce(&Self) -> Result<T>) -> Result<T> {
+        let tx = self.conn.unchecked_transaction()?;
+        let result = read(self)?;
+        tx.commit()?;
+        Ok(result)
+    }
     pub fn in_memory() -> Result<Self> {
         Self::from_connection(Connection::open_in_memory()?)
     }

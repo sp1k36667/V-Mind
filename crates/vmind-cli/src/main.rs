@@ -233,7 +233,7 @@ fn run() -> Result<()> {
             }
         }
         [cmd, db] if cmd == "report" => {
-            let report = report::build(&MemoryStore::open_existing(db)?, &scope)?;
+            let report = report::build(&MemoryStore::open_read_only(db)?, &scope)?;
             let text = report::markdown(&report);
             emit(report, text, json_mode)?;
         }

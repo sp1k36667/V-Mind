@@ -193,15 +193,21 @@ impl MemoryStore {
     /// Snapshot in einer Lesetransaktion. Projektkontext ist exakt bereichsgebunden, ohne global-Beimischung.
     pub fn resume(&self, scope: &str, conversation: Option<&str>) -> Result<Resume> {
         bounded(scope, 128)?;
-        let tx = self.conn.unchecked_transaction()?;
+        // A surrounding read_snapshot already owns the transaction (e.g. report).
+        let tx = self
+            .conn
+            .is_autocommit()
+            .then(|| self.conn.unchecked_transaction())
+            .transpose()?;
+        let conn = &self.conn;
         let latest = |kind: &str| -> Result<Option<JournalEntry>> {
-            tx.query_row(&format!("SELECT {JOURNAL} FROM project_journal WHERE scope=?1 AND kind=?2 ORDER BY id DESC LIMIT 1"),params![scope,kind],entry).optional()
+            conn.query_row(&format!("SELECT {JOURNAL} FROM project_journal WHERE scope=?1 AND kind=?2 ORDER BY id DESC LIMIT 1"),params![scope,kind],entry).optional()
         };
         let goal = latest("goal")?;
         let next_step = latest("next_step")?;
         // Aktueller Stand je Aufgabe: alle unerledigten (bis 20), von den erledigten nur die
         // letzten fünf. Lange Projekte hätten sonst den Kontext kleiner Modelle gefüllt.
-        let mut stmt=tx.prepare(&format!("SELECT {JOURNAL} FROM project_journal j
+        let mut stmt=conn.prepare(&format!("SELECT {JOURNAL} FROM project_journal j
             WHERE scope=?1 AND kind='task' AND (task_status='done')=?2
             AND id=(SELECT max(id) FROM project_journal WHERE scope=j.scope AND task_key=j.task_key AND kind='task')
             ORDER BY id DESC LIMIT ?3"))?;
@@ -213,12 +219,12 @@ impl MemoryStore {
                 .collect::<Result<Vec<_>>>()?,
         );
         drop(stmt);
-        let task_count = tx.query_row(
+        let task_count = conn.query_row(
             "SELECT count(DISTINCT task_key) FROM project_journal WHERE scope=?1 AND kind='task'",
             [scope],
             |r| r.get(0),
         )?;
-        let mut stmt=tx.prepare(&format!("SELECT {JOURNAL} FROM project_journal WHERE scope=?1 AND kind='decision' ORDER BY id DESC LIMIT ?2"))?;
+        let mut stmt=conn.prepare(&format!("SELECT {JOURNAL} FROM project_journal WHERE scope=?1 AND kind='decision' ORDER BY id DESC LIMIT ?2"))?;
         let decisions = stmt
             .query_map(params![scope, RESUME_DECISIONS], entry)?
             .collect::<Result<Vec<_>>>()?;
@@ -231,7 +237,7 @@ impl MemoryStore {
             .chain(next_step.iter())
             .map(|e| e.id)
             .collect();
-        let mut stmt = tx.prepare(&format!(
+        let mut stmt = conn.prepare(&format!(
             "SELECT {JOURNAL} FROM project_journal WHERE scope=?1 ORDER BY id DESC LIMIT ?2"
         ))?;
         let candidates = stmt
@@ -244,7 +250,7 @@ impl MemoryStore {
             .collect();
         recent_events.reverse();
         drop(stmt);
-        let total_events = tx.query_row(
+        let total_events = conn.query_row(
             "SELECT count(*) FROM project_journal WHERE scope=?1",
             [scope],
             |r| r.get(0),
@@ -259,7 +265,7 @@ impl MemoryStore {
         if found.as_ref().is_some_and(|c| c.scope != scope) {
             return Err(invalid("Gespräch gehört zu anderem Projektbereich"));
         }
-        let mut stmt=tx.prepare("SELECT id,conversation_id,role,content,created_at FROM chat_messages WHERE conversation_id=?1 ORDER BY id DESC LIMIT 10")?;
+        let mut stmt=conn.prepare("SELECT id,conversation_id,role,content,created_at FROM chat_messages WHERE conversation_id=?1 ORDER BY id DESC LIMIT 10")?;
         let mut chat_tail = stmt
             .query_map([&conversation_id], message)?
             .collect::<Result<Vec<_>>>()?;
@@ -267,7 +273,9 @@ impl MemoryStore {
         drop(stmt);
         let message_count = found.as_ref().map_or(0, |c| c.message_count);
         let conversation_id = found.map(|c| c.id);
-        tx.commit()?;
+        if let Some(tx) = tx {
+            tx.commit()?;
+        }
         Ok(Resume {
             scope: scope.into(),
             goal,

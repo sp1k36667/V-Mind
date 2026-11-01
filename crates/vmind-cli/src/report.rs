@@ -22,20 +22,22 @@ pub struct Report {
 }
 
 pub fn build(store: &MemoryStore, scope: &str) -> crate::Result<Report> {
-    let mut knowledge = Vec::new();
-    for record in store.validated(scope, REPORT_KNOWLEDGE)? {
-        let last_check_run = store.check_runs(record.id, 1)?.into_iter().next();
-        knowledge.push(Knowledge {
-            record,
-            last_check_run,
-        });
-    }
-    Ok(Report {
-        resume: store.resume(scope, None)?,
-        stats: store.stats(scope)?,
-        knowledge,
-        pending: store.pending(scope)?,
-    })
+    Ok(store.read_snapshot(|store| {
+        let mut knowledge = Vec::new();
+        for record in store.validated(scope, REPORT_KNOWLEDGE)? {
+            let last_check_run = store.check_runs(record.id, 1)?.into_iter().next();
+            knowledge.push(Knowledge {
+                record,
+                last_check_run,
+            });
+        }
+        Ok(Report {
+            resume: store.resume(scope, None)?,
+            stats: store.stats(scope)?,
+            knowledge,
+            pending: store.pending(scope)?,
+        })
+    })?)
 }
 
 /// Gespeicherte Angabe als eine Markdown-Zeile: Leerraum zusammenziehen und Zeichen
@@ -77,6 +79,14 @@ fn status_rank(status: Option<&str>) -> u8 {
 fn check_note(run: Option<&CheckRun>) -> String {
     match run {
         None => "kein Prüfbefehl ausgeführt".into(),
+        Some(r) if r.outcome == "failed" => format!(
+            "WARNUNG: letzter Prüflauf fehlgeschlagen am {}; Eintrag bleibt als validiert markiert, ist aktuell nicht erneut bestätigt",
+            day(&r.created_at)
+        ),
+        Some(r) if r.outcome == "error" => format!(
+            "WARNUNG: letzter Prüflauf mit Ausführungsfehler am {}; keine neue Aussage zur Gültigkeit",
+            day(&r.created_at)
+        ),
         Some(r) => format!("letzter Prüflauf: {} am {}", r.outcome, day(&r.created_at)),
     }
 }
@@ -106,7 +116,7 @@ pub fn markdown(report: &Report) -> String {
         ),
         String::new(),
         format!(
-            "## Aufgaben ({} von {}; alle offenen, die zuletzt erledigten)",
+            "## Aufgaben ({} von {}; bis 20 offene, bis 5 zuletzt erledigte)",
             r.tasks.len(),
             r.task_count
         ),
@@ -128,7 +138,7 @@ pub fn markdown(report: &Report) -> String {
     out.extend([
         String::new(),
         format!(
-            "## Letzte Entscheidungen ({}, neueste zuerst)",
+            "## Letzte Entscheidungen ({} von höchstens 5, neueste zuerst; ältere mit journal)",
             r.decisions.len()
         ),
         String::new(),

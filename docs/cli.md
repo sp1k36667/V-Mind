@@ -202,7 +202,9 @@ vmind --scope v-mind report vmind.db > projektbericht.md
 
 Er zeigt Ziel, nächsten Schritt, Aufgaben (blockierte und laufende zuerst), die letzten
 Entscheidungen, bis zu 20 geprüfte Einträge mit Bestätigung und letztem Prüflauf sowie
-ungeprüfte Vorschläge getrennt davon. Er liest nur und enthält nichts, was nicht
+ungeprüfte Vorschläge getrennt davon. Er öffnet ausschließlich eine vorhandene Datenbank mit aktuellem Schema rein lesend
+und liest alle Abschnitte aus einem gemeinsamen SQLite-Snapshot. Bei einem älteren
+Schema fordert er ein bewusstes Upgrade, statt zu migrieren. Er enthält nichts, was nicht
 gespeichert ist; Lücken stehen ausdrücklich als „noch nicht gespeichert“ da. Mit `--json`
 kommen dieselben Daten als JSON.
 
