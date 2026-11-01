@@ -2,6 +2,7 @@ name: Release
 # Ein Tag wie v0.2.0 baut fertige Programme für Linux, macOS und Windows und
 # veröffentlicht sie als GitHub-Release.
 on:
+  workflow_dispatch:
   push:
     tags: ["v*"]
 permissions:
@@ -19,6 +20,8 @@ jobs:
           - os: windows-latest
             name: windows-x86_64
     runs-on: ${{ matrix.os }}
+    env:
+      PACKAGE_REF: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust 1.95.0
@@ -31,20 +34,35 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           mkdir -p dist
-          cp target/release/vmind README.md README.de.md LICENSE dist/
-          tar -czf "vmind-${GITHUB_REF_NAME}-${{ matrix.name }}.tar.gz" -C dist .
+          cp target/release/vmind README.md README.de.md LICENSE CHANGELOG.md CONTRIBUTING.md AGENTS.md dist/
+          cp -R docs prompts examples dist/
+          tar -czf "vmind-${PACKAGE_REF}-${{ matrix.name }}.tar.gz" -C dist .
       - name: Package (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force dist | Out-Null
-          Copy-Item target/release/vmind.exe, README.md, README.de.md, LICENSE dist/
-          Compress-Archive -Path dist/* -DestinationPath "vmind-$env:GITHUB_REF_NAME-${{ matrix.name }}.zip"
+          Copy-Item target/release/vmind.exe, README.md, README.de.md, LICENSE, CHANGELOG.md, CONTRIBUTING.md, AGENTS.md dist/
+          Copy-Item -Recurse docs, prompts, examples dist/
+          Compress-Archive -Path dist/* -DestinationPath "vmind-$env:PACKAGE_REF-${{ matrix.name }}.zip"
+      - name: Extract and check package (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir extracted
+          tar -xzf "vmind-${PACKAGE_REF}-${{ matrix.name }}.tar.gz" -C extracted
+          python3 scripts/check_release_package.py extracted
+      - name: Extract and check package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Expand-Archive -Path "vmind-$env:PACKAGE_REF-${{ matrix.name }}.zip" -DestinationPath extracted
+          python scripts/check_release_package.py extracted
       - uses: actions/upload-artifact@v4
         with:
           name: vmind-${{ matrix.name }}
           path: vmind-*.*
   release:
+    if: startsWith(github.ref, 'refs/tags/')
     needs: build
     runs-on: ubuntu-latest
     permissions:
