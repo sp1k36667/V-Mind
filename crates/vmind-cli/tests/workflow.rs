@@ -409,3 +409,92 @@ fn output_timeout_never_validates_an_entry() {
     assert_eq!(stored["memory"]["status"], "pending");
     assert_eq!(stored["check_runs"][0]["outcome"], "error");
 }
+
+#[test]
+fn backup_and_doctor_preserve_restorable_state_without_overwriting() {
+    let temp = Temp::new();
+    let source = temp.0.join("source.db");
+    let copy = temp.0.join("copy.db");
+    let db = source.to_str().unwrap();
+    let target = copy.to_str().unwrap();
+    cli(&["init", db]);
+    cli(&[
+        "--scope",
+        "project",
+        "task",
+        db,
+        "next",
+        "open",
+        "Fortsetzen",
+        "Test",
+    ]);
+    assert_eq!(cli(&["doctor", db])["healthy"], true);
+    let report = cli(&["backup", db, target]);
+    assert_eq!(report["verified"], true);
+    assert_eq!(
+        cli(&["--scope", "project", "resume", target])["tasks"][0]["task_key"],
+        "next"
+    );
+    let saved = std::fs::read(&copy).unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(["backup", db, target])
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    assert_eq!(std::fs::read(copy).unwrap(), saved);
+    let missing = temp.0.join("missing.db");
+    assert!(
+        !Command::new(env!("CARGO_BIN_EXE_vmind"))
+            .args(["doctor", missing.to_str().unwrap()])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    assert!(!missing.exists());
+}
+
+#[test]
+fn independent_processes_preserve_every_concurrent_journal_write() {
+    let temp = Temp::new();
+    let path = temp.0.join("parallel.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    let mut children = Vec::new();
+    for index in 0..16 {
+        children.push(
+            Command::new(env!("CARGO_BIN_EXE_vmind"))
+                .args([
+                    "--json",
+                    "--scope",
+                    "parallel",
+                    "log",
+                    db,
+                    "note",
+                    &format!("writer-{index}"),
+                    "process-test",
+                ])
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .unwrap(),
+        );
+    }
+    for child in children {
+        let output = child.wait_with_output().unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    let events = cli(&["--scope", "parallel", "journal", db]);
+    let rows = events.as_array().unwrap();
+    assert_eq!(rows.len(), 16);
+    let bodies = rows
+        .iter()
+        .map(|e| e["body"].as_str().unwrap())
+        .collect::<std::collections::HashSet<_>>();
+    assert_eq!(bodies.len(), 16);
+    assert_eq!(cli(&["doctor", db])["healthy"], true);
+}

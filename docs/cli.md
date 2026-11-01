@@ -3,6 +3,14 @@
 Diese Seite ergänzt die [README](../README.de.md). Sie beschreibt alle Befehle,
 den Ablauf für lange Projekte, Konfiguration, Grenzen und Entwicklungshinweise.
 
+## Betrieb und Produktreife
+
+Im Entwicklungsstand nach 0.2.0: `vmind doctor DB` prüft die Datenbank rein lesend;
+`vmind backup DB ZIEL` erstellt eine geprüfte Sicherung ohne vorhandene Dateien zu
+überschreiben. Vor einem Schemawechsel wird automatisch gesichert. Details und
+Wiederherstellung: [Betrieb](operations.md). Offene Abnahmekriterien:
+[Produktreife](product-readiness.md).
+
 ## Startprompt für die nutzende KI
 
 Die vollständige gemeinsame Startanweisung liegt in `prompts/start.de.md`.
