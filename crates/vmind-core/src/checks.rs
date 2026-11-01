@@ -96,10 +96,28 @@ fn check_row(row: &rusqlite::Row<'_>) -> Result<Check> {
 
 const CHECK_FIELDS: &str = "c.id, c.memory_id, c.argv, c.workdir, c.set_by, c.created_at";
 
+/// Setzt ein Argument für die Anzeige in einfache Anführungszeichen, wenn es Leerzeichen
+/// oder Sonderzeichen enthält, damit Wortgrenzen sichtbar bleiben.
+fn quote(arg: &str) -> String {
+    let plain = !arg.is_empty()
+        && arg
+            .chars()
+            .all(|c| c.is_alphanumeric() || "-_./=:,@+%".contains(c));
+    if plain {
+        arg.into()
+    } else {
+        format!("'{}'", arg.replace('\'', r"'\''"))
+    }
+}
+
 impl Check {
     /// Lesbare Form für Nachweise; die Ausführung nutzt immer `argv` ohne Shell.
     pub fn command_line(&self) -> String {
-        self.argv.join(" ")
+        self.argv
+            .iter()
+            .map(|a| quote(a))
+            .collect::<Vec<_>>()
+            .join(" ")
     }
 }
 
