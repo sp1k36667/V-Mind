@@ -78,7 +78,9 @@ def fixture(binary, directory, number):
 def score(answer, expected):
     if not isinstance(answer, dict):
         answer = {}
-    hits = {key: isinstance(answer.get(key), str) and answer[key].strip() == value
+    # One whitespace rule for every metric; raw responses are stored unchanged.
+    answer = {k: v.strip() if isinstance(v, str) else v for k, v in answer.items()}
+    hits = {key: isinstance(answer.get(key), str) and answer[key] == value
             for key, value in expected.items()}
     unknown = ['password', 'production_date']
     invented = sum(key in answer and answer[key] != 'unbekannt' for key in unknown)
@@ -114,6 +116,10 @@ def main():
         assert score(expected, expected)['correct'] == 11
         assert score({}, expected)['correct'] == 0
         assert score(dict(expected, password='erfunden'), expected)['unsupported_answers'] == 1
+        padded = {key: f'  {value} \n' for key, value in expected.items()}
+        assert score(padded, expected)['correct'] == 11
+        assert score(padded, expected)['unsupported_answers'] == 0
+        assert score(dict(expected, password='Unbekannt'), expected)['unsupported_answers'] == 1
         (args.output/f'fixture-{n}.json').write_text(json.dumps(dict(snapshot=snapshot, expected=expected), ensure_ascii=False, indent=2))
     if args.self_test:
         print('3 fixtures, exact scoring, unknown/missing controls: passed; no model call.')

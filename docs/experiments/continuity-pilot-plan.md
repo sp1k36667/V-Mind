@@ -46,7 +46,10 @@ Fixtureaufbau, Sollwertpräsenz, exakte Bewertung und Negativkontrollen ohne Mod
 ## Bewertung und vorab festgelegte Pilotkriterien
 
 JSON-Objekt mit elf vorgegebenen Schlüsseln und Stringwerten. Exakte Sollwerte,
-keine positive Bewertung allein durch Auftreten eines Schlüsselwortes. `unbekannt`
+keine positive Bewertung allein durch Auftreten eines Schlüsselwortes. Einzige
+Angleichung: Führende und folgende Leerzeichen werden vor jeder Bewertung (Treffer und
+erfundene Angaben gleichermaßen) entfernt; Groß-/Kleinschreibung, Satzzeichen und
+Anführungszeichen bleiben unverändert. Rohantworten werden unverändert gespeichert. `unbekannt`
 ist nur bei den zwei tatsächlich unbeantwortbaren Fragen korrekt. Fehlende oder
 ungültige Antworten zählen als falsch. Extra-/fehlende Felder werden als Formatfehler
 berichtet. Falsche nichtleere Werte für unbekannte Angaben werden separat gezählt.
