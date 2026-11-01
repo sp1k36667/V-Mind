@@ -166,7 +166,7 @@ It should print the schema version and counts. If Claude does not list the `vmin
 |---|---|
 | Server fails to start, "command not found" | `vmind` is not on the `PATH` of the app. Use the absolute path to the program in `command`. |
 | Server fails to start, database not found | The server only opens an existing database and never creates one because a path was mistyped. The path in `args` is relative to the folder the app starts in. Use an absolute path, or run `vmind init` there first. |
-| No approval prompt in Claude Code | The server was declined earlier. Approve it again under `/mcp`. |
+| No approval prompt in Claude Code | Check the server state with `/mcp`; if the project server was declined, reset its approval choices with `claude mcp reset-project-choices` and start a new session. See the [official Claude Code MCP documentation](https://code.claude.com/docs/en/mcp). |
 | Old behaviour after an update | A running MCP server keeps the old program until Claude is restarted. Restart Claude after installing a new version. |
 
 ### 5. Optional: load the project state automatically

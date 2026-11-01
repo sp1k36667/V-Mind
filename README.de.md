@@ -173,7 +173,7 @@ Das zeigt Schemaversion und Zahlen. Wenn Claude die `vmind`-Werkzeuge nicht anze
 |---|---|
 | Server startet nicht, „command not found“ | `vmind` liegt nicht im `PATH` der App. Absoluten Programmpfad bei `command` eintragen. |
 | Server startet nicht, Datenbank nicht gefunden | Der Server öffnet nur eine vorhandene Datenbank und legt keine an, nur weil ein Pfad vertippt ist. Der Pfad in `args` bezieht sich auf den Ordner, in dem die App startet. Absoluten Pfad verwenden oder dort zuerst `vmind init` ausführen. |
-| Keine Freigabeabfrage in Claude Code | Der Server wurde früher abgelehnt. Unter `/mcp` erneut freigeben. |
+| Keine Freigabeabfrage in Claude Code | Zustand mit `/mcp` prüfen; wurde der Projektserver abgelehnt, mit `claude mcp reset-project-choices` die Projektentscheidungen zurücksetzen und eine neue Sitzung starten. Siehe [offizielle Claude-Code-Dokumentation](https://code.claude.com/docs/en/mcp). |
 | Altes Verhalten nach einem Update | Ein laufender MCP-Server behält das alte Programm bis zum Neustart von Claude. Nach der Installation einer neuen Version Claude neu starten. |
 
 ### 5. Optional: Projektstand automatisch laden
