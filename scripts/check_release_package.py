@@ -11,6 +11,11 @@ import sys
 import tempfile
 
 
+def require(condition, message):
+    if not condition:
+        raise RuntimeError(message)
+
+
 def check(package):
     package = Path(package).resolve()
     binary = package / ("vmind.exe" if os.name == "nt" else "vmind")
@@ -56,15 +61,15 @@ def check(package):
         run("log", db, "goal", "Package restart check", "release package smoke test")
         run("task", db, "package", "in_progress", "Verify persistence", "release package smoke test")
         resumed = run("resume", db, json_output=True)
-        assert resumed["goal"]["body"] == "Package restart check"
-        assert resumed["tasks"][0]["task_key"] == "package"
-        assert run("doctor", db, json_output=True)["healthy"] is True
+        require(resumed["goal"]["body"] == "Package restart check", "Goal was not persisted")
+        require(resumed["tasks"][0]["task_key"] == "package", "Task was not persisted")
+        require(run("doctor", db, json_output=True)["healthy"] is True, "Unhealthy fresh database")
         backup = root / "restored copy.db"
-        assert run("backup", db, backup, json_output=True)["verified"] is True
-        assert run("doctor", backup, json_output=True)["healthy"] is True
+        require(run("backup", db, backup, json_output=True)["verified"] is True, "Backup not verified")
+        require(run("doctor", backup, json_output=True)["healthy"] is True, "Unhealthy restored copy")
         restored = run("resume", backup, json_output=True)
-        assert restored == resumed, "Backup does not preserve project state"
-        assert "Package restart check" in run("report", backup)
+        require(restored == resumed, "Backup does not preserve project state")
+        require("Package restart check" in run("report", backup), "Report omits restored goal")
     print(f"Package passed: {links} local file links; {calls} separate process calls; "
           "isolated profile with empty PATH; restart, backup and restored report.")
 
