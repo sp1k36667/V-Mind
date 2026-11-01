@@ -49,11 +49,17 @@ abgerufene Lehren. Keine Suche, damit Suchqualität keine Rolle spielt.
 
 ## Ablauf
 
-0. **Vorlauf (Bedingung O allein):** 4 Aufgaben × 10 frische Seeds, nur erster Versuch.
-   Weiter nur, wenn die Zielprüfung in **höchstens 60 %** der Läufe besteht (sonst gibt
-   es zu wenig zu verbessern; dann anderen Fehlertyp wählen). Der Vorlauf zählt als O.
-1. **Obergrenze:** L und P mit denselben 40 Läufen (Aufgaben × Seeds) wie O. Die
-   Erfahrung ist hier von Hand geschrieben und korrekt.
+0. **Vorlauf (Bedingung O allein, Machbarkeit):** 4 Aufgaben × 5 eigene Seeds
+   (901 bis 905), nur erster Versuch. Weiter nur, wenn die Zielprüfung in **höchstens
+   60 %** der Läufe besteht (sonst gibt es zu wenig zu verbessern; dann anderen
+   Fehlertyp wählen). Die Grenze ist vorab eingefroren; bei Fehlschlag wird nicht auf
+   denselben Seeds an Aufgaben oder Prompt nachgebessert. Der Vorlauf geht **nicht** in
+   die Hauptauswertung ein, weil er nach seiner niedrigen Erfolgsquote ausgewählt wird
+   (Selektionsverzerrung).
+1. **Obergrenze:** O, L und P mit frischen Seeds 1001 bis 1010 auf denselben 4 Aufgaben,
+   also 40 gepaarte Läufe je Bedingung (gleiche Aufgabe und gleicher Seed in O, L und P).
+   Die Reihenfolge von O, L und P wird je Paar zufällig festgelegt (Startwert im
+   eingefrorenen Plan). Die Erfahrung ist hier von Hand geschrieben und korrekt.
 2. Nur wenn 1 das Erfolgskriterium erfüllt: **Erwerb.** 12B löst eine Quellaufgabe mit
    dieser Falle bis zum Bestehen; aus dem bereinigten Diff entsteht eine Erfahrung. Sie
    gilt nur, wenn
@@ -65,15 +71,16 @@ abgerufene Lehren. Keine Suche, damit Suchqualität keine Rolle spielt.
 
 Gegenfall: 10 Seeds je Bedingung O, L, P.
 
-Einstellungen: nur erster Versuch, Temperatur 0,7, Seeds 1001 bis 1010 (nie zuvor
-benutzt), Modell vor jedem Lauf entladen wie bisher.
+Einstellungen: nur erster Versuch, Temperatur 0,7, Seeds wie oben (nie zuvor benutzt),
+Modell vor jedem Lauf entladen wie bisher.
 
 ## Erfolgskriterium (vorab, für Schritt 1 und 3 gleich)
 
 Zielprüfung bestanden im ersten Versuch, je 40 Läufe:
 
-- L mindestens **30 Prozentpunkte** über O **und** einseitiger exakter Fisher-Test
-  L gegen O mit p < 0,05,
+- L mindestens **30 Prozentpunkte** über O **und** einseitiger exakter McNemar-Test
+  über die gepaarten Läufe L gegen O mit p < 0,05 (die Daten sind gepaart; ein
+  Fisher-Test über die zusammengefassten Zahlen wird nur explorativ berichtet),
 - L mindestens **20 Prozentpunkte** über P,
 - in mindestens **3 von 4** Aufgaben L > O.
 
@@ -84,7 +91,8 @@ Zielprüfung bestanden im ersten Versuch, je 40 Läufe:
   höchstens **1 von 10** häufiger als unter O.
 
 Wird eine Schadensgrenze verletzt, gilt der Pilot als nicht bestanden, auch wenn das
-Erfolgskriterium erfüllt ist.
+Erfolgskriterium erfüllt ist. Umgekehrt ist das Einhalten der Gegenfallgrenze bei 10
+Läufen nur beschreibend und **kein Nachweis**, dass die Erfahrung dort unschädlich ist.
 
 ## Trennschärfe
 
@@ -98,9 +106,11 @@ Simuliert mit exaktem einseitigem Fisher-Test, α = 0,05 (`examples/lernkurve/tr
 
 Deshalb 40 Läufe je Bedingung. Mit 20 Läufen würde ein echter Effekt von 30 pp etwa
 jedes zweite Mal übersehen. Beispiele bei 20 gegen 20: 12 gegen 6 ergibt p = 0,055,
-14 gegen 6 ergibt p = 0,013.
+14 gegen 6 ergibt p = 0,013. Die Tabelle gilt für unabhängige Gruppen; für den
+gepaarten McNemar-Test wird die Trennschärfe vor dem Einfrieren getrennt simuliert.
 
-Aufwand Schritt 0 und 1: 3 × 40 + 3 × 10 = 150 Läufe mit je einem Versuch.
+Aufwand: Vorlauf 20, Schritt 1 3 × 40, Gegenfall 3 × 10, zusammen 170 Läufe mit je
+einem Versuch.
 
 ## Grenzen
 
@@ -114,4 +124,10 @@ Aufwand Schritt 0 und 1: 3 × 40 + 3 × 10 = 150 Läufe mit je einem Versuch.
 
 - Wortlaut der Erfahrung und des Placebos.
 - Wer baut Aufgaben und Host (Vorschlag: Codex prüft, Claude baut, oder umgekehrt).
-- Ob Schritt 2 und 3 ein eigener Plan werden, nachdem Schritt 1 ausgewertet ist.
+- Trennschärfe des gepaarten McNemar-Tests simulieren (braucht eine Annahme zur
+  Korrelation zwischen O und L auf demselben Paar).
+- Schritt 2 und 3 werden ein eigener Plan, nachdem Schritt 1 ausgewertet ist (mit
+  Codex vereinbart).
+
+Review: Codex (Teamkanal, Nachricht #20) – Vorlauf getrennt, Randomisierung, gepaarter
+Test, Gegenfall nur beschreibend, kein Nachbessern auf denselben Seeds; eingearbeitet.
