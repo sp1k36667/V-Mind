@@ -143,8 +143,13 @@ pub fn backup_database(
         ))
     })?;
     let result = (|| {
+        // SQLite interprets relative names beginning with file: as URIs even when
+        // the filesystem reserved a literal name. Bind it to the actual new file
+        // before SQLite sees it, so URI options can never redirect a backup.
+        let physical_destination = fs::canonicalize(destination)
+            .map_err(|e| invalid(&format!("Sicherungsziel nicht auflösbar: {e}")))?;
         let mut target =
-            Connection::open_with_flags(destination, OpenFlags::SQLITE_OPEN_READ_WRITE)?;
+            Connection::open_with_flags(&physical_destination, OpenFlags::SQLITE_OPEN_READ_WRITE)?;
         {
             let backup = Backup::new(&source, &mut target)?;
             let started = Instant::now();
@@ -171,7 +176,7 @@ pub fn backup_database(
         let file = fs::OpenOptions::new()
             .read(true)
             .write(true)
-            .open(destination)
+            .open(&physical_destination)
             .map_err(|e| invalid(&format!("Sicherungsdatei nicht lesbar: {e}")))?;
         file.sync_all()
             .map_err(|e| invalid(&format!("Sicherung nicht auf Datenträger bestätigt: {e}")))?;
