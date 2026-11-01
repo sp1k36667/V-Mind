@@ -38,9 +38,25 @@ pub fn build(store: &MemoryStore, scope: &str) -> crate::Result<Report> {
     })
 }
 
-/// Zeilenumbrüche und Mehrfachleerzeichen einer Angabe für eine Listenzeile zusammenziehen.
+/// Gespeicherte Angabe als eine Markdown-Zeile: Leerraum zusammenziehen und Zeichen
+/// maskieren, mit denen ein Text Links, Hervorhebungen oder Code vortäuschen könnte.
 fn line(text: &str) -> String {
-    text.split_whitespace().collect::<Vec<_>>().join(" ")
+    let mut out = String::new();
+    for c in text
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .chars()
+    {
+        if matches!(
+            c,
+            '\\' | '`' | '*' | '_' | '[' | ']' | '<' | '>' | '#' | '|' | '!'
+        ) {
+            out.push('\\');
+        }
+        out.push(c);
+    }
+    out
 }
 
 fn day(timestamp: &str) -> &str {
@@ -68,7 +84,7 @@ fn check_note(run: Option<&CheckRun>) -> String {
 pub fn markdown(report: &Report) -> String {
     let r = &report.resume;
     let mut out = vec![
-        format!("# Projektbericht: {}", r.scope),
+        format!("# Projektbericht: {}", line(&r.scope)),
         String::new(),
         format!(
             "Aus V-Mind (Schema {}). Enthält nur gespeicherte Angaben. Geprüftes Wissen und \
@@ -89,7 +105,11 @@ pub fn markdown(report: &Report) -> String {
                 .map_or("noch nicht festgelegt".into(), |e| line(&e.body))
         ),
         String::new(),
-        format!("## Aufgaben ({} von {})", r.tasks.len(), r.task_count),
+        format!(
+            "## Aufgaben ({} von {}; alle offenen, die zuletzt erledigten)",
+            r.tasks.len(),
+            r.task_count
+        ),
         String::new(),
     ];
     let mut tasks: Vec<_> = r.tasks.iter().collect();
@@ -99,15 +119,18 @@ pub fn markdown(report: &Report) -> String {
     }
     for t in tasks {
         out.push(format!(
-            "- **{}** `{}`: {}",
-            t.task_status.as_deref().unwrap_or("?"),
-            t.task_key.as_deref().unwrap_or("?"),
+            "- **{}** {}: {}",
+            line(t.task_status.as_deref().unwrap_or("?")),
+            line(t.task_key.as_deref().unwrap_or("?")),
             line(&t.body)
         ));
     }
     out.extend([
         String::new(),
-        "## Letzte Entscheidungen".into(),
+        format!(
+            "## Letzte Entscheidungen ({}, neueste zuerst)",
+            r.decisions.len()
+        ),
         String::new(),
     ]);
     if r.decisions.is_empty() {
@@ -124,7 +147,7 @@ pub fn markdown(report: &Report) -> String {
     out.extend([
         String::new(),
         format!(
-            "## Geprüftes Wissen ({} von {})",
+            "## Geprüftes Wissen ({} von {}, neueste zuerst)",
             report.knowledge.len(),
             report.stats.validated
         ),
@@ -148,7 +171,11 @@ pub fn markdown(report: &Report) -> String {
     }
     out.extend([
         String::new(),
-        format!("## Ungeprüfte Vorschläge ({})", report.stats.pending),
+        format!(
+            "## Ungeprüfte Vorschläge ({} von {})",
+            report.pending.len(),
+            report.stats.pending
+        ),
         String::new(),
     ]);
     if report.pending.is_empty() {
@@ -207,16 +234,33 @@ mod tests {
         assert!(text.starts_with("# Projektbericht: p"));
         assert!(text.contains("**Ziel:** Release 1.0"));
         assert!(text.contains("**Nächster Schritt:** Tests schreiben"));
-        let blocked = text.find("`gpu`: GPU Index").unwrap();
-        assert!(blocked < text.find("`docs`").unwrap());
-        let knowledge = text.find("## Geprüftes Wissen (1 von 1)").unwrap();
-        let pending = text.find("## Ungeprüfte Vorschläge (1)").unwrap();
+        let blocked = text.find("- **blocked** gpu: GPU Index").unwrap();
+        assert!(blocked < text.find("- **done** docs: Doku").unwrap());
+        let knowledge = text.find("## Geprüftes Wissen (1 von 1,").unwrap();
+        let pending = text.find("## Ungeprüfte Vorschläge (1 von 1)").unwrap();
         let validated_entry = text.find("Leere DB → Migration").unwrap();
         let pending_entry = text.find("Vermutung → ungeklärt").unwrap();
         assert!(knowledge < validated_entry && validated_entry < pending);
         assert!(pending < pending_entry);
         assert!(text.contains("Bestätigt von Prüfer: Test bestanden. kein Prüfbefehl ausgeführt."));
         assert!(text.contains("noch nicht bestätigt"));
+    }
+
+    #[test]
+    fn stored_text_cannot_inject_links_code_or_headings() {
+        let s = MemoryStore::in_memory().unwrap();
+        s.journal(
+            "p",
+            "task",
+            Some("in_progress"),
+            Some("open"),
+            "[klick](http://x) `code`\n# Kopf",
+            "T",
+        )
+        .unwrap();
+        let text = markdown(&build(&s, "p").unwrap());
+        assert!(text.contains(r"in\_progress: \[klick\](http://x) \`code\` \# Kopf"));
+        assert!(!text.contains("\n# Kopf"));
     }
 
     #[test]

@@ -523,7 +523,7 @@ fn report_prints_markdown_and_leaves_the_database_unchanged() {
     assert!(output.status.success());
     let text = String::from_utf8(output.stdout).unwrap();
     assert!(text.starts_with("# Projektbericht: p"));
-    assert!(text.contains("- **blocked** `docs`: Doku fehlt"));
+    assert!(text.contains("- **blocked** docs: Doku fehlt"));
     assert_eq!(
         cli(&["--scope", "p", "report", db])["stats"]["schema_version"],
         5
