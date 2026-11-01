@@ -127,7 +127,7 @@ kompaktes `resume`, eingebautes SQLite. Siehe [Changelog](CHANGELOG.md).
 | Verständliche Fehler | Ungültige Zustände erhalten erklärende Meldungen |
 | Sichtbarer Prüfzustand | Wissensabruf zeigt letzte Prüfung der aktiven Definition samt Zeit; Fehler verdecken keinen früheren Fehlbefund |
 
-**Automatische Tests:** 96 Tests laufen bei jeder Änderung in GitHub Actions unter Linux,
+**Automatische Tests:** 99 Tests laufen bei jeder Änderung in GitHub Actions unter Linux,
 zusammen mit Clippy (jede Warnung ist ein Fehler) und einer Formatprüfung; die Builds für
 macOS und Windows werden ebenfalls geprüft; dort laufen zusätzlich die Dateipfad-/Sicherungstests. Abgedeckt sind unter anderem:
 
