@@ -290,6 +290,13 @@ having to remember to ask. File `.claude/settings.local.json` in the project fol
 }
 ```
 
+Development version after 0.2.0 (schema 6): Claude Code can also report every Bash, Edit
+and Write call through a `PostToolUse` hook to `vmind observe`. V-Mind then keeps only the
+tool, whether it completed or failed, and the project-relative file path; never commands,
+output, error text or file contents. `resume` shows the last three sessions in summary,
+marked as observed, not verified. Setup and limits (German):
+[docs/cli.md](docs/cli.md#beobachtungen-aus-claude-code-ab-schema-6).
+
 ### 6. Get started
 
 Tell Claude, for example:

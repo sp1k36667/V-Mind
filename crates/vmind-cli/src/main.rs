@@ -1,5 +1,6 @@
 mod check_cmd;
 mod mcp;
+mod observe;
 mod ollama;
 mod prompt;
 mod protocol;
@@ -38,6 +39,7 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
   resume DB                     (Fortsetzungsstand des Projektbereichs)
   resume DB GESPRÄCH_ID
   report DB                     (lesbarer Projektbericht in Markdown, nur lesen)
+  observe DB                    (Claude-Code-Hook: Meldung von stdin, nur Werkzeug/Ergebnis/Pfad)
   sessions DB
   session-new DB TITEL
   messages DB GESPRÄCH_ID [NACH_ID]
@@ -183,7 +185,39 @@ fn resume_output(db: &str, scope: &str, session: Option<&str>, json_mode: bool) 
         messages,
         resume.total_events
     );
+    let text = if resume.observation_count == 0 {
+        text
+    } else {
+        format!(
+            "{text}\n\nBeobachtete Werkzeugaufrufe (nicht geprüft; {} insgesamt):\n{}",
+            resume.observation_count,
+            observed_lines(&resume.observed_sessions).join("\n")
+        )
+    };
     emit(resume, text, json_mode)
+}
+
+/// Eine Zeile je Sitzung. Ein abgeschlossener Aufruf heißt nicht, dass ein Test bestand.
+pub(crate) fn observed_lines(sessions: &[vmind_core::SessionSummary]) -> Vec<String> {
+    sessions
+        .iter()
+        .map(|s| {
+            format!(
+                "- Sitzung {} ({} bis {}): {} Aufrufe, davon {} fehlgeschlagen; {} Dateien{}",
+                s.session_id.chars().take(8).collect::<String>(),
+                s.first_at,
+                s.last_at,
+                s.calls,
+                s.failed,
+                s.files,
+                if s.paths.is_empty() {
+                    String::new()
+                } else {
+                    format!(", zuletzt: {}", s.paths.join(", "))
+                }
+            )
+        })
+        .collect()
 }
 
 fn run() -> Result<()> {
@@ -232,6 +266,7 @@ fn run() -> Result<()> {
                 return Err(io::Error::other("Datenbankprüfung fehlgeschlagen").into());
             }
         }
+        [cmd, db] if cmd == "observe" => observe::run(db, &scope)?,
         [cmd, db] if cmd == "report" => {
             let report = report::build(&MemoryStore::open_read_only(db)?, &scope)?;
             let text = report::markdown(&report);

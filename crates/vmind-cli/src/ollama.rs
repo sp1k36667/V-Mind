@@ -15,6 +15,11 @@ fn request(model: &str, question: &str, memories: &[Record], resume: Option<&Res
             "tasks":r.tasks.iter().take(8).map(brief).collect::<Vec<_>>(),"total_tasks":r.task_count,
             "decisions":r.decisions.iter().take(3).map(brief).collect::<Vec<_>>(),
             "recent_events":r.recent_events.iter().rev().take(3).map(brief).collect::<Vec<_>>(),
+            "observed_sessions":r.observed_sessions.iter().take(3).map(|s| json!({
+                "session_id":cut(&s.session_id,200), "calls":s.calls, "failed":s.failed,
+                "files":s.files, "paths":s.paths.iter().take(5).map(|p| cut(p,160)).collect::<Vec<_>>(),
+                "notice":"Hostbeobachtungen, kein Test- oder Erledigungsnachweis; Pfade können gekürzt sein."
+            })).collect::<Vec<_>>(), "total_observations":r.observation_count,
             "recent_messages_newest_first":messages,"total_messages":r.message_count,
             "notice":"Gekürzter Fortsetzungsstand; vollständige Daten über resume, journal, messages. Projektberichte sind keine unabhängig validierten Fakten."})
     });
@@ -135,6 +140,41 @@ mod tests {
             600
         );
         assert_eq!(prompt["question"], "Frage mit \"Zitat\"");
+    }
+
+    #[test]
+    fn project_context_includes_observed_work_without_claiming_validation() {
+        let store = vmind_core::MemoryStore::in_memory().unwrap();
+        store
+            .observe(
+                "p",
+                &vmind_core::Observation {
+                    session_id: "session".into(),
+                    tool_use_id: "call".into(),
+                    tool: "Write".into(),
+                    result: "completed".into(),
+                    paths: vec!["src/model.rs".into()],
+                },
+            )
+            .unwrap();
+        let resume = store.resume("p", None).unwrap();
+        let req = request(
+            "test-model",
+            "Welche Datei wurde angefasst?",
+            &[],
+            Some(&resume),
+        );
+        let prompt: Value = serde_json::from_str(req["prompt"].as_str().unwrap()).unwrap();
+        let context = &prompt["project_context"];
+        assert_eq!(context["total_observations"], 1);
+        assert_eq!(context["observed_sessions"][0]["paths"][0], "src/model.rs");
+        assert!(
+            context["observed_sessions"][0]["notice"]
+                .as_str()
+                .unwrap()
+                .contains("kein Test- oder Erledigungsnachweis")
+        );
+        assert_eq!(prompt["vmind_runtime"]["tools_available"], false);
     }
 
     fn mock_response(status: &str, body: &str) -> (String, thread::JoinHandle<()>) {
