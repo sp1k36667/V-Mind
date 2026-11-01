@@ -4,9 +4,11 @@ pub use check_evidence::{CheckEvidence, CheckState, CheckVerdict};
 mod maintenance;
 pub use maintenance::{BackupReport, DoctorReport, backup_database, inspect_database};
 mod observations;
+mod paths;
 mod project;
 pub use checks::{Applied, Check, CheckResult, CheckRun, Outcome};
 pub use observations::{Observation, SessionSummary};
+pub use paths::literal_file_path;
 pub use project::{ChatMessage, Conversation, JournalEntry, Resume};
 
 const SCHEMA_VERSION: i64 = 6;
@@ -158,6 +160,12 @@ fn create_private(path: &Path) -> Result<()> {
 }
 
 impl MemoryStore {
+    /// Persistent filesystem filename, including names resembling a SQLite URI.
+    pub fn open_file(path: impl AsRef<Path>) -> Result<Self> {
+        Self::open(literal_file_path(path)?)
+    }
+    /// SQLite-compatible API, including explicitly chosen :memory: and file: URIs.
+    /// For persistent filenames use open_file; CLI commands always use file APIs.
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         create_private(path.as_ref())?;
         Self::from_connection(Connection::open(path)?)
@@ -165,13 +173,16 @@ impl MemoryStore {
     /// Öffnet nur eine vorhandene Datei, verhindert versehentliche neue Datenbanken bei Tippfehlern.
     pub fn open_existing(path: impl AsRef<Path>) -> Result<Self> {
         Self::from_connection(Connection::open_with_flags(
-            path,
+            literal_file_path(path)?,
             OpenFlags::SQLITE_OPEN_READ_WRITE,
         )?)
     }
     /// Reads only an existing current-schema database; never creates or upgrades.
     pub fn open_read_only(path: impl AsRef<Path>) -> Result<Self> {
-        let conn = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+        let conn = Connection::open_with_flags(
+            literal_file_path(path)?,
+            OpenFlags::SQLITE_OPEN_READ_ONLY,
+        )?;
         conn.busy_timeout(std::time::Duration::from_secs(5))?;
         let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
         if version != SCHEMA_VERSION {
@@ -186,7 +197,10 @@ impl MemoryStore {
     /// und stellt nichts um. Für Hintergrundaufrufe wie Hooks, die kein Upgrade auslösen
     /// dürfen.
     pub fn open_current(path: impl AsRef<Path>) -> Result<Self> {
-        let conn = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_WRITE)?;
+        let conn = Connection::open_with_flags(
+            literal_file_path(path)?,
+            OpenFlags::SQLITE_OPEN_READ_WRITE,
+        )?;
         conn.busy_timeout(std::time::Duration::from_secs(5))?;
         conn.pragma_update(None, "foreign_keys", true)?;
         let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;

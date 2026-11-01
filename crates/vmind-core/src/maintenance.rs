@@ -33,7 +33,10 @@ pub struct BackupReport {
 }
 
 fn read_only(path: &Path) -> Result<Connection> {
-    let conn = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+    let conn = Connection::open_with_flags(
+        crate::literal_file_path(path)?,
+        OpenFlags::SQLITE_OPEN_READ_ONLY,
+    )?;
     conn.busy_timeout(Duration::from_secs(5))?;
     Ok(conn)
 }
@@ -128,7 +131,7 @@ pub fn backup_database(
     destination: impl AsRef<Path>,
 ) -> Result<BackupReport> {
     let source = read_only(source.as_ref())?;
-    let destination = destination.as_ref();
+    let destination = crate::literal_file_path(destination)?;
     // Exclusive creation also protects the source, aliases, symlinks and empty files.
     let mut options = fs::OpenOptions::new();
     options.write(true).create_new(true);
@@ -137,19 +140,15 @@ pub fn backup_database(
         use std::os::unix::fs::OpenOptionsExt;
         options.mode(0o600);
     }
-    options.open(destination).map_err(|e| {
+    options.open(&destination).map_err(|e| {
         invalid(&format!(
             "Sicherungsziel kann nicht neu angelegt werden: {e}"
         ))
     })?;
     let result = (|| {
-        // SQLite interprets relative names beginning with file: as URIs even when
-        // the filesystem reserved a literal name. Bind it to the actual new file
-        // before SQLite sees it, so URI options can never redirect a backup.
-        let physical_destination = fs::canonicalize(destination)
-            .map_err(|e| invalid(&format!("Sicherungsziel nicht auflösbar: {e}")))?;
+        // The exact same literal filename is used for exclusive creation and SQLite.
         let mut target =
-            Connection::open_with_flags(&physical_destination, OpenFlags::SQLITE_OPEN_READ_WRITE)?;
+            Connection::open_with_flags(&destination, OpenFlags::SQLITE_OPEN_READ_WRITE)?;
         {
             let backup = Backup::new(&source, &mut target)?;
             let started = Instant::now();
@@ -176,7 +175,7 @@ pub fn backup_database(
         let file = fs::OpenOptions::new()
             .read(true)
             .write(true)
-            .open(&physical_destination)
+            .open(&destination)
             .map_err(|e| invalid(&format!("Sicherungsdatei nicht lesbar: {e}")))?;
         file.sync_all()
             .map_err(|e| invalid(&format!("Sicherung nicht auf Datenträger bestätigt: {e}")))?;
@@ -189,7 +188,7 @@ pub fn backup_database(
     })();
     if result.is_err() {
         // Only the file exclusively created above belongs to this attempt.
-        let _ = fs::remove_file(destination);
+        let _ = fs::remove_file(&destination);
     }
     result
 }

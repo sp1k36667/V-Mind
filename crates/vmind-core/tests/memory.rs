@@ -96,3 +96,21 @@ fn new_database_files_are_private_but_existing_files_keep_their_mode() {
     assert!(MemoryStore::open(":memory:").is_ok());
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn explicit_programmatic_sqlite_memory_uris_remain_supported() {
+    let uri = format!(
+        "file:vmind-explicit-memory-{}-{}?mode=memory&cache=shared",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    );
+    let first = MemoryStore::open(&uri).unwrap();
+    let id = first
+        .remember("long_term", "Gemeinsam", "Bewahren", "Fixture")
+        .unwrap();
+    let second = MemoryStore::open(&uri).unwrap();
+    assert_eq!(second.get(id).unwrap().unwrap().problem, "Gemeinsam");
+}
