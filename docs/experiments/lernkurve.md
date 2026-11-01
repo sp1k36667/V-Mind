@@ -24,7 +24,12 @@ Der Lauf zeigt trotzdem drei Dinge deutlich, die für V-Mind wichtig sind:
    dann den Syntaxfehler, wird aber von einer fachfremden Prüfung bestätigt. So wurde
    auch eine falsche Lehre validiert.
 
-Der explorative Lauf mit Gemma 4 12B läuft noch; sein Ergebnis wird unten ergänzt.
+**Explorativer Lauf mit Gemma 4 12B:** 12B behebt Fehler und findet seine Lehren wieder,
+zeigt aber ebenfalls keine Lernkurve für die geprüfte Bedingung B. Ungeprüfte Lehren (C)
+waren bei 12B kaum falsch, und C lag beim Anteil bestandener Prüfungen vorn. Das spricht
+dafür, dass sich die heutige Prüfung (Zuordnung „Prüfung schlug vorher fehl, jetzt nicht
+mehr“) vor allem bei schwachen Modellen auszahlt und für stärkere geschärft werden muss.
+Details unten.
 
 ## Aufbau in Kürze
 
@@ -120,8 +125,81 @@ Durchgängen wieder auf.
    gescheitert war (kein Syntax- oder Importfehler, der alle Prüfungen umschaltet), und je
    Fix höchstens eine Lehre bilden.
 2. Denselben Aufbau mit Teilwortsuche (Schema 5) wiederholen, um den Abrufengpass zu messen.
-3. Ergebnis des 12B-Laufs abwarten: Greift die Schleife, wenn das Modell Fehler beheben kann?
+3. Aus dem 12B-Lauf: je Fix nur eine Lehre speichern (keine Vervielfachung je
+   umgeschalteter Prüfung) und aufgabenspezifische Lehren (Klassen- und Methodennamen) nur
+   im Bereich der Aufgabe ablegen, damit sie den Abruf für andere Aufgaben nicht füllen.
+4. Mehr Aufgabenläufe je Zelle, damit Unterschiede wie C gegenüber A beim Prüfungsanteil
+   von Zufall und Aufgabenreihenfolge trennbar werden.
 
 ## Explorativer Lauf mit Gemma 4 12B
 
-Läuft. Ergebnisse werden hier ergänzt und getrennt vom Hauptlauf ausgewiesen.
+**Explorativ**, nach dem E2B-Hauptlauf ergänzt (Plan: Commit c302f49). Gleicher Aufbau,
+gleicher Code des Testhosts, nur `--modell gemma4:12b`. Die Ergebnisse sind nicht Teil der
+vorab festgelegten Prüfung und dienen nur der Einordnung.
+
+| Pos. | Erfolg 1. V. A / B / C | Prüfungen 1. V. A | B | C | bestanden A / B / C | Gedächtnis B | C |
+|---:|---|---:|---:|---:|---|---:|---:|
+| 1 | 0 % / 0 % / 0 % | 44 % | 44 % | 44 % | 0 % / 0 % / 0 % | 0 % | 0 % |
+| 2 | 0 % / 0 % / 0 % | 56 % | 57 % | 57 % | 33 % / 17 % / 0 % | 67 % | 100 % |
+| 3 | 0 % / 0 % / 0 % | 41 % | 43 % | 65 % | 0 % / 17 % / 0 % | 100 % | 100 % |
+| 4 | 0 % / 17 % / 17 % | 67 % | 61 % | 74 % | 67 % / 33 % / 67 % | 100 % | 100 % |
+| 5 | 0 % / 0 % / 0 % | 41 % | 35 % | 54 % | 0 % / 17 % / 17 % | 100 % | 100 % |
+| 6 | 0 % / 0 % / 17 % | 41 % | 48 % | 57 % | 0 % / 17 % / 17 % | 100 % | 100 % |
+
+„bestanden“ heißt: innerhalb von höchstens 5 Versuchen. Insgesamt bestand jede Bedingung
+6 von 36 Aufgabenläufen.
+
+Paarvergleich wie oben, Positionen 4 bis 6, Prozentpunkte zu A:
+
+| Reihenfolge, Seed | B − A Erfolg | B − A Prüfungen | C − A Erfolg | C − A Prüfungen |
+|---|---:|---:|---:|---:|
+| 1, 7 | +33 | +26 | 0 | −4 |
+| 1, 42 | 0 | −11 | 0 | +15 |
+| 2, 7 | 0 | +4 | +33 | +7 |
+| 2, 42 | 0 | −7 | 0 | +15 |
+| 3, 7 | 0 | −26 | 0 | +7 |
+| 3, 42 | 0 | +7 | +33 | +33 |
+
+Beobachtungen:
+
+- **Keine Lernkurve für B.** B liegt nur in einem von sechs Durchgängen beim Erfolg über A.
+  Das Kriterium aus dem Plan (mindestens 25 Prozentpunkte in 5 von 6) wäre klar verfehlt.
+- **C liegt beim Anteil bestandener Prüfungen vorn**: auf den späten Positionen im Mittel
+  62 % gegenüber 50 % (A) und 48 % (B), in 5 von 6 Durchgängen über A. Bei 6 Aufgabenläufen
+  je Zelle ist das ein Hinweis, kein Nachweis.
+- **Was A löst, ist fast nur eine Aufgabe.** A bestand ausschließlich `lesezeichen`
+  (6 von 6), B und C verteilen ihre Erfolge auf vier Aufgaben, bestehen `lesezeichen` aber
+  seltener (3 bzw. 4 von 6). Die Positionsunterschiede in der Tabelle spiegeln deshalb
+  stark wider, wo `lesezeichen` in der jeweiligen Reihenfolge steht.
+- **Der Abruf funktioniert bei 12B.** Ab Position 3 rief B in allen Aufgaben Lehren ab
+  (E2B: 17 bis 33 %), weil 12B mehr Fehler behob und daher mehr Lehren entstanden.
+- **Die Zuordnungslücke zeigt sich als Vervielfachung.** Ein einzelner Fix erzeugt oft
+  mehrere fast gleiche Lehren, eine je umgeschalteter Prüfung (z. B. dreimal
+  „`list_items` in `list` umbenennen“).
+
+Lehren:
+
+| | B (geprüft) | C (ungeprüft) |
+|---|---:|---:|
+| vorgeschlagen und übernommen | 45 | 91 |
+| verschiedene Texte | 37 | 77 |
+
+**B, alle 45 von Hand eingeordnet:** 13 nützlich und übertragbar (fehlende Datei als leere
+Daten behandeln; JSON-Schlüssel vor `max` in Ganzzahlen umwandeln; nächste ID dauerhaft
+speichern), 6 richtig, aber allgemein (Fehler auf stderr, Exitcode ungleich 0), 18
+aufgabenspezifisch (Klasse `NoteStore` anlegen, `list_items` in `list` umbenennen,
+Argumentindizes), 5 vage, 2 fragwürdig („Mindestlänge der URL erhöhen“ als Ersatz für
+eine echte Prüfung), 1 mit falscher Begründung („`total` überschreibt eine eingebaute
+Funktion“; eine solche gibt es nicht).
+
+**C, Zufallsstichprobe von 20 der 77 verschiedenen Texte (Startwert 1):** etwa 7 nützlich
+(darunter richtig „nächste ID nicht aus dem Maximum berechnen, sonst werden gelöschte IDs
+wiederverwendet“, also das Gegenteil des häufigsten E2B-Fehlers), 4 aufgabenspezifisch,
+7 vage, 2 fragwürdig, **keine eindeutig falsch**.
+
+Einordnung: Mit dem stärkeren Modell entfällt der Effekt, der bei E2B für die Prüfung
+sprach. 12B schreibt auch ungeprüft kaum falsche Lehren, und die Prüfung filtert dann
+wenig heraus. Sie lässt aber weiterhin Fragwürdiges und falsch Begründetes durch, weil
+sie nur zeigt, dass der Code nach dem Fix eine Prüfung besteht, nicht, dass der Text der
+Lehre stimmt. Dass C hier beim Prüfungsanteil vorn liegt, kann an der größeren Menge an
+Lehren liegen; mit dieser Stichprobe lässt sich das nicht trennen.
