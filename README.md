@@ -63,6 +63,37 @@ confirmed it, and the confirmation is kept with the entry.
   knowledge, e.g. for science, with sources and without training. This is a hypothesis so
   far; [opportunities and limits (German)](docs/design.md#spezialisierung-kleiner-lokaler-modelle).
 
+## Is it useful today? An honest answer
+
+**Yes, for one thing: keeping an AI's project state reliable across sessions and between
+different AI tools. The bigger promise, that an AI learns from experience, is not proven.**
+
+What works in daily use, not only in tests:
+
+- **Continuing a project after a restart.** A session-start hook hands the AI the goal, open
+  tasks and decisions, so it picks up where it stopped. V-Mind is developed this way itself.
+- **Two different AIs sharing one working state.** Claude and Codex coordinated the work on
+  V-Mind through a V-Mind conversation, with almost 70 messages, handovers and mutual
+  reviews. Normally two AI tools know nothing about each other.
+- **Knowledge with provenance.** An entry only counts after a test or a person confirmed
+  it, and you can always see who confirmed it, when and how.
+- **Solid basics:** local, one file, automated tests, verified backups before every
+  upgrade, ready-made programs for Linux, macOS and Windows.
+
+What is not there yet:
+
+- **Learning is not shown.** Our experiments found no learning curve on new tasks.
+- **Continuation by a small local model is not shown either.** In our test, Gemma 4 12B
+  did worse with `resume` than with the same data as a plain list; the main cause is fixed,
+  the follow-up test has not run yet.
+- **Logging still depends on the AI.** It has to remember to record what it did; automatic
+  logging through a Claude Code hook is built but not merged.
+- **Search finds words and word parts, not meanings.** Most detailed docs are in German.
+
+**In short:** if you work with Claude Code or similar tools on longer projects, V-Mind is
+useful today to make continuing and handing over work more reliable and traceable. It is
+not yet a finished product for a broad audience.
+
 ## Project status: what is built and how it was tested
 
 *As of 1 November 2026.* Every point below comes with the test or check behind it. Open
