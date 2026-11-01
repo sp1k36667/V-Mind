@@ -473,7 +473,10 @@ selbst ist nicht fälschungssicher.
 Projekttagebuch und Gespräche. Der Speicher bleibt auf deinem Rechner. `ask` schickt Frage
 und abgerufenen Kontext an den Ollama-Endpunkt in `VMIND_OLLAMA_URL` (standardmäßig ein
 lokaler Server; jede andere eingestellte Adresse erhält diese Daten). MCP-Clients geben,
-was sie aus V-Mind lesen, an ihr Modell weiter, das in der Cloud laufen kann. Keine Passwörter oder Schlüssel speichern. Einen
+was sie aus V-Mind lesen, an ihr Modell weiter, das in der Cloud laufen kann. Ab dem
+Entwicklungsstand nach 0.2.0 wird eine neue Datenbankdatei unter Linux und macOS nur für
+den Besitzer lesbar angelegt (0600); vorhandene Dateien behalten ihre Rechte, unter
+Windows gelten die Rechte des Ordners. Keine Passwörter oder Schlüssel speichern. Einen
 Befehl zum Löschen von Inhalten gibt es derzeit nicht; ist ein Geheimnis in der Datei
 gelandet, ein früheres Backup zurückspielen oder es mit SQLite-Werkzeugen entfernen und
 das Geheimnis als offengelegt behandeln.
