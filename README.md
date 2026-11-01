@@ -146,7 +146,7 @@ repository):
 | 2 | Does a model get better from its own checked lessons? | Gemma 4 E2B | done, pre-registered | No learning curve; 0 of 108 task runs solved; about one in five unchecked lessons clearly wrong. [Report](docs/experiments/lernkurve.md) |
 | 3 | Same question as 2 | Gemma 4 12B | done, exploratory | No learning curve either, but 12B fixed errors itself and its unchecked lessons were rarely wrong. [Report](docs/experiments/lernkurve.md#explorativer-lauf-mit-gemma-4-12b) |
 | 4 | Can a fresh session continue a project from `resume`? | Gemma 4 12B | done, pre-registered | Criteria missed: 117/165 vs. 133/165 for the same data as a flat list; cause found and fixed. [Report](docs/experiments/continuity-pilot.md) |
-| 5 | Does the fix help, and does the format matter? | Gemma 4 12B | done, 80 pre-registered calls | Obsolete next steps: 1/2 → 0/0 by format; no overall accuracy gain. [Report](docs/experiments/continuity-2x2.md) |
+| 5 | Does the fix help, and does the format matter? | Gemma 4 12B | done, 80 pre-registered calls | Obsolete next steps: JSON 1→0, text 2→0 (out of 15 each); no overall accuracy gain. [Report](docs/experiments/continuity-2x2.md) |
 | 6 | Does one correct, verified lesson help on *new* tasks? | Gemma 4 12B | draft | – [Draft](docs/experiments/transfer-pilot-plan.md) |
 
 New experiments use **Gemma 4 12B only**. In tests 2 and 3, 12B fixed its own errors far more

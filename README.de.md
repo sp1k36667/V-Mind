@@ -156,7 +156,7 @@ im Repository):
 | 2 | Wird ein Modell durch eigene geprüfte Lehren besser? | Gemma 4 E2B | durchgeführt, vorab geplant | Keine Lernkurve; 0 von 108 Aufgabenläufen gelöst; etwa jede fünfte ungeprüfte Lehre eindeutig falsch. [Bericht](docs/experiments/lernkurve.md) |
 | 3 | Gleiche Frage wie 2 | Gemma 4 12B | durchgeführt, explorativ | Ebenfalls keine Lernkurve, aber 12B behob Fehler selbst, und seine ungeprüften Lehren waren selten falsch. [Bericht](docs/experiments/lernkurve.md#explorativer-lauf-mit-gemma-4-12b) |
 | 4 | Kann eine frische Sitzung ein Projekt aus `resume` fortsetzen? | Gemma 4 12B | durchgeführt, vorab geplant | Kriterien verfehlt: 117/165 gegen 133/165 für dieselben Daten als flache Liste; Ursache gefunden und behoben. [Bericht](docs/experiments/continuity-pilot.md) |
-| 5 | Hilft die Korrektur, und spielt das Format eine Rolle? | Gemma 4 12B | durchgeführt, 80 vorab geplante Aufrufe | Alte nächste Schritte: 1/2 → 0/0 je Format; Gesamtgenauigkeit steigt nicht. [Bericht](docs/experiments/continuity-2x2.md) |
+| 5 | Hilft die Korrektur, und spielt das Format eine Rolle? | Gemma 4 12B | durchgeführt, 80 vorab geplante Aufrufe | Alte nächste Schritte: JSON 1→0, Text 2→0 (von je 15); Gesamtgenauigkeit steigt nicht. [Bericht](docs/experiments/continuity-2x2.md) |
 | 6 | Hilft eine richtige, geprüfte Lehre bei *neuen* Aufgaben? | Gemma 4 12B | Entwurf | – [Entwurf](docs/experiments/transfer-pilot-plan.md) |
 
 Neue Versuche laufen **nur noch mit Gemma 4 12B**. In den Versuchen 2 und 3 hat 12B seine

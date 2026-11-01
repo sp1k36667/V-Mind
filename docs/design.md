@@ -93,6 +93,25 @@ Kriterien. Die bisherigen Modellversuche liefern keinen solchen Produktvergleich
 Auch eine externe Prüfung kann fachlich ungeeignet sein: Der Prüfstatus allein
 beweist weder Wahrheit noch heutige Gültigkeit einer gespeicherten Aussage.
 
+## Verwandte Arbeiten
+
+Die folgenden Arbeiten und Projekte ordnen den Ansatz ein; daraus folgt weder ein
+Funktionsvergleich aktueller Versionen noch ein Überlegenheitsnachweis für V-Mind:
+
+- [Reflexion (Shinn u. a., 2023)](https://arxiv.org/abs/2303.11366): sprachliche
+  Reflexion über Rückmeldungen, gespeichert für spätere Versuche.
+- [Voyager (Wang u. a., 2023)](https://arxiv.org/abs/2305.16291): ein Minecraft-Agent
+  mit einer wachsenden Bibliothek ausführbarer Fähigkeiten und Umgebungsfeedback.
+- [ExpeL (Zhao u. a., 2023)](https://arxiv.org/abs/2308.10144): Erfahrungen sammeln,
+  sprachliche Erkenntnisse ableiten und für spätere Entscheidungen abrufen.
+- [mem0](https://github.com/mem0ai/mem0) und [Letta](https://github.com/letta-ai/letta):
+  offene Projekte für persistentes Gedächtnis bzw. zustandsbehaftete Agenten.
+- [Retrieval-Augmented Generation (Lewis u. a., 2020)](https://arxiv.org/abs/2005.11401):
+  Textgenerierung mit zusätzlichem Abruf aus einem externen Wissensbestand.
+
+Die Primärquellen wurden am 1. November 2026 für diese knappe Einordnung geprüft.
+Ihre experimentellen Resultate werden hier nicht auf V-Mind übertragen.
+
 ## Spezialisierung kleiner lokaler Modelle
 
 Die Hypothese: Ein kleines, allgemeines Modell könnte mit einer fachlichen

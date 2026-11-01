@@ -34,7 +34,11 @@ sind die zugesagten Funktionen; eine allgemeine Lernwirkung ist nicht zugesagt.
   vorhandene Ziele, Wiederherstellung und Migration. `backup_paths.rs` ergänzt
   URI-artige Namen sowie Leerzeichen/Unicode; Dateipfadtests laufen auf Linux,
   macOS und Windows. Das aktuelle Entwicklungsschema ist 6, die echte Teamdatenbank
-  bleibt bis zum koordinierten Clientwechsel auf 5.
+  bleibt bis zum koordinierten Clientwechsel auf 5. An einer isolierten Kopie der
+  echten Datenbank blieben beim Upgrade alle 18 vorhandenen Tabellen unverändert;
+  die automatische Schema-5-Sicherung war inhaltsgleich, und ein erneutes Backup
+  der Schema-6-Kopie lieferte nach Wiederherstellung denselben `resume`-Stand.
+  Das alte Binary lehnt die neue Kopie erwartungsgemäß ab.
 - Fortsetzung: [45er-Pilot](experiments/continuity-pilot.md) verfehlt seine Kriterien;
   [80er-Folgelauf](experiments/continuity-2x2.md) reduziert alte nächste Schritte,
   verbessert jedoch nicht die Gesamtgenauigkeit. Gleichwertige flache Daten sind
