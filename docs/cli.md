@@ -346,8 +346,10 @@ Eine automatische Anbindung an Codex/ChatGPT ist damit noch nicht eingerichtet.
   180 Sekunden Zeitlimit. Zeichenlimits sind keine exakte Tokenzählung.
 - Abgeschnittene, leere, unvollständige und HTTP-Fehlerantworten werden als Fehler gemeldet.
 - FTS5 sucht zuerst ganze Wörter (BM25), danach füllt eine Teilwortsuche (Trigramme, ab drei
-  Zeichen je Begriff) auf, etwa „Filter“ in „Testfilter“. Keine Bedeutungen, keine automatische
-  Übersetzung, keine semantische Suche oder Konflikterkennung.
+  Zeichen je Begriff) auf, etwa „Filter“ in „Testfilter“. Das gilt nur in dieser Richtung:
+  Eine längere gebeugte Form in der Frage („Rundungsfehlern“) findet die kürzere gespeicherte
+  („Rundungsfehler“) nicht ([Abrufkorpus](experiments/abruf-korpus.md)). Keine Bedeutungen,
+  keine automatische Übersetzung, keine semantische Suche oder Konflikterkennung.
 - Bereichstrennung steuert die Relevanz, ist keine Zugriffskontrolle. `show` und
   `get` lesen ausdrücklich angegebene IDs unabhängig vom Bereich.
 - Ein lokales Programm mit Schreibzugriff auf die Datenbank kann die Daten ändern.

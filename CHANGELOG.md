@@ -22,6 +22,10 @@
 
 - Continuity pilot with Gemma 4 12B: pre-registered criteria missed, published with all
   raw data and a re-check of every lost point. (#13)
+- Retrieval corpus v1 (synthetic, pre-registered, no model): scope, status and withdrawal
+  limits held in all 45 queries; exact-wording queries 10/10 at rank 1; longer inflected
+  query forms are not found by partial-word search. Report:
+  `docs/experiments/abruf-korpus.md` (German).
 
 ## 0.2.0 – 2026-11-01
 
