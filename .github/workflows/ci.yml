@@ -14,13 +14,25 @@ jobs:
         with:
           toolchain: 1.95.0
           components: rustfmt, clippy
-      - name: Update package index
-        run: sudo apt-get update
-      - name: Install SQLite development files
-        run: sudo apt-get install -y libsqlite3-dev pkg-config
       - name: Formatting
         run: cargo fmt --all -- --check
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Tests
         run: cargo test --workspace --locked
+  # Die Tests nutzen Unix-Werkzeuge (sh, sleep); auf macOS und Windows wird nur gebaut,
+  # damit die Release-Programme dort sicher entstehen.
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust 1.95.0
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.95.0
+      - name: Build
+        run: cargo build --workspace --locked

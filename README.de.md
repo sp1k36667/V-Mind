@@ -71,11 +71,14 @@ Terminal**.
 
 ### 1. V-Mind installieren
 
-Voraussetzungen: Rust/Cargo, Git und SQLite mit FTS5. Unter Ubuntu:
+**Weg A: herunterladen.** Fertige Programme für Linux, macOS und Windows gibt es auf der
+[Release-Seite](https://github.com/sp1k36667/V-Mind/releases). Entpacken und `vmind`
+(unter Windows `vmind.exe`) in einen Ordner im `PATH` legen. SQLite ist eingebaut, sonst
+wird nichts gebraucht. `SHA256SUMS.txt` enthält die Prüfsummen. Die Programme sind nicht
+signiert; unter macOS muss man sie einmal mit `xattr -d com.apple.quarantine vmind` erlauben.
 
-```sh
-sudo apt install build-essential pkg-config libsqlite3-dev
-```
+**Weg B: selbst bauen.** Voraussetzungen: Rust/Cargo, Git und ein C-Compiler (SQLite wird
+mitgebaut). Unter Ubuntu `sudo apt install build-essential`, dann:
 
 ```sh
 git clone https://github.com/sp1k36667/V-Mind.git
