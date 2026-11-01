@@ -19,8 +19,9 @@ and find them again later:
 V-Mind is model-agnostic. It works as an **MCP server** (e.g. with Claude), from the command
 line, through a simple JSONL protocol, and with local models via Ollama.
 
-> Status: experimental prototype, MIT license. Detailed docs, CLI help texts and the AI
-> start prompt are currently in German.
+> Status: experimental prototype, version 0.2.0, MIT license. What is built and how it was
+> tested: [project status](#project-status-what-is-built-and-how-it-was-tested). Detailed
+> docs, CLI help texts and the AI start prompt are currently in German.
 
 ## What makes V-Mind different
 
@@ -61,6 +62,63 @@ confirmed it, and the confirmation is kept with the entry.
 - **Turning small local models into specialists:** a general model plus verified domain
   knowledge, e.g. for science, with sources and without training. This is a hypothesis so
   far; [opportunities and limits (German)](docs/design.md#spezialisierung-kleiner-lokaler-modelle).
+
+## Project status: what is built and how it was tested
+
+*As of 1 November 2026.* Every point below comes with the test or check behind it. Open
+questions are listed as open.
+
+**Released: [version 0.2.0](https://github.com/sp1k36667/V-Mind/releases/tag/v0.2.0)**
+with ready-made programs for Linux x86_64, macOS arm64 and Windows x86_64 and SHA-256
+checksums. Contents: MCP server, check commands with `revalidate`, partial-word search,
+compact `resume`, bundled SQLite. See the [changelog](CHANGELOG.md).
+
+**On `main` since 0.2.0, not released yet:**
+
+| Feature | What it does |
+|---|---|
+| `vmind doctor DB` | Read-only check of schema, integrity, foreign keys and required tables |
+| `vmind backup DB TARGET` | Verified SQLite backup that never overwrites an existing file |
+| Automatic backup before upgrades | Every schema upgrade first writes and verifies a backup; if that fails, nothing is changed |
+| `vmind report DB` | Readable Markdown report for people; strictly read-only, verified knowledge and unverified proposals kept apart |
+| Cleaner `resume` | Superseded goals, next steps and task states no longer appear next to the current ones |
+
+**Automated tests:** 75 tests run on every change in GitHub Actions on Linux, together with
+Clippy (all warnings are errors) and a formatting check; macOS and Windows builds are
+checked too. Among other things they cover:
+
+- upgrades from older schemas without data loss, and failed upgrades that leave the
+  database untouched;
+- backups that never overwrite, and an automatic backup whose failure blocks the upgrade;
+- 16 separate processes writing at the same time without losing an entry;
+- check commands: no shell, time limit also while reading output, a timeout or error never
+  validates an entry;
+- scope and status filters for every search path, including partial-word search;
+- the MCP and JSONL protocols, including malformed and oversized input;
+- `report` leaving the database byte for byte unchanged, also on an older schema.
+
+**Checked by hand:** the published Linux download (checksum and first start); the upgrade of
+a real project database from schema 4 to 5 with a verified backup, integrity check and
+matching row counts; installation from the release on a fresh user profile without Rust or
+SQLite tools.
+
+**Experiments** (details below, all raw data in the repository):
+
+| Experiment | Result |
+|---|---|
+| Does a stored, verified solution help a small model? | Yes for reuse of the same solution; says nothing about learning |
+| Does a model get better from its own checked lessons? | No learning curve (Gemma 4 E2B pre-registered, 12B exploratory) |
+| Can a fresh model session continue a project from `resume`? | Pre-registered criteria missed: 117/165 vs. 133/165 for the same data as a flat list; cause found and fixed, follow-up prepared |
+
+**In progress** (open pull requests, under review): observing Claude Code tool calls through
+a hook (only tool, result and project path; never commands, output or file contents), new
+database files readable only by their owner, clearer error messages, and the follow-up
+continuity test. [Open pull requests](https://github.com/sp1k36667/V-Mind/pulls).
+
+**How it is developed:** the maintainer sets goals and priorities. Two AI assistants, Claude
+(Anthropic) and Codex (OpenAI), write and review the code. Only one of them writes code at a
+time; the other reviews every change and re-checks reported numbers independently. They
+coordinate through a V-Mind conversation, so V-Mind is used to build V-Mind.
 
 ## Use it with Claude (Claude Desktop / Claude Code)
 
@@ -309,6 +367,27 @@ checks at once. A smaller follow-up that measures transfer of a single verified 
 drafted but not run.
 [Report (German)](docs/experiments/lernkurve.md),
 [follow-up draft (German)](docs/experiments/transfer-pilot-plan.md).
+
+## Third experiment: can a fresh session continue a project?
+
+This tests what V-Mind is mainly used for. Gemma 4 12B answered eleven fixed questions about
+three synthetic projects (current goal, task states, the replaced backend decision, the
+next step, two questions with no answer in the data), in 45 pre-registered runs: without any
+history, with the same data as a flat field list, and with V-Mind's `resume` output.
+
+| | No history | Flat list | V-Mind `resume` |
+|---|---:|---:|---:|
+| Correct answers (strict, of 165) | 6 | 133 | 117 |
+
+**Result: the pre-registered criteria were missed**, and the result is published as is.
+Re-checking the raw answers showed where the 16 points went: 7 were real errors, because
+`resume` showed old "next step" entries next to the current one and the model sometimes
+picked an old one; most of the rest were correct facts in the wrong form (a quoted folder
+with a trailing full stop, "Backend SQLite" instead of "SQLite"). The old entries are now
+filtered out of `resume`. A follow-up that separates this fix from the presentation format
+is pre-registered with new projects and seeds, but has not been run yet.
+[Report (German)](docs/experiments/continuity-pilot.md),
+[follow-up plan (German)](https://github.com/sp1k36667/V-Mind/blob/exp/continuity-2x2/docs/experiments/continuity-2x2-plan.md).
 
 ## Trust, privacy and backups
 

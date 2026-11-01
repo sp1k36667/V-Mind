@@ -21,7 +21,8 @@ V-Mind ist modellunabhängig. Es funktioniert als **MCP-Server** (z. B. mit Clau
 über die Kommandozeile, über ein einfaches JSONL-Protokoll und mit lokalen Modellen
 über Ollama.
 
-> Status: experimenteller Prototyp. 59 automatische Tests, MIT-Lizenz.
+> Status: experimenteller Prototyp, Version 0.2.0, MIT-Lizenz. Was gebaut ist und wie es
+> geprüft wurde: [Projektstand](#projektstand-was-gebaut-ist-und-wie-es-geprüft-wurde).
 
 ## Was V-Mind anders macht
 
@@ -66,6 +67,66 @@ ausführbarer Prüfbefehl sie bestätigt hat; die Bestätigung bleibt am Eintrag
 - **Kleine lokale Modelle zu Spezialisten machen:** ein allgemeines Modell plus
   geprüftes Fachwissen, z. B. für die Wissenschaft, mit Quellen und ohne Training.
   Das ist bisher eine Hypothese; [Chancen und Grenzen](docs/design.md#spezialisierung-kleiner-lokaler-modelle).
+
+## Projektstand: was gebaut ist und wie es geprüft wurde
+
+*Stand 1. November 2026.* Zu jedem Punkt steht, womit er geprüft wurde. Offene Fragen
+stehen als offen da.
+
+**Veröffentlicht: [Version 0.2.0](https://github.com/sp1k36667/V-Mind/releases/tag/v0.2.0)**
+mit fertigen Programmen für Linux x86_64, macOS arm64 und Windows x86_64 samt
+SHA-256-Prüfsummen. Inhalt: MCP-Server, Prüfbefehle mit `revalidate`, Teilwortsuche,
+kompaktes `resume`, eingebautes SQLite. Siehe [Changelog](CHANGELOG.md).
+
+**Auf `main` seit 0.2.0, noch nicht veröffentlicht:**
+
+| Funktion | Was sie tut |
+|---|---|
+| `vmind doctor DB` | Prüft Schema, Integrität, Fremdschlüssel und nötige Tabellen, nur lesend |
+| `vmind backup DB ZIEL` | Geprüfte SQLite-Sicherung, die nie eine vorhandene Datei überschreibt |
+| Automatische Sicherung vor Upgrades | Jede Schemaumstellung schreibt und prüft zuerst eine Sicherung; scheitert sie, bleibt alles unverändert |
+| `vmind report DB` | Lesbarer Bericht in Markdown für Menschen; strikt nur lesend, geprüftes Wissen und ungeprüfte Vorschläge getrennt |
+| Aufgeräumtes `resume` | Überholte Ziele, nächste Schritte und Aufgabenstände erscheinen nicht mehr neben den aktuellen |
+
+**Automatische Tests:** 75 Tests laufen bei jeder Änderung in GitHub Actions unter Linux,
+zusammen mit Clippy (jede Warnung ist ein Fehler) und einer Formatprüfung; die Builds für
+macOS und Windows werden ebenfalls geprüft. Abgedeckt sind unter anderem:
+
+- Upgrades älterer Schemas ohne Datenverlust; fehlgeschlagene Upgrades lassen die
+  Datenbank unverändert;
+- Sicherungen überschreiben nie, und eine fehlgeschlagene automatische Sicherung
+  verhindert das Upgrade;
+- 16 getrennte Prozesse schreiben gleichzeitig, ohne dass ein Eintrag verloren geht;
+- Prüfbefehle: keine Shell, Zeitlimit auch beim Lesen der Ausgabe, Zeitüberschreitung
+  oder Fehler bestätigen nie einen Eintrag;
+- Bereichs- und Statusfilter in allen Suchwegen, auch in der Teilwortsuche;
+- MCP- und JSONL-Protokoll, auch mit kaputten und übergroßen Eingaben;
+- `report` lässt die Datenbank Byte für Byte unverändert, auch bei älterem Schema.
+
+**Von Hand geprüft:** der veröffentlichte Linux-Download (Prüfsumme und erster Start); das
+Upgrade einer echten Projektdatenbank von Schema 4 auf 5 mit geprüfter Sicherung,
+Integritätsprüfung und gleichen Zeilenzahlen; die Installation aus dem Release auf einem
+frischen Benutzerprofil ohne Rust- oder SQLite-Werkzeuge.
+
+**Versuche** (Einzelheiten unten, alle Rohdaten im Repository):
+
+| Versuch | Ergebnis |
+|---|---|
+| Hilft eine gespeicherte, geprüfte Lösung einem kleinen Modell? | Ja beim Wiederverwenden derselben Lösung; sagt nichts über Lernen |
+| Wird ein Modell durch eigene geprüfte Lehren besser? | Keine Lernkurve (Gemma 4 E2B vorab geplant, 12B explorativ) |
+| Kann eine frische Modellsitzung ein Projekt aus `resume` fortsetzen? | Vorab festgelegte Kriterien verfehlt: 117/165 gegen 133/165 für dieselben Daten als flache Liste; Ursache gefunden und behoben, Folgeversuch vorbereitet |
+
+**In Arbeit** (offene Pull Requests, in Prüfung): Beobachtung von Claude-Code-Werkzeugaufrufen
+über einen Hook (nur Werkzeug, Ergebnis und Projektpfad; nie Befehle, Ausgaben oder
+Dateiinhalte), neue Datenbankdateien nur für den Besitzer lesbar, verständlichere
+Fehlermeldungen und der Fortsetzungs-Folgeversuch.
+[Offene Pull Requests](https://github.com/sp1k36667/V-Mind/pulls).
+
+**Wie entwickelt wird:** Der Projektinhaber legt Ziele und Prioritäten fest. Zwei
+KI-Assistenten, Claude (Anthropic) und Codex (OpenAI), schreiben und prüfen den Code. Immer
+nur einer schreibt Code; der andere prüft jede Änderung und rechnet berichtete Zahlen
+unabhängig nach. Abgestimmt wird über ein V-Mind-Gespräch – V-Mind wird also mit V-Mind
+gebaut.
 
 ## In Claude nutzen (Claude Desktop / Claude Code)
 
@@ -317,6 +378,29 @@ Bestätigung über „die Prüfung, die vorher fehlschlug, besteht jetzt“ ist 
 ein Fix oft viele Prüfungen gleichzeitig umschaltet. Ein kleinerer Folgeversuch, der den
 Transfer einer einzelnen geprüften Lehre misst, ist entworfen, aber nicht gelaufen.
 [Bericht](docs/experiments/lernkurve.md), [Entwurf Folgeversuch](docs/experiments/transfer-pilot-plan.md).
+
+## Dritter Versuch: Kann eine frische Sitzung ein Projekt fortsetzen?
+
+Das prüft, wofür V-Mind vor allem gedacht ist. Gemma 4 12B beantwortete elf feste Fragen
+zu drei synthetischen Projekten (aktuelles Ziel, Aufgabenstände, die ersetzte
+Backend-Entscheidung, der nächste Schritt, zwei Fragen ohne Antwort in den Daten), in 45
+vorab festgelegten Läufen: ohne Verlauf, mit denselben Daten als flache Feldliste und mit
+der `resume`-Ausgabe von V-Mind.
+
+| | Ohne Verlauf | Flache Liste | V-Mind `resume` |
+|---|---:|---:|---:|
+| Richtige Antworten (streng, von 165) | 6 | 133 | 117 |
+
+**Ergebnis: Die vorab festgelegten Kriterien wurden verfehlt**, und das Ergebnis ist
+unverändert veröffentlicht. Die Nachprüfung der Rohantworten zeigt, woher die 16 Punkte
+kommen: 7 waren echte Fehler, weil `resume` alte „nächste Schritte“ neben dem aktuellen
+zeigte und das Modell manchmal einen alten nannte; der größte Rest waren richtige Fakten in
+falscher Form (ein Ordner mit Satzpunkt, „Backend SQLite“ statt „SQLite“). Die alten
+Einträge filtert `resume` inzwischen heraus. Ein Folgeversuch, der diese Korrektur von der
+Darstellungsform trennt, ist mit neuen Projekten und Seeds vorab festgelegt, aber noch
+nicht gelaufen.
+[Bericht](docs/experiments/continuity-pilot.md),
+[Plan des Folgeversuchs](https://github.com/sp1k36667/V-Mind/blob/exp/continuity-2x2/docs/experiments/continuity-2x2-plan.md).
 
 ## Vertrauen, Datenschutz und Sicherung
 
