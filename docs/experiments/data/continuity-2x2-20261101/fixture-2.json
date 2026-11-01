@@ -1,0 +1,365 @@
+{
+  "project": {
+    "name": "mosaik",
+    "notes": 10,
+    "notes_after_state": false,
+    "tasks": 5
+  },
+  "snapshots": {
+    "0": {
+      "scope": "continuity",
+      "goal": {
+        "id": 20,
+        "scope": "continuity",
+        "kind": "goal",
+        "task_key": null,
+        "task_status": null,
+        "body": "Release-Kennung MOSAIK-5 als Ziel; Datenordner /daten/mosaik/lauf-6 für alle Läufe",
+        "source": "fixture",
+        "created_at": "2026-11-01T14:51:05.351Z"
+      },
+      "next_step": {
+        "id": 25,
+        "scope": "continuity",
+        "kind": "next_step",
+        "task_key": null,
+        "task_status": null,
+        "body": "mosaik-abnahme",
+        "source": "fixture",
+        "created_at": "2026-11-01T14:51:05.720Z"
+      },
+      "tasks": [
+        {
+          "id": 23,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "gpu-index",
+          "task_status": "blocked",
+          "body": "GPU-Index zurückgestellt",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:05.572Z"
+        },
+        {
+          "id": 22,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "search",
+          "task_status": "in_progress",
+          "body": "Suche baut Index",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:05.498Z"
+        },
+        {
+          "id": 18,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "aufgabe-1",
+          "task_status": "open",
+          "body": "Weitere Aufgabe aufgabe-1",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:05.203Z"
+        },
+        {
+          "id": 17,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "aufgabe-0",
+          "task_status": "open",
+          "body": "Weitere Aufgabe aufgabe-0",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:05.130Z"
+        },
+        {
+          "id": 21,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "schema",
+          "task_status": "done",
+          "body": "Schema anlegen",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:05.425Z"
+        }
+      ],
+      "task_count": 5,
+      "decisions": [
+        {
+          "id": 24,
+          "scope": "continuity",
+          "kind": "decision",
+          "task_key": null,
+          "task_status": null,
+          "body": "D2 ersetzt D1 vollständig: Backend SQLite statt PostgreSQL",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:05.646Z"
+        },
+        {
+          "id": 3,
+          "scope": "continuity",
+          "kind": "decision",
+          "task_key": null,
+          "task_status": null,
+          "body": "D1: Backend PostgreSQL für alle Läufe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:04.063Z"
+        }
+      ],
+      "recent_events": [
+        {
+          "id": 13,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 7 zu mosaik ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:04.819Z"
+        },
+        {
+          "id": 14,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 8 zu mosaik ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:04.900Z"
+        },
+        {
+          "id": 15,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 9 zu mosaik ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:04.974Z"
+        },
+        {
+          "id": 16,
+          "scope": "continuity",
+          "kind": "next_step",
+          "task_key": null,
+          "task_status": null,
+          "body": "mosaik-entwurf",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:05.055Z"
+        },
+        {
+          "id": 19,
+          "scope": "continuity",
+          "kind": "next_step",
+          "task_key": null,
+          "task_status": null,
+          "body": "mosaik-messen",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:05.277Z"
+        }
+      ],
+      "total_events": 25,
+      "conversation_id": "191501ad1855dd391efc48865a048c94",
+      "chat_tail": [
+        {
+          "id": 1,
+          "conversation_id": "191501ad1855dd391efc48865a048c94",
+          "role": "assistant",
+          "content": "Zwischenstand mosaik 63 gesichert",
+          "created_at": "2026-11-01T14:51:05.876Z"
+        }
+      ],
+      "message_count": 1
+    },
+    "a": {
+      "scope": "continuity",
+      "goal": {
+        "id": 20,
+        "scope": "continuity",
+        "kind": "goal",
+        "task_key": null,
+        "task_status": null,
+        "body": "Release-Kennung MOSAIK-5 als Ziel; Datenordner /daten/mosaik/lauf-6 für alle Läufe",
+        "source": "fixture",
+        "created_at": "2026-11-01T14:51:05.351Z"
+      },
+      "next_step": {
+        "id": 25,
+        "scope": "continuity",
+        "kind": "next_step",
+        "task_key": null,
+        "task_status": null,
+        "body": "mosaik-abnahme",
+        "source": "fixture",
+        "created_at": "2026-11-01T14:51:05.720Z"
+      },
+      "tasks": [
+        {
+          "id": 23,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "gpu-index",
+          "task_status": "blocked",
+          "body": "GPU-Index zurückgestellt",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:05.572Z"
+        },
+        {
+          "id": 22,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "search",
+          "task_status": "in_progress",
+          "body": "Suche baut Index",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:05.498Z"
+        },
+        {
+          "id": 18,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "aufgabe-1",
+          "task_status": "open",
+          "body": "Weitere Aufgabe aufgabe-1",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:05.203Z"
+        },
+        {
+          "id": 17,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "aufgabe-0",
+          "task_status": "open",
+          "body": "Weitere Aufgabe aufgabe-0",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:05.130Z"
+        },
+        {
+          "id": 21,
+          "scope": "continuity",
+          "kind": "task",
+          "task_key": "schema",
+          "task_status": "done",
+          "body": "Schema anlegen",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:05.425Z"
+        }
+      ],
+      "task_count": 5,
+      "decisions": [
+        {
+          "id": 24,
+          "scope": "continuity",
+          "kind": "decision",
+          "task_key": null,
+          "task_status": null,
+          "body": "D2 ersetzt D1 vollständig: Backend SQLite statt PostgreSQL",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:05.646Z"
+        },
+        {
+          "id": 3,
+          "scope": "continuity",
+          "kind": "decision",
+          "task_key": null,
+          "task_status": null,
+          "body": "D1: Backend PostgreSQL für alle Läufe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:04.063Z"
+        }
+      ],
+      "recent_events": [
+        {
+          "id": 11,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 5 zu mosaik ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:04.662Z"
+        },
+        {
+          "id": 12,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 6 zu mosaik ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:04.736Z"
+        },
+        {
+          "id": 13,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 7 zu mosaik ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:04.819Z"
+        },
+        {
+          "id": 14,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 8 zu mosaik ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:04.900Z"
+        },
+        {
+          "id": 15,
+          "scope": "continuity",
+          "kind": "note",
+          "task_key": null,
+          "task_status": null,
+          "body": "Arbeitsnotiz 9 zu mosaik ohne Zustandsangabe",
+          "source": "fixture",
+          "created_at": "2026-11-01T14:51:04.974Z"
+        }
+      ],
+      "total_events": 25,
+      "conversation_id": "191501ad1855dd391efc48865a048c94",
+      "chat_tail": [
+        {
+          "id": 1,
+          "conversation_id": "191501ad1855dd391efc48865a048c94",
+          "role": "assistant",
+          "content": "Zwischenstand mosaik 63 gesichert",
+          "created_at": "2026-11-01T14:51:05.876Z"
+        }
+      ],
+      "message_count": 1
+    }
+  },
+  "expected": {
+    "release": "MOSAIK-5",
+    "folder": "/daten/mosaik/lauf-6",
+    "backend": "SQLite",
+    "schema": "done",
+    "search": "in_progress",
+    "next": "mosaik-abnahme",
+    "assistant": "Zwischenstand mosaik 63 gesichert",
+    "gpu": "blocked",
+    "archive_port": "7222",
+    "password": "unbekannt",
+    "production_date": "unbekannt"
+  },
+  "superseded": {
+    "release": [
+      "MOSAIK-3"
+    ],
+    "backend": [
+      "PostgreSQL"
+    ],
+    "schema": [
+      "in_progress"
+    ],
+    "search": [
+      "blocked"
+    ],
+    "next": [
+      "mosaik-entwurf",
+      "mosaik-messen"
+    ]
+  }
+}
