@@ -69,3 +69,30 @@ fn persists_across_reopening_and_migrates_once() {
     }
     std::fs::remove_file(path).unwrap();
 }
+
+#[cfg(unix)]
+#[test]
+fn new_database_files_are_private_but_existing_files_keep_their_mode() {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = std::env::temp_dir().join(format!(
+        "vmind-mode-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    std::fs::create_dir(&dir).unwrap();
+    let mode = |p: &std::path::Path| std::fs::metadata(p).unwrap().permissions().mode() & 0o777;
+    let fresh = dir.join("neu.db");
+    MemoryStore::open(&fresh).unwrap();
+    assert_eq!(mode(&fresh), 0o600);
+    // A file the user already created keeps the permissions the user chose.
+    let existing = dir.join("vorhanden.db");
+    std::fs::write(&existing, []).unwrap();
+    std::fs::set_permissions(&existing, std::fs::Permissions::from_mode(0o640)).unwrap();
+    MemoryStore::open(&existing).unwrap();
+    assert_eq!(mode(&existing), 0o640);
+    assert!(MemoryStore::open(":memory:").is_ok());
+    std::fs::remove_dir_all(dir).unwrap();
+}

@@ -333,7 +333,10 @@ to the SQLite file directly bypasses them, and the history itself is not tamper-
 journal and conversations. The store stays on your machine. `ask` sends the question and
 the retrieved context to the Ollama endpoint in `VMIND_OLLAMA_URL` (by default a local
 server; any other address you set receives that data). MCP clients pass what they read from
-V-Mind to their model, which may run in the cloud. Do not store passwords or keys. There is currently no command to
+V-Mind to their model, which may run in the cloud. From the development version after
+0.2.0, a new database file is created readable only by its owner on Linux and macOS (0600);
+existing files keep their permissions, and on Windows the folder permissions apply. Do not
+store passwords or keys. There is currently no command to
 delete an entry's content; if a secret ends up in the file, restore an earlier backup or
 remove it with SQLite tools, and treat the secret as exposed.
 
