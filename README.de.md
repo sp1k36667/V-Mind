@@ -262,8 +262,8 @@ Der nächste geplante Versuch prüft, ob gespeicherte Erfahrungen auch bei
 
 ## Grenzen
 
-- Die Suche (SQLite FTS5) findet Wörter, keine Bedeutungen: keine Synonyme,
-  Übersetzung oder Wortstämme.
+- Die Suche (SQLite FTS5) findet ganze Wörter und Wortteile (z. B. „Filter“ in
+  „Testfilter“), aber keine Bedeutungen: keine Synonyme und keine Übersetzung.
 - Eine Validierung dokumentiert eine Prüfung; V-Mind beweist nicht selbst, dass
   eine Lösung stimmt.
 - Projektbereiche ordnen Wissen, sind aber keine Zugriffskontrolle. Daten liegen

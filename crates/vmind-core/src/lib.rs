@@ -3,7 +3,7 @@ mod project;
 pub use checks::{Applied, Check, CheckResult, CheckRun, Outcome};
 pub use project::{ChatMessage, Conversation, JournalEntry, Resume};
 
-const SCHEMA_VERSION: i64 = 4;
+const SCHEMA_VERSION: i64 = 5;
 
 // Persistentes, modellunabhängiges Gedächtnis mit nachvollziehbarer Validierung.
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Result, params};
@@ -87,8 +87,8 @@ fn nonblank(value: &str) -> Result<()> {
     }
 }
 
-// Nur gequotete Wörter gelangen in MATCH, keine vom Aufrufer gelieferte FTS-Syntax.
-fn match_query(query: &str) -> String {
+/// Suchbegriffe ohne Stoppwörter, klein geschrieben, ohne Dubletten, höchstens 24.
+fn search_terms(query: &str) -> Vec<String> {
     let stop = [
         "der", "die", "das", "ein", "eine", "einer", "einem", "einen", "und", "oder", "ist",
         "sind", "mit", "für", "von", "zu", "im", "in", "am", "an", "wie", "was", "ich", "wir",
@@ -108,11 +108,18 @@ fn match_query(query: &str) -> String {
         }
     }
     terms
-        .into_iter()
+}
+
+// Nur gequotete Begriffe gelangen in MATCH, keine vom Aufrufer gelieferte FTS-Syntax.
+fn match_expression<'a>(terms: impl Iterator<Item = &'a String>) -> String {
+    terms
         .map(|t| format!("\"{t}\""))
         .collect::<Vec<_>>()
         .join(" OR ")
 }
+
+/// Der Trigramm-Index braucht mindestens drei Zeichen je Begriff.
+const MIN_PARTIAL_TERM_CHARS: usize = 3;
 
 impl MemoryStore {
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
@@ -157,6 +164,10 @@ impl MemoryStore {
         }
         if version == 3 {
             tx.execute_batch(include_str!("../../../migrations/0004_checks.sql"))?;
+            version = 4;
+        }
+        if version == 4 {
+            tx.execute_batch(include_str!("../../../migrations/0005_partial_search.sql"))?;
         }
         tx.pragma_update(None, "user_version", SCHEMA_VERSION)?;
         tx.commit()?;
@@ -259,6 +270,7 @@ impl MemoryStore {
         .collect()
     }
     /// BM25-Volltextsuche, nur validierte aktive Einträge; Projekt plus global.
+    /// Zuerst ganze Wörter, danach füllen Teilworttreffer auf (Beugungen, Komposita).
     pub fn recall(&self, query: &str, scope: &str, limit: usize) -> Result<Vec<Record>> {
         nonblank(scope)?;
         if query.chars().count() > 2000 {
@@ -267,19 +279,50 @@ impl MemoryStore {
         if !(1..=20).contains(&limit) {
             return Err(invalid("Limit muss 1 bis 20 sein"));
         }
-        let query = match_query(query);
-        if query.is_empty() {
+        let terms = search_terms(query);
+        let mut found = self.ranked(
+            "memories_fts",
+            &match_expression(terms.iter()),
+            scope,
+            limit,
+        )?;
+        if found.len() < limit {
+            let partial = match_expression(
+                terms
+                    .iter()
+                    .filter(|t| t.chars().count() >= MIN_PARTIAL_TERM_CHARS),
+            );
+            for extra in self.ranked("memories_trigram", &partial, scope, limit)? {
+                if found.len() == limit {
+                    break;
+                }
+                if !found.iter().any(|r| r.id == extra.id) {
+                    found.push(extra);
+                }
+            }
+        }
+        Ok(found)
+    }
+    /// Validierte aktive Treffer eines FTS-Index im Bereich plus global, nach BM25.
+    fn ranked(
+        &self,
+        index: &str,
+        expression: &str,
+        scope: &str,
+        limit: usize,
+    ) -> Result<Vec<Record>> {
+        if expression.is_empty() {
             return Ok(Vec::new());
         }
         let mut stmt = self.conn.prepare(&format!(
             "SELECT {FIELDS}
-            FROM memories_fts JOIN memories m ON m.id=memories_fts.rowid
+            FROM {index} JOIN memories m ON m.id={index}.rowid
             LEFT JOIN invalidations i ON i.memory_id=m.id
-            WHERE memories_fts MATCH ?1 AND m.status='validated' AND i.memory_id IS NULL
+            WHERE {index} MATCH ?1 AND m.status='validated' AND i.memory_id IS NULL
             AND m.scope IN ('global', ?2)
-            ORDER BY bm25(memories_fts, 2.0, 1.0), m.id LIMIT ?3"
+            ORDER BY bm25({index}, 2.0, 1.0), m.id LIMIT ?3"
         ))?;
-        stmt.query_map(params![query, scope, limit as i64], record)?
+        stmt.query_map(params![expression, scope, limit as i64], record)?
             .collect()
     }
     pub fn pending(&self, scope: &str) -> Result<Vec<Record>> {
