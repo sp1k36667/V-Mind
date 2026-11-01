@@ -241,12 +241,20 @@ den Dateipfad relativ zum Projektordner. **Befehle, Ausgaben, Fehlertexte und
 Dateiinhalte werden weder gespeichert noch ausgeführt;** Pfade außerhalb des Projekts
 werden weggelassen. Dieselbe Meldung zweimal ergibt keinen zweiten Eintrag; dieselbe
 Aufruf-ID mit anderem Inhalt wird abgelehnt. Andere Werkzeuge werden still ignoriert.
+Projektordner und Dateipfad müssen absolut sein; `..` wird nicht als Projektpfad
+übernommen. Pro Ereignis sind höchstens 20 verschiedene relative Pfade zulässig,
+jeweils bis zu 400 Zeichen. Größere Meldungen werden abgelehnt, nicht still gekürzt.
+Dateipfade und Sitzungskennungen sind selbst Metadaten, die vertraulich sein können.
+Hooks bewusst aktivieren; gelesene Zusammenfassungen können über den Modell-Host
+weitergegeben werden.
 `observe` legt keine Datenbank an und stellt kein Schema um: Ist die Datenbank älter,
 meldet der Hook einen Fehler, bis das Upgrade bewusst ausgeführt wurde.
 
 `resume` und `report` zeigen die letzten drei Sitzungen zusammengefasst (Zeitraum,
 Anzahl Aufrufe und Fehlschläge, Anzahl Dateien, bis zu fünf zuletzt betroffene Pfade)
-und die Gesamtzahl; Beobachtungen stehen nicht im Projekttagebuch und verdrängen dort
+und die Gesamtzahl; der Ollama-Adapter übergibt ebenfalls eine begrenzte Zusammenfassung
+als nicht geprüfte Hostbeobachtung. Pfade im Modellkontext können gekürzt sein.
+Beobachtungen stehen nicht im Projekttagebuch und verdrängen dort
 nichts. **Beobachtet heißt nicht geprüft:** Ein abgeschlossener Bash-Aufruf ist kein
 bestandener Test, keine erledigte Aufgabe und keine Validierung. Unterstützt ist nur
 Claude Code; für den Chat der Desktop-App oder andere Clients gibt es keine Hooks.

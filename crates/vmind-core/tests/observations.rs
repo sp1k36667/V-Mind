@@ -45,6 +45,10 @@ fn invalid_reports_are_rejected_without_storing_anything() {
         obs("s", "t", "Edit", "passed", &[]),
         obs("s", "t", "Edit", "completed", &["a\nb"]),
         obs("s", &"x".repeat(201), "Edit", "completed", &[]),
+        obs("s", "t", "Edit", "completed", &["../private"]),
+        obs("s", "t", "Edit", "completed", &["/private/key"]),
+        obs("s", "t", "Edit", "completed", &[r"C:\private\key"]),
+        obs("s", "t", "Edit", "completed", &[r"src\..\private"]),
     ] {
         assert!(s.observe("p", &bad).is_err());
     }
@@ -52,6 +56,9 @@ fn invalid_reports_are_rejected_without_storing_anything() {
         s.observe(" ", &obs("s", "t", "Edit", "completed", &[]))
             .is_err()
     );
+    let mut too_many = obs("s", "many", "Edit", "completed", &[]);
+    too_many.paths = (0..21).map(|n| format!("src/{n}.rs")).collect();
+    assert!(s.observe("p", &too_many).is_err());
     assert_eq!(s.resume("p", None).unwrap().observation_count, 0);
 }
 
@@ -152,4 +159,99 @@ fn schema_5_upgrade_keeps_all_data_and_makes_a_verified_backup_first() {
     assert_eq!(old.schema_version, 5);
     assert!(MemoryStore::open_current(&path).is_ok());
     std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn hook_open_waits_for_a_short_writer_lock_instead_of_dropping_the_event() {
+    let path = std::env::temp_dir().join(format!(
+        "vmind-hook-lock-{}-{}.db",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    drop(MemoryStore::open(&path).unwrap());
+    let lock = rusqlite::Connection::open(&path).unwrap();
+    lock.execute_batch("BEGIN EXCLUSIVE").unwrap();
+    let other = path.clone();
+    let (started, ready) = std::sync::mpsc::channel();
+    let (finished, result) = std::sync::mpsc::channel();
+    let worker = std::thread::spawn(move || {
+        started.send(()).unwrap();
+        let outcome = MemoryStore::open_current(&other)
+            .and_then(|s| s.observe("p", &obs("session", "call", "Bash", "completed", &[])));
+        finished.send(outcome.map_err(|e| e.to_string())).unwrap();
+    });
+    ready.recv().unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(150));
+    let early = result.try_recv();
+    lock.execute_batch("COMMIT").unwrap();
+    assert!(
+        matches!(early, Err(std::sync::mpsc::TryRecvError::Empty)),
+        "Hook must wait for the lock: {early:?}"
+    );
+    assert!(
+        result
+            .recv_timeout(std::time::Duration::from_secs(5))
+            .unwrap()
+            .unwrap()
+    );
+    worker.join().unwrap();
+    drop(lock);
+    assert_eq!(
+        MemoryStore::open_read_only(&path)
+            .unwrap()
+            .resume("p", None)
+            .unwrap()
+            .observation_count,
+        1
+    );
+    std::fs::remove_file(path).unwrap();
+}
+
+#[test]
+fn simultaneous_hook_retries_are_recorded_once_across_connections() {
+    let path = std::env::temp_dir().join(format!(
+        "vmind-hook-retry-{}-{}.db",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    drop(MemoryStore::open(&path).unwrap());
+    let start = std::sync::Arc::new(std::sync::Barrier::new(12));
+    let workers = (0..12)
+        .map(|_| {
+            let path = path.clone();
+            let start = start.clone();
+            std::thread::spawn(move || {
+                start.wait();
+                MemoryStore::open_current(&path)
+                    .and_then(|s| {
+                        s.observe(
+                            "p",
+                            &obs("session", "same-call", "Edit", "completed", &["src/a.rs"]),
+                        )
+                    })
+                    .map_err(|e| e.to_string())
+            })
+        })
+        .collect::<Vec<_>>();
+    let inserted = workers
+        .into_iter()
+        .map(|w| w.join().unwrap().unwrap())
+        .filter(|b| *b)
+        .count();
+    assert_eq!(inserted, 1);
+    assert_eq!(
+        MemoryStore::open_read_only(&path)
+            .unwrap()
+            .resume("p", None)
+            .unwrap()
+            .observation_count,
+        1
+    );
+    std::fs::remove_file(path).unwrap();
 }

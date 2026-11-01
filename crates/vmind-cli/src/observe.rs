@@ -1,11 +1,11 @@
 //! `vmind observe DB`: liest eine Claude-Code-Hook-Meldung (PostToolUse oder
 //! PostToolUseFailure) von stdin und speichert nur Sitzung, Aufruf-ID, Werkzeug,
 //! Ergebnis und betroffene Projektdatei. Befehle, Ausgaben, Fehlertexte und
-//! Dateiinhalte werden nicht gelesen und nicht gespeichert; nichts wird ausgeführt.
+//! Dateiinhalte werden nicht ausgewertet und nicht gespeichert; nichts wird ausgeführt.
 use serde_json::Value;
 use std::{
     io::{self, Read},
-    path::Path,
+    path::{Component, Path},
 };
 use vmind_core::{MemoryStore, Observation};
 
@@ -21,9 +21,22 @@ fn field<'a>(input: &'a Value, name: &str) -> crate::Result<&'a str> {
 
 /// Projektdatei relativ zum Projektordner; Dateien außerhalb werden nicht genannt.
 fn project_path(file: &str, root: &Path) -> Option<String> {
-    let relative = Path::new(file).strip_prefix(root).ok()?;
-    let text = relative.to_str()?;
-    (!text.is_empty()).then(|| text.replace('\\', "/"))
+    let file = Path::new(file);
+    if !root.is_absolute()
+        || !file.is_absolute()
+        || root.components().any(|c| matches!(c, Component::ParentDir))
+    {
+        return None;
+    }
+    let relative = file.strip_prefix(root).ok()?;
+    let mut parts = Vec::new();
+    for component in relative.components() {
+        match component {
+            Component::Normal(value) => parts.push(value.to_str()?),
+            _ => return None,
+        }
+    }
+    (!parts.is_empty()).then(|| parts.join("/"))
 }
 
 /// `None`, wenn die Meldung kein unterstütztes Werkzeug betrifft (wird still ignoriert).
@@ -31,10 +44,8 @@ pub fn observation(input: &Value, root: &Path) -> crate::Result<Option<Observati
     let result = match field(input, "hook_event_name")? {
         "PostToolUse" => "completed",
         "PostToolUseFailure" => "failed",
-        other => {
-            return Err(
-                io::Error::other(format!("Hook-Ereignis {other} wird nicht unterstützt")).into(),
-            );
+        _ => {
+            return Err(io::Error::other("Hook-Ereignis wird nicht unterstützt").into());
         }
     };
     let tool = field(input, "tool_name")?;
@@ -73,7 +84,11 @@ pub fn run(db: &str, scope: &str) -> crate::Result<()> {
         .ok()
         .or_else(|| input["cwd"].as_str().map(String::from))
         .ok_or_else(|| io::Error::other("Projektordner unbekannt (CLAUDE_PROJECT_DIR oder cwd)"))?;
-    if let Some(o) = observation(&input, Path::new(&root))? {
+    let root = Path::new(&root);
+    if !root.is_absolute() || root.components().any(|c| matches!(c, Component::ParentDir)) {
+        return Err(io::Error::other("Projektordner muss ein absoluter Pfad ohne .. sein").into());
+    }
+    if let Some(o) = observation(&input, root)? {
         // Kein Upgrade aus einem Hook heraus: nur aktuelles Schema, keine neue Datei.
         MemoryStore::open_current(db)?.observe(scope, &o)?;
     }
@@ -139,5 +154,25 @@ mod tests {
         let mut no_id = hook("PostToolUse", "Bash", json!({}));
         no_id.as_object_mut().unwrap().remove("tool_use_id");
         assert!(observation(&no_id, Path::new("/projekt")).is_err());
+    }
+}
+
+#[cfg(test)]
+mod path_regressions {
+    use super::*;
+
+    #[test]
+    fn traversal_and_empty_roots_do_not_disclose_external_paths() {
+        assert!(project_path("/projekt/../secret/key", Path::new("/projekt")).is_none());
+        assert!(project_path("/secret/key", Path::new("")).is_none());
+        assert!(project_path("relative/file", Path::new("relative")).is_none());
+        assert_eq!(
+            project_path("/projekt/src/file.rs", Path::new("/projekt")),
+            Some("src/file.rs".into())
+        );
+        assert_eq!(
+            project_path("/projekt/./src/a.rs", Path::new("/projekt")),
+            Some("src/a.rs".into())
+        );
     }
 }

@@ -154,13 +154,15 @@ impl MemoryStore {
     /// dürfen.
     pub fn open_current(path: impl AsRef<Path>) -> Result<Self> {
         let conn = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_WRITE)?;
+        conn.busy_timeout(std::time::Duration::from_secs(5))?;
+        conn.pragma_update(None, "foreign_keys", true)?;
         let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
         if version != SCHEMA_VERSION {
             return Err(invalid(
                 "Datenbank hat nicht das aktuelle Schema; zuerst doctor, backup und ein bewusstes Upgrade ausführen",
             ));
         }
-        Self::from_connection(conn)
+        Ok(Self { conn })
     }
     /// Keeps several reads in one consistent SQLite snapshot. The callback must
     /// only read; use open_read_only when this must also be enforced by SQLite.

@@ -48,11 +48,22 @@ fn text(value: &str, max: usize, what: &str) -> Result<()> {
 fn normalized_paths(paths: &[String]) -> Result<Vec<String>> {
     for p in paths {
         text(p, MAX_PATH_CHARS, "Pfad")?;
+        let bytes = p.as_bytes();
+        let drive = bytes.len() >= 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':';
+        if p.starts_with(['/', '\\']) || drive || p.split(['/', '\\']).any(|part| part == "..") {
+            return Err(invalid(
+                "Ungültige Beobachtung: Pfad muss relativ zum Projekt und ohne .. sein",
+            ));
+        }
     }
     let mut out = paths.to_vec();
     out.sort();
     out.dedup();
-    out.truncate(MAX_PATHS);
+    if out.len() > MAX_PATHS {
+        return Err(invalid(
+            "Ungültige Beobachtung: höchstens 20 unterschiedliche Pfade",
+        ));
+    }
     Ok(out)
 }
 

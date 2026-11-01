@@ -205,8 +205,8 @@ pub(crate) fn observed_lines(sessions: &[vmind_core::SessionSummary]) -> Vec<Str
             format!(
                 "- Sitzung {} ({} bis {}): {} Aufrufe, davon {} fehlgeschlagen; {} Dateien{}",
                 s.session_id.chars().take(8).collect::<String>(),
-                s.first_at.get(..16).unwrap_or(&s.first_at),
-                s.last_at.get(11..16).unwrap_or(&s.last_at),
+                s.first_at,
+                s.last_at,
                 s.calls,
                 s.failed,
                 s.files,
