@@ -68,6 +68,41 @@ ausführbarer Prüfbefehl sie bestätigt hat; die Bestätigung bleibt am Eintrag
   geprüftes Fachwissen, z. B. für die Wissenschaft, mit Quellen und ohne Training.
   Das ist bisher eine Hypothese; [Chancen und Grenzen](docs/design.md#spezialisierung-kleiner-lokaler-modelle).
 
+## Taugt es heute schon etwas? Eine ehrliche Antwort
+
+**Ja, für eine Sache: den Projektstand einer KI über Sitzungen hinweg und zwischen
+verschiedenen KI-Werkzeugen zuverlässig zu halten. Das größere Versprechen, dass eine KI
+aus Erfahrung lernt, ist nicht belegt.**
+
+Was im Alltag funktioniert, nicht nur im Test:
+
+- **Ein Projekt nach einem Neustart fortsetzen.** Ein Start-Hook gibt der KI Ziel, offene
+  Aufgaben und Entscheidungen mit, sie macht dort weiter, wo sie aufgehört hat. V-Mind wird
+  selbst so entwickelt.
+- **Zwei verschiedene KIs teilen sich einen Arbeitsstand.** Claude und Codex haben die
+  Arbeit an V-Mind über ein V-Mind-Gespräch abgestimmt, mit fast 70 Nachrichten,
+  Übergaben und gegenseitigen Prüfungen. Normalerweise wissen zwei KI-Programme nichts
+  voneinander.
+- **Wissen mit Herkunft.** Ein Eintrag gilt erst, wenn ein Test oder ein Mensch ihn
+  bestätigt hat, und man sieht immer, wer, wann und womit.
+- **Solide Grundlagen:** lokal, eine Datei, automatische Tests, geprüfte Sicherungen vor
+  jedem Upgrade, fertige Programme für Linux, macOS und Windows.
+
+Was noch fehlt:
+
+- **Lernen ist nicht gezeigt.** Unsere Versuche fanden bei neuen Aufgaben keine Lernkurve.
+- **Fortsetzung durch ein kleines lokales Modell ebenfalls nicht.** Im Test schnitt
+  Gemma 4 12B mit `resume` schlechter ab als mit denselben Daten als einfache Liste; die
+  Hauptursache ist behoben, der Folgetest läuft noch nicht.
+- **Mitschreiben hängt noch an der KI.** Sie muss selbst daran denken einzutragen, was sie
+  getan hat; ein automatisches Protokoll über einen Claude-Code-Hook ist gebaut, aber noch
+  nicht gemergt.
+- **Die Suche findet Wörter und Wortteile, keine Bedeutungen.**
+
+**Kurz:** Wer mit Claude Code oder ähnlichen Werkzeugen an längeren Projekten arbeitet,
+macht mit V-Mind heute schon das Fortsetzen und Übergeben zuverlässiger und
+nachvollziehbarer. Ein fertiges Produkt für die breite Masse ist es noch nicht.
+
 ## Projektstand: was gebaut ist und wie es geprüft wurde
 
 *Stand 1. November 2026.* Zu jedem Punkt steht, womit er geprüft wurde. Offene Fragen
