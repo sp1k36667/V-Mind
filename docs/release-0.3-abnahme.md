@@ -24,6 +24,15 @@ Diskussionsentwurf mit ungelöstem Blocker B6, kein ausführbares Feature.
 | Pakettest aller drei Plattformen (`release.yml`, manueller Lauf 41324710001) | erfolgreich an `bebad71` (#24) | **älterer Stand:** enthält weder englisches Onboarding (#28) noch Audit (#29) |
 | Upgrade 5 → 6 an einer isolierten Kopie der echten Datenbank | laut [Produktreife](product-readiness.md): 18 Tabellen unverändert, Schema-5-Sicherung inhaltsgleich, Wiederherstellung liefert denselben `resume`-Stand | Kopie, nicht die echte Datei; nicht mit dem Release-Binary |
 | Veröffentlichter Linux-Download 0.2.0 in isoliertem Profil | geprüft | Version 0.2.0, nicht 0.3 |
+| Paketprobe aller drei Plattformen (manueller Lauf 41479924674, laut Codex #150/#152) | erfolgreich an `2a3af39`; Linux-Archiv lokal vollständig geprüft (Pakettest, beide Startsprachen, add/validate/recall, Audit, Upgrade/Restore an Kopie), macOS-Archiv Dateien geprüft | **Entwicklungsartefakt vor der Versionsanhebung:** meldet `0.2.0`, ist aber nicht das veröffentlichte 0.2.0; nur über Commit/SHA-256 eindeutig. Windows-Download wegen HTTP 503 noch nicht lokal geprüft, CI-Pakettest grün. Die laufende MCP-Probe ist auf dieses Artefakt gepinnt |
+
+### Kandidat 0.3.0-rc.1
+
+Ab dem Commit der Versionsanhebung meldet der Quellstand `vmind 0.3.0-rc.1`. Die
+Schritte 1–4 laufen am Kandidaten erneut, sobald ein Paket dieses Stands gebaut ist;
+Ergebnisse der Artefakte von `2a3af39` gelten als Vorprüfung, nicht als Abnahme des
+Kandidaten. Ein Kandidat ist kein Release: Tag, Veröffentlichung und Installation
+bleiben getrennte Schritte.
 
 ## Abnahmeschritte
 
@@ -42,7 +51,7 @@ Spalte „Wer“: **N** = Nutzer (eigener Rechner, Konten, Neustarts), **C** = C
 
 | # | Schritt | Erwartung | Wer |
 | --- | --- | --- | --- |
-| 2.1 | Neues Benutzerkonto oder leeres `HOME`, `PATH` ohne `cargo`/`sqlite3`; Archiv entpacken | `vmind --version` meldet die neue Version | N (Konto) oder C (isoliertes `HOME`) |
+| 2.1 | Neues Benutzerkonto oder leeres `HOME`, `PATH` ohne `cargo`/`sqlite3`; Archiv entpacken | `vmind --version` meldet `vmind 0.3.0-rc.1` (bzw. die endgültige Version); SHA-256 des Archivs protokolliert | N (Konto) oder C (isoliertes `HOME`) |
 | 2.2 | `vmind init test.db`, dann `vmind doctor test.db` | Schema 6, Zustand ok; Datei hat unter Unix Rechte 0600; unter Windows gelten die Ordnerrechte | C |
 | 2.3 | `vmind start-prompt` und `vmind start-prompt en` | deutscher bzw. englischer Text; `vmind start-prompt fr` scheitert mit klarer Meldung | C |
 | 2.4 | Kurzer Ablauf mit synthetischem Eintrag: `add`, passende `validate`-Freigabe, `recall`, `log`, `resume`, `report`, jeweils als eigener Prozess | Einträge bleiben über Prozesse erhalten | C |
