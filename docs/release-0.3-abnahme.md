@@ -34,6 +34,44 @@ Ergebnisse der Artefakte von `2a3af39` gelten als Vorprüfung, nicht als Abnahme
 Kandidaten. Ein Kandidat ist kein Release: Tag, Veröffentlichung und Installation
 bleiben getrennte Schritte.
 
+### Ergebnisse am Kandidaten (Stand 2. November 2026)
+
+Quelle: `7e92e002afd3ac3874a31780cbb44292062da32d` (Merge von #32), Paketlauf
+`release.yml` 41483780591 per `workflow_dispatch`: alle drei Builds erfolgreich,
+Veröffentlichung übersprungen. Codex hat die Archive heruntergeladen und die Ergebnisse
+in einer lokalen Beleg-Datei festgehalten (nur synthetische Daten und Statuswerte);
+Claude hat die Prüfsummen und eine Stichprobe unabhängig nachvollzogen.
+
+| Archiv | SHA-256 (selbst nachgerechnet von Codex und Claude) |
+| --- | --- |
+| `vmind-7e92e00…-linux-x86_64.tar.gz` | `d8b2482b165249d2695ce546ffd7a6872aed81bc49d56f2450ae73c7bc0a810a` |
+| `vmind-7e92e00…-macos-arm64.tar.gz` | `653c35fbb1b4fc5629917f6b6d751b67f870469c0cd3e42dcbf91a9ae0cc3fd4` |
+| `vmind-7e92e00…-windows-x86_64.zip` | `a18a7254c72dda6faffa8da6303068cff035a13e05745aac0dfd921d19bef977` |
+
+| Schritt | Ergebnis | Wer, wo |
+| --- | --- | --- |
+| 1.1 Paket am Stand | bestanden: drei Builds samt Pakettest jedes Archivs in CI | CI |
+| 1.2 Prüfsummen | protokolliert (oben); Vergleich mit veröffentlichter `SHA256SUMS.txt` erst beim Release | X, gegengerechnet C |
+| 1.3 Dateien im Archiv | bestanden (Linux lokal: 105 Links, 10 Prozessaufrufe) | X |
+| 2.1 leeres Profil | Linux bestanden: `vmind 0.3.0-rc.1` mit leerem `PATH` und eigenem `HOME` | X; Stichprobe C |
+| 2.2 init/doctor | Linux bestanden: Schema 6, Rechte 0600 | X; Stichprobe C (0600) |
+| 2.3 Startsprachen | Linux bestanden: de, en; `fr` mit klarer Meldung abgewiesen | X; Stichprobe C |
+| 2.4 Ablauf | Linux bestanden: ungeprüfter Eintrag nicht im Abruf, nach `validate` im Abruf | X |
+| 2.5 Audit | Linux bestanden: leere Datenbank ohne Fund | X; Stichprobe C |
+| — fehlende Datenbank | Linux bestanden: wird nicht angelegt | X; Stichprobe C |
+| 3.1–3.6 Upgrade an Kopie | Linux bestanden: 18 vorhandene Tabellen unverändert, automatische Sicherung inhaltsgleich, Wiederherstellung liefert gleichen `resume`-Stand; echte Datenbank weiter Schema 5 | X |
+| 4.1 MCP | **offen.** Nur Protokollebene geprüft (Serverversion im MCP-Handshake korrekt); ein realer Desktop-Client-Test fehlt, die Probedatenbank ist leer | N, C |
+| 4.2–4.4 | **offen** | N, C, X |
+
+Grenzen: Lokal ausgeführt wurde nur das Linux-Archiv auf diesem Ubuntu-Rechner. macOS
+und Windows sind durch die Pakettests in CI belegt, nicht durch einen Anwenderversuch
+auf echten Geräten. Die laufende MCP-Probe ist noch auf das ältere Artefakt von
+`2a3af39` gepinnt.
+
+**Noch offen vor einem Release:** Schritt 4 (realer Client), Entscheidung über die
+endgültige Versionsnummer, Tag und Veröffentlichung (Nutzerfreigabe) und Schritt 5
+(Upgrade der echten Teamdatenbank, eigene Nutzerfreigabe).
+
 ## Abnahmeschritte
 
 Spalte „Wer“: **N** = Nutzer (eigener Rechner, Konten, Neustarts), **C** = Claude,

@@ -28,7 +28,7 @@ sind die zugesagten Funktionen; eine allgemeine Lernwirkung ist nicht zugesagt.
 - [ ] Datenportabilität und Wiederherstellung ohne Anbieterbindung dokumentiert; eine SQLite-Datei ist bereits portabel, ein geprüfter Export kann dies ergänzen.
 - [ ] Gegenprüfung durch den jeweils anderen Teilnehmer und Release-/Upgradeprüfung am tatsächlich veröffentlichten Paket.
 
-## Nachweise und verbleibende Lücken (1. November 2026)
+## Nachweise und verbleibende Lücken (Stand 2. November 2026)
 
 - Sicherung/Upgrade: `maintenance.rs` prüft Snapshots mit WAL-Inhalt, atomare Fehler,
   vorhandene Ziele, Wiederherstellung und Migration. `backup_paths.rs` ergänzt
@@ -46,16 +46,23 @@ sind die zugesagten Funktionen; eine allgemeine Lernwirkung ist nicht zugesagt.
 - Mehrprozessbetrieb: 16 parallele Journalprozesse und 12 gleichzeitige Hook-Retries
   sind geprüft, ebenso kurze Schreibsperren. Eine systematische Prüfung harter
   Prozessabbrüche/Stromausfälle bleibt offen.
-- Installation: veröffentlichter Linux-Download und isolierte Profile wurden geprüft.
-  Die neuen Funktionen sind noch nicht als vollständiges Releasepaket geprüft.
-  macOS/Windows-CI ersetzt keinen vollständigen Anwender-Installationsversuch.
+- Installation: veröffentlichter Linux-Download 0.2.0 und isolierte Profile wurden geprüft.
+  Stand 2. November: Der unveröffentlichte Kandidat `0.3.0-rc.1` (`7e92e00`, Paketlauf
+  41483780591) wurde als Linux-Archiv in leerem Profil geprüft, inklusive Startsprachen,
+  Abruf nach Validierung, Audit und Upgrade/Restore an einer Kopie; Einzelheiten und
+  Prüfsummen in der [Abnahme 0.3](release-0.3-abnahme.md). Das ist keine Prüfung eines
+  veröffentlichten Pakets. macOS/Windows nur durch CI-Pakettests belegt, kein
+  Anwender-Installationsversuch.
 - Wissensabruf zeigt Zustand und Zeitpunkt der aktiven Prüfdefinition. Ein altes
   `passed` ist kein Nachweis für den aktuellen Git-Stand; Abruf führt nichts aus.
 - Datenschutz: Besitzerrechte und inhaltsarme Hook-Metadaten sind umgesetzt.
-  Ein geprüftes Verfahren zum Entfernen versehentlich gespeicherter Geheimnisse
-  aus Datenbank, Historie und Sicherungen fehlt weiterhin. Rückzug ist keine Löschung.
-- Reale MCP-Neueinrichtung, repräsentativer Abrufkorpus, unabhängige Gesamtabnahme
-  und abschließende Wiederherstellung am veröffentlichten Paket bleiben offen.
+  `audit-secrets` (#29) findet bekannte Geheimnisformate rein lesend, ohne Werte
+  auszugeben. Ein geprüftes Verfahren zum Entfernen versehentlich gespeicherter
+  Geheimnisse fehlt weiterhin: der [Purge-Entwurf](purge-entwurf.md) ist durch
+  Blocker B6 gesperrt. Rückzug ist keine Löschung.
+- Reale MCP-Neueinrichtung (eine isolierte Probe ist vorbereitet, aber noch nicht
+  durchgeführt), repräsentativer Abrufkorpus, unabhängige Gesamtabnahme und
+  abschließende Wiederherstellung am veröffentlichten Paket bleiben offen.
 
 ## Arbeitsweise
 
