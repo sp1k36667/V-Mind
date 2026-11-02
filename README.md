@@ -118,7 +118,7 @@ compact `resume`, bundled SQLite. See the [changelog](CHANGELOG.md).
 | Readable errors | Invalid states receive explanatory messages |
 | Visible check evidence | Retrieved knowledge includes active-definition results and times; execution errors preserve earlier failed verdicts |
 
-**Automated tests:** 110 tests run on every change in GitHub Actions on Linux, together with
+**Automated tests:** 112 tests run on every change in GitHub Actions on Linux, together with
 Clippy (all warnings are errors) and a formatting check; macOS and Windows builds are
 checked too, including filename/backup runtime tests. Among other things they cover:
 

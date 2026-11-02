@@ -46,7 +46,11 @@ fn human(report: &AuditReport) -> String {
 }
 
 pub fn run(db: &str, json_mode: bool) -> Result<()> {
-    let report = audit_secrets(db)?;
+    // SQLite errors may contain schema object names or file paths from the database.
+    // Do not echo potentially sensitive values on this content-redacting command.
+    let report = audit_secrets(db).map_err(|_| std::io::Error::other(
+        "Audit konnte die Datenbank nicht vollständig prüfen. Datei, unterstütztes Schema und Lesbarkeit prüfen; kein vollständiges Ergebnis.",
+    ))?;
     let text = human(&report);
     emit(report, text, json_mode)
 }

@@ -591,6 +591,15 @@ fn audit_secrets_reports_kind_and_place_but_never_the_value() {
         .unwrap();
     assert!(!out.status.success());
     assert!(!missing.exists(), "fehlende Datenbank angelegt");
+    // Auch Fehler dürfen keine potenziell vertraulichen Dateinamen wiederholen.
+    let private_path = temp.0.join(format!("{token}.db"));
+    let failed = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(["audit-secrets", private_path.to_str().unwrap()])
+        .output()
+        .unwrap();
+    assert!(!failed.status.success());
+    assert!(!String::from_utf8_lossy(&failed.stdout).contains(&token));
+    assert!(!String::from_utf8_lossy(&failed.stderr).contains(&token));
 }
 
 fn observe(db: &str, input: &str) -> std::process::Output {

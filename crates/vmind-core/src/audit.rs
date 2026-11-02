@@ -57,6 +57,7 @@ enum Parent {
 
 struct Source {
     table: &'static str,
+    min_schema: i64,
     id: &'static str,
     parent: Parent,
     fields: &'static [&'static str],
@@ -68,6 +69,7 @@ struct Source {
 const SOURCES: &[Source] = &[
     Source {
         table: "memories",
+        min_schema: 1,
         id: "id",
         parent: Parent::Memory("id"),
         fields: &[
@@ -82,6 +84,7 @@ const SOURCES: &[Source] = &[
     },
     Source {
         table: "memory_events",
+        min_schema: 2,
         id: "id",
         parent: Parent::Memory("memory_id"),
         fields: &["actor", "reason"],
@@ -89,6 +92,7 @@ const SOURCES: &[Source] = &[
     },
     Source {
         table: "invalidations",
+        min_schema: 2,
         id: "memory_id",
         parent: Parent::Memory("memory_id"),
         fields: &["actor", "reason"],
@@ -96,6 +100,7 @@ const SOURCES: &[Source] = &[
     },
     Source {
         table: "project_journal",
+        min_schema: 3,
         id: "id",
         parent: Parent::None,
         fields: &["scope", "task_key", "body", "source"],
@@ -103,6 +108,7 @@ const SOURCES: &[Source] = &[
     },
     Source {
         table: "conversations",
+        min_schema: 3,
         id: "rowid",
         parent: Parent::None,
         fields: &["id", "scope", "title"],
@@ -110,6 +116,7 @@ const SOURCES: &[Source] = &[
     },
     Source {
         table: "chat_messages",
+        min_schema: 3,
         id: "id",
         parent: Parent::Conversation(
             "(SELECT c.rowid FROM conversations c WHERE c.id=chat_messages.conversation_id)",
@@ -119,6 +126,7 @@ const SOURCES: &[Source] = &[
     },
     Source {
         table: "memory_checks",
+        min_schema: 4,
         id: "id",
         parent: Parent::Memory("memory_id"),
         fields: &["argv", "workdir", "set_by"],
@@ -126,6 +134,7 @@ const SOURCES: &[Source] = &[
     },
     Source {
         table: "check_runs",
+        min_schema: 4,
         id: "id",
         parent: Parent::Memory(
             "(SELECT c.memory_id FROM memory_checks c WHERE c.id=check_runs.check_id)",
@@ -135,6 +144,7 @@ const SOURCES: &[Source] = &[
     },
     Source {
         table: "observations",
+        min_schema: 6,
         id: "id",
         parent: Parent::None,
         fields: &["scope", "session_id", "tool_use_id", "paths"],
@@ -252,9 +262,24 @@ pub fn audit_secrets(path: impl AsRef<Path>) -> Result<AuditReport> {
     let mut findings = Vec::new();
     for source in SOURCES {
         if !table_exists(&tx, source.table)? {
+            if version >= source.min_schema {
+                return Err(invalid(
+                    "Erforderliche Audit-Tabelle fehlt; keine vollständige Prüfung",
+                ));
+            }
             continue;
         }
         let fields = present_fields(&tx, source)?;
+        let expected = source
+            .fields
+            .iter()
+            .filter(|&&field| !(version == 1 && source.table == "memories" && field == "scope"))
+            .count();
+        if fields.len() != expected {
+            return Err(invalid(
+                "Erforderliches Audit-Feld fehlt; keine vollständige Prüfung",
+            ));
+        }
         let rows = scan_source(&tx, source, &fields, &mut findings)?;
         scanned.push(ScannedTable {
             table: source.table,
@@ -480,6 +505,27 @@ mod tests {
         conn.pragma_update(None, "user_version", SCHEMA_VERSION + 1)
             .unwrap();
         drop(conn);
+        assert!(audit_secrets(&path).is_err());
+    }
+
+    #[test]
+    fn known_version_without_required_tables_is_not_a_clean_audit() {
+        let path = temp_db("empty-known");
+        let conn = Connection::open(&path).unwrap();
+        conn.pragma_update(None, "user_version", 5).unwrap();
+        drop(conn);
+        assert!(audit_secrets(&path).is_err());
+    }
+
+    #[test]
+    fn missing_required_table_or_text_column_is_not_silently_skipped() {
+        let path = temp_db("missing-fields");
+        drop(MemoryStore::open_file(&path).unwrap());
+        let conn = Connection::open(&path).unwrap();
+        conn.execute_batch("ALTER TABLE memories RENAME COLUMN solution TO hidden_solution;")
+            .unwrap();
+        assert!(audit_secrets(&path).is_err());
+        conn.execute_batch("ALTER TABLE memories RENAME COLUMN hidden_solution TO solution; DROP TABLE observations;").unwrap();
         assert!(audit_secrets(&path).is_err());
     }
 
