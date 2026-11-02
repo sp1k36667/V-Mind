@@ -32,7 +32,7 @@ pub struct BackupReport {
     pub bytes: u64,
 }
 
-fn read_only(path: &Path) -> Result<Connection> {
+pub(crate) fn read_only(path: &Path) -> Result<Connection> {
     let conn = Connection::open_with_flags(
         crate::literal_file_path(path)?,
         OpenFlags::SQLITE_OPEN_READ_ONLY,

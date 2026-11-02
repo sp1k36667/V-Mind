@@ -118,7 +118,7 @@ compact `resume`, bundled SQLite. See the [changelog](CHANGELOG.md).
 | Readable errors | Invalid states receive explanatory messages |
 | Visible check evidence | Retrieved knowledge includes active-definition results and times; execution errors preserve earlier failed verdicts |
 
-**Automated tests:** 99 tests run on every change in GitHub Actions on Linux, together with
+**Automated tests:** 112 tests run on every change in GitHub Actions on Linux, together with
 Clippy (all warnings are errors) and a formatting check; macOS and Windows builds are
 checked too, including filename/backup runtime tests. Among other things they cover:
 
@@ -475,7 +475,11 @@ server; any other address you set receives that data). MCP clients pass what the
 V-Mind to their model, which may run in the cloud. From the development version after
 0.2.0, a new database file is created readable only by its owner on Linux and macOS (0600);
 existing files keep their permissions, and on Windows the folder permissions apply. Do not
-store passwords or keys. There is currently no command to
+store passwords or keys. In the development version, `vmind audit-secrets DB` searches
+every text field read-only for a few known secret formats (private keys, GitHub, AWS, Slack,
+Google and `sk-` keys; JWTs and passwords in URLs as uncertain) and reports only table, row,
+field and kind, never the value. It recognises only these formats: no finding does not mean
+the file is free of secrets. There is currently no command to
 delete an entry's content; if a secret ends up in the file, restore an earlier backup or
 remove it with SQLite tools, and treat the secret as exposed.
 

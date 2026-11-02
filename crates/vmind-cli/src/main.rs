@@ -1,3 +1,4 @@
+mod audit_cmd;
 mod check_cmd;
 mod mcp;
 mod observe;
@@ -19,6 +20,7 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
   init DB
   doctor DB                     (nur lesen: Schema, Integrität, Fremdschlüssel)
   backup DB ZIEL                (geprüfte SQLite-Sicherung, überschreibt niemals)
+  audit-secrets DB              (nur lesen: bekannte Geheimnisformate, nie Fundtext; alle Bereiche)
   add DB error_solution|long_term PROBLEM LÖSUNG QUELLE
   pending DB
   show DB ID
@@ -272,6 +274,7 @@ fn run() -> Result<()> {
                 return Err(io::Error::other("Datenbankprüfung fehlgeschlagen").into());
             }
         }
+        [cmd, db] if cmd == "audit-secrets" => audit_cmd::run(db, json_mode)?,
         [cmd, db] if cmd == "observe" => observe::run(db, &scope)?,
         [cmd, db] if cmd == "report" => {
             let report = report::build(&MemoryStore::open_read_only(db)?, &scope)?;
