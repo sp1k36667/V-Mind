@@ -63,22 +63,26 @@ scheitern (geprüft).
 | Kürzel | `gedaechtnis` im Prompt |
 |---|---|
 | O | leer |
-| L | Problem: „JSON-Objektschlüssel sind nach dem Laden immer Strings; als Schlüssel gespeicherte numerische IDs kommen als Text zurück.“ Lösung: „Beim Laden solche Schlüssel in Ganzzahlen umwandeln, bevor mit den IDs verglichen, gesucht oder gerechnet wird.“ |
-| P | Problem: „Zeitstempel ohne Zeitzone sind mehrdeutig; lokale Uhrzeiten springen bei der Umstellung auf die Sommerzeit und zurück.“ Lösung: „Zeitpunkte mit Zeitzone in UTC speichern und erst bei der Anzeige in die lokale Zeit umrechnen, niemals umgekehrt.“ |
+| L | Problem: „JSON-Objektschlüssel sind nach dem Laden immer Strings; Einträge, die unter numerischen IDs gespeichert wurden, haben dann Text-Schlüssel.“ Lösung: „Wer intern mit int-IDs arbeitet, wandelt die Schlüssel beim Laden in Ganzzahlen um, bevor IDs verglichen, gesucht oder hochgezählt werden.“ |
+| P | Problem: „HTTP-Statuscodes sind in Klassen geordnet; Codes ab 400 melden Fehler der Anfrage, Codes ab 500 Fehler auf der Seite des Webservers.“ Lösung: „Fehler der 500er-Klasse sind oft vorübergehend, und ein späterer Versuch kann helfen; viele 400er-Fehler bleiben, bis die Anfrage geändert wird.“ |
 
-L und P sind genau gleich lang (232 Zeichen). Die Prompts der drei Bedingungen
+L ist ein korrekter, nicht ausschließlicher Hinweis: Eine Lösung, die intern konsequent
+mit Text-Schlüsseln arbeitet und nur an der Schnittstelle umwandelt, ist ebenso richtig
+und besteht die Zielprüfung. P ist wahr und themenfern (keine Zeit- oder Datumsregel,
+weil eine Aufgabe Termine verwaltet). L und P sind genau gleich lang (276 Zeichen). Die Prompts der drei Bedingungen
 unterscheiden sich nur im Feld `gedaechtnis` (getestet). Die Erfahrung steht direkt im
 Prompt, ohne Suche.
 
 ## Ablauf
 
 0. **Vorlauf** (nur O, Machbarkeit): 4 Aufgaben × Seeds 901–905 = 20 Läufe. Weiter nur,
-   wenn die Zielprüfung in **höchstens 12 von 20** (60 %) besteht **und** höchstens 2
-   Läufe technisch ausfallen (HTTP-Fehler oder abgeschnittene Antwort). Bei zu vielen
-   technischen Ausfällen wird der Host repariert und der Vorlauf einmal mit neuen Seeds
-   911–915 wiederholt; bei zu hoher Erfolgsquote wird ein anderer Fehlertyp gewählt. Nie
-   wird auf denselben Seeds nachgebessert. Der Vorlauf geht nicht in die Hauptauswertung
-   ein (Selektionsverzerrung).
+   wenn der Vorlauf gültig ist (siehe Gültigkeit) **und** die Zielprüfung in **höchstens
+   12 von 20** (60 %) besteht. Eine Wiederholung ist **nicht** vorgesehen: Ist der Vorlauf
+   ungültig oder die Erfolgsquote zu hoch, endet der Pilot in dieser Form; jede Änderung
+   braucht eine neue Planfassung mit neuem Freeze und neuen Seeds. Nie wird auf denselben
+   Seeds nachgebessert. Der Vorlauf geht nicht in die Hauptauswertung ein
+   (Selektionsverzerrung). Der Host startet Haupt- und Gegenfall nur mit einem gültigen,
+   bestandenen Vorlauf desselben Commits (`--vorlauf`).
 1. **Hauptlauf**: O, L, P mit Seeds 1001–1010 auf den 4 Aufgaben = 40 Paare, 120 Läufe.
    Reihenfolge der Paare und der Bedingungen je Paar zufällig, festgelegt durch
    `reihenfolge_seed` 20261102 (wiederholbar, getestet).
@@ -89,21 +93,33 @@ Prompt, ohne Suche.
 Insgesamt 170 Modellaufrufe mit je einem Versuch.
 
 **Durchführung:** Gezählte Läufe nur an einem Commit ohne uneingecheckte Änderungen in
-`examples/transfer` (der Host prüft das). Abgeschlossene Läufe werden nie wiederholt; ein
-unvollständiger Laufordner stoppt den Host zur Prüfung. Technische Fehler und
-abgeschnittene Antworten zählen als nicht bestanden und werden getrennt berichtet;
-liegen sie in einer Stufe über 10 %, gilt die Stufe als technisch gescheitert.
+`examples/transfer` (der Host prüft das) und mit dem Modell-Digest aus dem Plan.
+Abgeschlossene Läufe werden nie wiederholt; vor dem Überspringen prüft der Host, dass das
+gespeicherte Ergebnis zum Zeitplan passt. Ein unvollständiger Laufordner stoppt den Host
+zur Prüfung. Die Modellanfrage wird auch bei HTTP-Fehlern gespeichert.
 
-**Ausführung des Modellcodes:** ohne Shell, mit Zeitlimit 90 s je Abnahme und 20 s je
-CLI-Aufruf, Ausgabe auf 200 kB begrenzt, `HOME` auf den Laufordner gesetzt. Das ist
-**keine Sandbox**: Der Code läuft mit den Rechten des Nutzers. Rohdaten je Lauf: Anfrage,
-Antwort, `app.py`, Abnahmeausgabe, `ergebnis.json`; sie gehören nicht ins Repository.
+**Gültigkeit einer Stufe** (`auswerten.py`): Die Läufe entsprechen genau dem Zeitplan
+(Nummer, Aufgabe, Bedingung, Seed; vollständig, ohne Dubletten, ohne fremde Läufe),
+`bedingungen.json` ist seit dem Lauf unverändert, und höchstens 10 % der geplanten Läufe
+fielen technisch aus (HTTP-Fehler oder abgeschnittene Antwort, als Vereinigung gezählt).
+Technische Ausfälle zählen in allen Raten als nicht bestanden. Eine ungültige oder
+unvollständige Stufe ist nie bestanden. Das Gesamtergebnis ist nur „bestanden“, wenn
+Vorlauf, Hauptlauf und Gegenfall gültig sind, vom selben Commit stammen, keine Attrappe
+sind, das Erfolgskriterium erfüllt ist und keine Schadensgrenze verletzt ist.
+Zielprüfungen, die an der Formatvorgabe scheitern, werden maschinell getrennt gezählt.
+
+**Ausführung des Modellcodes:** ohne Shell, `HOME` auf den Laufordner gesetzt; Zeitlimit
+90 s je Abnahme (20 s je CLI-Aufruf) und Ausgabe höchstens 200 kB **während** der
+Ausführung, bei Überschreitung wird die ganze Prozessgruppe beendet und der Abbruch im
+Ergebnis vermerkt. Das ist **keine Sandbox**: Der Code läuft mit den Rechten des Nutzers
+und kann etwa Dateien schreiben. Rohdaten je Lauf: Anfrage, Antwort, `app.py`,
+Abnahmeausgabe, `ergebnis.json`; sie gehören nicht ins Repository.
 
 ## Erfolgskriterium (vorab)
 
 Zielprüfung bestanden im ersten Versuch, 40 Paare:
 
-- L mindestens **X Prozentpunkte** über O (X siehe Entscheidung E1) **und** einseitiger
+- L mindestens **30 Prozentpunkte** über O (Entscheidung E1) **und** einseitiger
   exakter McNemar-Test über die Paare L gegen O mit p < 0,05,
 - L mindestens **20 Prozentpunkte** über P,
 - in mindestens **3 von 4** Aufgaben L > O.
@@ -149,15 +165,15 @@ nötig. P und die Aufgabenregel senken die Trennschärfe weiter.
 - Fällt der Hauptlauf durch, ist das ein Ergebnis: Dann hilft schon eine korrekte
   Erfahrung im Prompt nicht.
 
-## Offene Entscheidungen vor dem Einfrieren
+## Entscheidungen
 
-- **E1 Abstandsschwelle:** 30 pp (Original; ≈ 0,55 Trennschärfe bei wahrem Effekt
-  30 pp, ≈ 0,9 bei 40 pp) oder 20 pp (≈ 0,85 bei 30 pp, Fehlerrate unverändert)?
-  Vorschlag Claude: 20 pp als Mindestabstand, 30 pp als vorab genannter erwarteter
-  Effekt, beide im Bericht.
-- **E2 Prüfung durch Codex:** Aufgabenwortlaut (verrät die allgemeine Anforderung die
-  Falle zu stark?), Zielprüfung inklusive Format, Erfahrungs- und Placebotext, Host.
-- **E3 Freeze:** Commit nach Einarbeitung der Prüfung; der Hash steht im Bericht.
+- **E1 Abstandsschwelle (entschieden, #168):** 30 pp bleibt. Die Schwelle wird nicht
+  wegen der Simulation gesenkt. Folge, offen benannt: Ein wahrer Effekt von genau 30 pp
+  wird nur etwa jedes zweite Mal erkannt; der Pilot ist auf deutliche Effekte (≈ 40 pp)
+  ausgelegt. Ein Verfehlen schließt einen kleineren Nutzen nicht aus.
+- **E2 Aufgabenwortlaut (entschieden, #168):** ID- und Formatvorgabe sind fair, weil
+  Schnittstelle und Speicherformat zum Auftrag gehören.
+- **E3 Freeze:** nach erneuter Prüfung durch Codex; der Commit-Hash steht im Bericht.
 
 Review: Codex (Teamkanal #20, #165) – Vorlauf getrennt, Randomisierung, gepaarter Test,
 Gegenfall nur beschreibend, kein Nachbessern auf denselben Seeds; eingearbeitet.

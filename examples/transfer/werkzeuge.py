@@ -1,10 +1,14 @@
 """Gemeinsame Hilfen für Testhost, Selbsttest und Auswertung des Transfer-Pilots."""
 
+import json
 import os
+import random
 import re
 import shutil
+import signal
 import subprocess
 import sys
+import threading
 from pathlib import Path
 
 BASIS = Path(__file__).resolve().parent
@@ -25,42 +29,68 @@ def abnahme_einrichten(aufgabe, ziel):
     shutil.copy(AUFGABEN / "gemeinsam.py", pruefung / "gemeinsam.py")
 
 
-def _begrenzt_lesen(pfad):
-    with open(pfad, "rb") as datei:
-        inhalt = datei.read(MAX_AUSGABE_BYTES + 1)
-    text = inhalt[:MAX_AUSGABE_BYTES].decode("utf-8", errors="replace")
-    if len(inhalt) > MAX_AUSGABE_BYTES:
-        text += f"\n[Ausgabe nach {MAX_AUSGABE_BYTES} Bytes abgeschnitten]"
-    return text
+def _prozessgruppe_beenden(prozess):
+    try:
+        os.killpg(prozess.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
 
 
 def abnahme_ausfuehren(ziel, test=None):
-    """Führt die Abnahme in ZIEL ohne Shell aus, mit Zeitlimit und begrenzter Ausgabe.
+    """Führt die Abnahme in ZIEL ohne Shell aus. Zeitlimit und Ausgabelimit gelten während
+    der Ausführung: Bei Überschreitung wird die ganze Prozessgruppe beendet.
 
     Modellcode läuft mit den Rechten des Nutzers; HOME zeigt auf den Arbeitsordner,
-    damit der Code nicht versehentlich ins echte Profil schreibt (keine Sandbox)."""
+    damit der Code nicht versehentlich ins echte Profil schreibt (keine Sandbox).
+    Ergebnis `abbruch`: None, "zeitlimit" oder "ausgabelimit"."""
     ziel = Path(ziel)
     befehl = [sys.executable, "verification/abnahme.py"]
     if test:
         befehl.append(f"Abnahme.{test}")
     umgebung = {"PATH": os.environ.get("PATH", ""), "HOME": str(ziel), "LANG": "C.UTF-8",
                 "PYTHONDONTWRITEBYTECODE": "1"}
-    protokoll = ziel / "abnahme.log"
-    with open(protokoll, "wb") as ausgabe:
-        prozess = subprocess.Popen(befehl, cwd=ziel, stdout=ausgabe, stderr=subprocess.STDOUT,
-                                   env=umgebung, start_new_session=True)
-        try:
-            exit_code = prozess.wait(timeout=ABNAHME_ZEITLIMIT)
-        except subprocess.TimeoutExpired:
-            os.killpg(prozess.pid, 9)
-            prozess.wait()
-            exit_code = 124
-    text = _begrenzt_lesen(protokoll)
-    protokoll.unlink()
-    if exit_code == 124:
-        text += f"\n[Zeitlimit von {ABNAHME_ZEITLIMIT} s überschritten]"
+    prozess = subprocess.Popen(befehl, cwd=ziel, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT, env=umgebung, start_new_session=True)
+    gelesen = bytearray()
+    zu_viel = threading.Event()
+
+    def lesen():
+        while chunk := prozess.stdout.read(65536):
+            platz = MAX_AUSGABE_BYTES - len(gelesen)
+            gelesen.extend(chunk[:max(platz, 0)])
+            if len(chunk) > platz:
+                zu_viel.set()
+                _prozessgruppe_beenden(prozess)
+                break
+
+    leser = threading.Thread(target=lesen, daemon=True)
+    leser.start()
+    abbruch = None
+    try:
+        exit_code = prozess.wait(timeout=ABNAHME_ZEITLIMIT)
+    except subprocess.TimeoutExpired:
+        _prozessgruppe_beenden(prozess)
+        exit_code = prozess.wait()
+        abbruch = "zeitlimit"
+    leser.join(timeout=10)
+    prozess.stdout.close()
+    if zu_viel.is_set():
+        abbruch = "ausgabelimit"
+    text = bytes(gelesen).decode("utf-8", errors="replace")
+    if abbruch == "zeitlimit":
+        text += f"\n[Zeitlimit von {ABNAHME_ZEITLIMIT} s überschritten, Prozessgruppe beendet]"
+    elif abbruch == "ausgabelimit":
+        text += f"\n[Ausgabe über {MAX_AUSGABE_BYTES} Bytes, Prozessgruppe beendet]"
     status = {name: ergebnis for name, ergebnis in ERGEBNIS.findall(text)}
-    return {"exit_code": exit_code, "status": status, "ausgabe": text}
+    return {"exit_code": exit_code, "status": status, "ausgabe": text, "abbruch": abbruch}
+
+
+def format_fehler(ausgabe, test):
+    """True, wenn die Zielprüfung an einer Formatvorgabe scheiterte. unittest hängt die
+    eigene Meldung an („… : Format: …“), daher Suche in der AssertionError-Zeile."""
+    block = re.search(rf"^(?:FAIL|ERROR): {test} .*?(?=^={{5,}}|^-{{5,}}\nRan |\Z)", ausgabe,
+                      re.MULTILINE | re.DOTALL)
+    return bool(block and re.search(r"^AssertionError: .*\bFormat:", block.group(0), re.MULTILINE))
 
 
 def alle_tests(aufgabe):
@@ -79,3 +109,24 @@ def zieltest(aufgabe):
 
 def uebrige_tests(aufgabe):
     return [t for t in alle_tests(aufgabe) if not t.startswith("test_ziel_")]
+
+
+def plan_laden():
+    return json.loads((BASIS / "bedingungen.json").read_text(encoding="utf-8"))
+
+
+def zeitplan(stufe, plan):
+    """Gepaarte Läufe (Aufgabe, Seed) in zufälliger Reihenfolge; je Paar die Bedingungen in
+    zufälliger Reihenfolge. Vollständig durch reihenfolge_seed festgelegt."""
+    angaben = plan["stufen"][stufe]
+    zufall = random.Random(f"{plan['reihenfolge_seed']}-{stufe}")
+    paare = [(a, s) for a in angaben["aufgaben"] for s in angaben["seeds"]]
+    zufall.shuffle(paare)
+    laeufe = []
+    for aufgabe, seed in paare:
+        bedingungen = list(angaben["bedingungen"])
+        zufall.shuffle(bedingungen)
+        laeufe.extend({"aufgabe": aufgabe, "seed": seed, "bedingung": b} for b in bedingungen)
+    for nummer, lauf in enumerate(laeufe, 1):
+        lauf["nr"] = nummer
+    return laeufe

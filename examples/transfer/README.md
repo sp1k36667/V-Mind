@@ -40,6 +40,16 @@ python3 examples/transfer/run.py --stufe vorlauf --ausgabe ../v-mind-transfer/vo
 python3 examples/transfer/auswerten.py ../v-mind-transfer/vorlauf
 ```
 
+Haupt- und Gegenfall starten nur mit gültigem, bestandenem Vorlauf desselben Commits:
+
+```sh
+python3 examples/transfer/run.py --stufe haupt --vorlauf ../v-mind-transfer/vorlauf --ausgabe ../v-mind-transfer/haupt
+```
+
+```sh
+python3 examples/transfer/auswerten.py ../v-mind-transfer/vorlauf ../v-mind-transfer/haupt ../v-mind-transfer/gegenfall
+```
+
 Generierter Code läuft ohne Sandbox mit den Rechten des Nutzers (Zeit- und
 Ausgabelimits, `HOME` im Laufordner); nur auf einem eigenen Rechner ausführen. Rohdaten
 gehören nicht ins Repository.

@@ -2,39 +2,93 @@
   "modell": "hf.co/google/gemma-4-12B-it-qat-q4_0-gguf:Q4_0",
   "modell_digest": "18a4d9511d9965d973356e62310a2793771c22456be408cc06a05f04a6376acd",
   "modell_quelle": "Ollama /api/tags am 2. November 2026; gleicher Digest wie in docs/experiments/data/continuity-*/metadata.json",
-  "optionen": {"temperature": 0.7, "num_ctx": 8192, "num_predict": 2400},
+  "optionen": {
+    "temperature": 0.7,
+    "num_ctx": 8192,
+    "num_predict": 2400
+  },
   "think": false,
   "reihenfolge_seed": 20261102,
   "erfahrungen": {
     "O": [],
     "L": [
       {
-        "problem": "JSON-Objektschlüssel sind nach dem Laden immer Strings; als Schlüssel gespeicherte numerische IDs kommen als Text zurück.",
-        "loesung": "Beim Laden solche Schlüssel in Ganzzahlen umwandeln, bevor mit den IDs verglichen, gesucht oder gerechnet wird."
+        "problem": "JSON-Objektschlüssel sind nach dem Laden immer Strings; Einträge, die unter numerischen IDs gespeichert wurden, haben dann Text-Schlüssel.",
+        "loesung": "Wer intern mit int-IDs arbeitet, wandelt die Schlüssel beim Laden in Ganzzahlen um, bevor IDs verglichen, gesucht oder hochgezählt werden."
       }
     ],
     "P": [
       {
-        "problem": "Zeitstempel ohne Zeitzone sind mehrdeutig; lokale Uhrzeiten springen bei der Umstellung auf die Sommerzeit und zurück.",
-        "loesung": "Zeitpunkte mit Zeitzone in UTC speichern und erst bei der Anzeige in die lokale Zeit umrechnen, niemals umgekehrt."
+        "problem": "HTTP-Statuscodes sind in Klassen geordnet; Codes ab 400 melden Fehler der Anfrage, Codes ab 500 Fehler auf der Seite des Webservers.",
+        "loesung": "Fehler der 500er-Klasse sind oft vorübergehend, und ein späterer Versuch kann helfen; viele 400er-Fehler bleiben, bis die Anfrage geändert wird."
       }
     ]
   },
   "stufen": {
     "vorlauf": {
-      "aufgaben": ["ausgaben", "leihliste", "rezepte", "termine"],
-      "bedingungen": ["O"],
-      "seeds": [901, 902, 903, 904, 905]
+      "aufgaben": [
+        "ausgaben",
+        "leihliste",
+        "rezepte",
+        "termine"
+      ],
+      "bedingungen": [
+        "O"
+      ],
+      "seeds": [
+        901,
+        902,
+        903,
+        904,
+        905
+      ]
     },
     "haupt": {
-      "aufgaben": ["ausgaben", "leihliste", "rezepte", "termine"],
-      "bedingungen": ["O", "L", "P"],
-      "seeds": [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010]
+      "aufgaben": [
+        "ausgaben",
+        "leihliste",
+        "rezepte",
+        "termine"
+      ],
+      "bedingungen": [
+        "O",
+        "L",
+        "P"
+      ],
+      "seeds": [
+        1001,
+        1002,
+        1003,
+        1004,
+        1005,
+        1006,
+        1007,
+        1008,
+        1009,
+        1010
+      ]
     },
     "gegenfall": {
-      "aufgaben": ["vorrat"],
-      "bedingungen": ["O", "L", "P"],
-      "seeds": [1101, 1102, 1103, 1104, 1105, 1106, 1107, 1108, 1109, 1110]
+      "aufgaben": [
+        "vorrat"
+      ],
+      "bedingungen": [
+        "O",
+        "L",
+        "P"
+      ],
+      "seeds": [
+        1101,
+        1102,
+        1103,
+        1104,
+        1105,
+        1106,
+        1107,
+        1108,
+        1109,
+        1110
+      ]
     }
   }
 }
