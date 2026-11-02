@@ -1,10 +1,11 @@
 # Plan: Transfer-Pilot mit Gemma 4 12B
 
-**Status: vorbereitet, nicht eingefroren, kein Modelllauf.** Aufgaben, Prüfungen, Host,
+**Status: vor dem ersten Modelllauf eingefroren; unabhängige Prüfung abgeschlossen.** Aufgaben, Prüfungen, Host,
 Auswertung und Selbsttests liegen in [`examples/transfer/`](../../examples/transfer/).
-Vor dem ersten gezählten Lauf prüft Codex Plan und Host unabhängig; danach wird der
-Commit eingefroren und im Bericht genannt. Offene Entscheidungen stehen am Ende; solange
-sie offen sind, gibt es keinen gezählten Lauf. Hintergrund: [lernkurve.md](lernkurve.md).
+Codex prüfte Plan/Host unabhängig; Claude prüfte die letzten Korrekturen nach (Team
+#168–#172). Freeze ist der Commit dieser Planfinalisierung. Sein vollständiger Hash
+steht im Ausführungsprotokoll und wird im Ergebnisbericht genannt. Zunächst werden nur
+die 20 Vorlaufaufrufe ausgeführt; weitere Stufen erst bei erfülltem Gate. Hintergrund: [lernkurve.md](lernkurve.md).
 
 ## Frage
 
@@ -173,7 +174,9 @@ nötig. P und die Aufgabenregel senken die Trennschärfe weiter.
   ausgelegt. Ein Verfehlen schließt einen kleineren Nutzen nicht aus.
 - **E2 Aufgabenwortlaut (entschieden, #168):** ID- und Formatvorgabe sind fair, weil
   Schnittstelle und Speicherformat zum Auftrag gehören.
-- **E3 Freeze:** nach erneuter Prüfung durch Codex; der Commit-Hash steht im Bericht.
+- **E3 Freeze (entschieden, #172):** Plan und Host sind unabhängig gegengeprüft.
+  Dieser Finalisierungscommit wird unverändert in einem getrennten Worktree ausgeführt;
+  alle Stufen und Wiederaufnahmen müssen denselben Hash verwenden.
 
 Review: Codex (Teamkanal #20, #165) – Vorlauf getrennt, Randomisierung, gepaarter Test,
 Gegenfall nur beschreibend, kein Nachbessern auf denselben Seeds; eingearbeitet.

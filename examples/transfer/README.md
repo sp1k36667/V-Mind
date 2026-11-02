@@ -1,8 +1,9 @@
 # Transfer-Pilot: hilft eine geprüfte Erfahrung bei einer neuen Aufgabe?
 
-Plan, Kriterien und offene Entscheidungen:
+Plan und festgelegte Kriterien:
 [docs/experiments/transfer-pilot-plan.md](../../docs/experiments/transfer-pilot-plan.md).
-**Noch nicht eingefroren; keine gezählten Läufe.**
+**Plan und Host vor dem ersten Modelllauf eingefroren. Zunächst nur der Vorlauf;
+weitere Stufen ausschließlich nach dem festgelegten Gate.**
 
 | Datei | Inhalt |
 |---|---|
