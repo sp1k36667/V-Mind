@@ -2,6 +2,10 @@
 
 ## Unreleased (on `main`)
 
+Not released yet. The next version requires a database migration from schema 5 to 6;
+the automatic verified backup from #10 runs first (see "Upgrading" below). Release
+acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (German).
+
 ### Added
 
 - `vmind doctor DB`: read-only check of schema version, integrity, foreign keys and
@@ -12,15 +16,40 @@
   checked, the upgrade does not happen. `VMIND_BACKUP_DIR` chooses another folder. (#10)
 - `vmind report DB`: readable Markdown project report for people, strictly read-only,
   verified knowledge and unverified proposals in separate sections. (#12)
+- **Observations (schema 6):** `vmind observe DB` for Claude Code hooks records only
+  session, call id, tool (Bash/Edit/Write), result and project-relative paths, never
+  commands, output, error text or file contents, in its own table `observations`.
+  `resume` and `report` summarise the last three sessions as "observed, not checked";
+  a completed call is not a passed test. The hook never creates or upgrades a database.
+  Not yet tried in a real Claude Code session with an installed release. (#15)
+- Retrieved knowledge carries the evidence of its active check: `none`, `not_run`,
+  `passed`, `failed` or `error`, with time and the last pass/fail verdict of the same
+  definition, in CLI, report, JSONL, MCP and the local model prompt. Retrieval runs no
+  commands; an old `passed` is no proof for today's code. (#23)
 - English start instructions (`prompts/start.en.md`, `vmind start-prompt en`) with the
   same sections, operations and limits as the German original, checked by a test; German
   stays the default. English Claude Code guide `docs/claude-code.en.md` (MCP, start
-  instructions, hooks) that says what is tested. Release packages must contain both.
+  instructions, hooks) that says what is tested. Release packages must contain both. (#28)
+- Release packages contain the changelog, guides, prompts and examples the READMEs link
+  to. Each platform build extracts its own archive and smoke-tests links, help,
+  init, persistence across processes, doctor, backup and restore. (#24)
+- *Pending, not on `main` yet:* `vmind audit-secrets DB`, a read-only search for a few
+  known secret formats that reports places, never values (#29).
 
 ### Changed
 
 - `resume` no longer lists superseded goals, next steps and task states among the recent
   events; the full history stays in `journal`. Found through the continuity pilot. (#14)
+- New database files are created readable only by their owner (0600) on Linux and macOS;
+  existing files keep their permissions. On Windows the folder permissions apply. (#16)
+- Validation errors show only V-Mind's message, without SQLite's misleading
+  "Invalid parameter name:" prefix, in CLI, JSONL and MCP. (#17)
+
+### Fixed
+
+- A relative database or backup name shaped like a SQLite URI (`file:...?mode=rw`) could
+  redirect a backup onto an existing database. Persistent file names are now always
+  taken literally by CLI, JSONL, MCP, hook, doctor and backup. (#22)
 
 ### Experiments
 
@@ -29,7 +58,23 @@
 - Retrieval corpus v1 (synthetic, pre-registered, no model): scope, status and withdrawal
   limits held in all 45 queries; exact-wording queries 10/10 at rank 1; longer inflected
   query forms are not found by partial-word search. Report:
-  `docs/experiments/abruf-korpus.md` (German).
+  `docs/experiments/abruf-korpus.md` (German). (#26)
+- Continuity follow-up with all 80 runs: fewer stale next steps in answers, no gain in
+  overall accuracy. (#21)
+- Stem-based partial search (#27) is not part of this version: it missed one of its
+  pre-registered criteria and showed new weaknesses.
+
+### Upgrading
+
+1. Stop all clients that use the database (MCP server, `serve`, hooks, scripts).
+2. Install the new binary. The first command that opens the database normally (for
+   example `stats`, `resume` or `add`) migrates schema 5 → 6 and first writes a verified
+   backup next to the file (or in `VMIND_BACKUP_DIR`); without a verified backup there is
+   no migration. `doctor` and `report` only read and never migrate; the `observe` hook
+   refuses an old schema instead of upgrading it.
+3. Confirm with `vmind doctor vmind.db` that `schema_version` is 6 and the database is
+   healthy. Older binaries refuse a schema 6 database.
+4. Restart MCP clients so they use the new binary.
 
 ## 0.2.0 – 2026-11-01
 
