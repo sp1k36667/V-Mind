@@ -1,9 +1,11 @@
 # Entwurf: gezieltes Entfernen von Geheimnissen (`purge`)
 
 Status: **Entwurf zur gemeinsamen Prüfung, nicht umgesetzt.** Grundlage sind die
-Abstimmungen im Teamkanal (#116, #120, #121, #131) und das lesende Audit
-`vmind audit-secrets` (PR #29). Dieses Dokument legt fest, was ein späterer Befehl tun
-darf und wie das geprüft wird. Es verspricht keine physische Löschung.
+Abstimmungen im Teamkanal (#116, #120, #121, #131, Revision nach #134–#136) und das
+lesende Audit `vmind audit-secrets` (PR #29). Dieses Dokument legt fest, was ein
+späterer Befehl tun darf und wie das geprüft wird. Es verspricht keine physische
+Löschung. Punkte unter [Blocker](#blocker-vor-einer-umsetzung) sind noch nicht
+entschieden; vorher wird nichts umgesetzt.
 
 ## Ziel und Nicht-Ziele
 
@@ -21,7 +23,9 @@ Bytes der Datenbankdatei steht.
   Ein gespeichertes Geheimnis gilt immer als offengelegt und muss **widerrufen bzw.
   ersetzt** werden. Purge ist Schadensbegrenzung, kein Ersatz dafür.
 - Kein MCP- oder JSONL-Werkzeug. Nur ausdrücklicher CLI-Aufruf durch einen Menschen.
-- Keine Änderung an Bereichsnamen (`scope`) in Version 1 (siehe offene Fragen).
+- Keine Änderung an Bereichsnamen (`scope`) und Text-IDs von Gesprächen in Version 1.
+- Version 1 unterstützt nur Datenbanken im Journalmodus `delete` (V-Mind-Standard),
+  nicht `wal`.
 
 ## Ziele (Namensräume)
 
@@ -32,8 +36,8 @@ zum Abbruch **vor** jeder Änderung.
 | Ziel | Tabelle (Schlüssel) | Was entfernt wird |
 | --- | --- | --- |
 | `memory:N` | `memories.id` | problem, solution, source, validated_by, evidence des Eintrags; dazu alle Zeilen in `memory_events` (actor, reason) und `invalidations` (actor, reason) dieses Eintrags; alle `memory_checks` und deren `check_runs` des Eintrags werden gelöscht |
-| `journal:N` | `project_journal.id` | body, source; task_key wird durch `purged-N` ersetzt (siehe Folgen) |
-| `conversation:R` | `conversations.rowid` | title (die Text-ID bleibt; siehe offene Fragen) |
+| `journal:N` | `project_journal.id` | body, source; `task_key` siehe [Aufgabenschlüssel](#aufgabenschlüssel) |
+| `conversation:R` | `conversations.rowid` | title; die Text-ID bleibt (siehe [Bezug auf Gespräche](#stabiler-bezug-auf-gespräche)) |
 | `message:N` | `chat_messages.id` | content |
 | `check_run:N` | `check_runs.id` | output |
 | `check:N` | `memory_checks.id` | Zeile und ihre `check_runs` werden gelöscht |
@@ -48,41 +52,79 @@ die nichts verweist (Prüfbefehle, Prüfläufe, Beobachtungen).
 **Folgen für Wissenseinträge:** Ein redigierter Eintrag darf nicht als geprüftes Wissen
 weiterleben. Ist er nicht zurückgezogen, wird er im selben Vorgang zurückgezogen
 (Akteur `purge`, Grund `[entfernt: purge #P]`). Seine Prüfbefehle werden gelöscht,
-damit `check`/`revalidate` nie einen redigierten Befehl ausführen.
+damit `check`/`revalidate` nie einen redigierten Befehl ausführen (`check` lehnt
+zurückgezogene Einträge ohnehin ab).
 
-**Folgen für Aufgaben:** Ein redigierter `task_key` trennt dieses Ereignis von der
-Aufgabe. `resume` zeigt dann ggf. einen älteren Stand als aktuell. Die Vorschau weist
-darauf hin; die Nutzerin oder der Nutzer kann danach mit `task` einen neuen Stand
-eintragen.
+### Aufgabenschlüssel
 
-**Kopien in anderen Zeilen** gehören nicht zum Ziel. Die Vorschau sucht intern nach
-denselben erkannten Werten in allen Feldern, die das Audit kennt, und listet
-Fundstellen außerhalb der Ziele als **„vermutete Kopie, nicht im Auftrag“** mit
-Namensraum und ID. Sie werden nur entfernt, wenn sie ausdrücklich als weiteres Ziel
-genannt werden. Kopien, die keine bekannte Fundart enthalten oder umformuliert sind,
-findet die Vorschau nicht; das steht in jeder Vorschau.
+`resume` bestimmt den aktuellen Stand einer Aufgabe über die jüngste Journalzeile mit
+demselben Bereich und `task_key`. Würde nur in einer Zeile der Schlüssel ersetzt, könnte
+ein älterer Stand derselben Aufgabe wieder als aktuell erscheinen. Teilredaktion des
+Schlüssels einzelner Zeilen ist deshalb **ausgeschlossen**. Zwei Optionen, Entscheidung
+offen (Blocker B1):
+
+- **Option A (eng):** `task_key` wird nie redigiert. Steckt der Fund im Schlüssel, meldet
+  die Vorschau das Ziel als „in Version 1 nicht entfernbar“; nur `body`/`source` sind
+  redigierbar.
+- **Option B (empfohlen):** Ein eigenes Ziel `task:N` (N = eine Journal-ID der Aufgabe)
+  ersetzt den Schlüssel in **allen** Journalzeilen desselben Bereichs und Schlüssels
+  einheitlich durch `purged-P`. Die Vorschau listet alle betroffenen IDs. Die Aufgabe
+  bleibt zusammenhängend; ihr jüngster Stand bleibt der jüngste.
+
+Wird nur `body` oder `source` einer Aufgabenzeile redigiert, bleibt der Schlüssel
+unverändert und der Aufgabenverlauf unberührt.
+
+### Stabiler Bezug auf Gespräche
+
+Alle Zieltabellen außer `conversations` haben einen `INTEGER PRIMARY KEY`; diese IDs
+ändert `VACUUM` nicht. `conversations` hat eine Text-ID und eine implizite rowid, die
+`VACUUM` laut SQLite-Dokumentation neu vergeben darf
+([lang_vacuum](https://sqlite.org/lang_vacuum.html)). Deshalb:
+
+- Eine rowid gilt nur innerhalb eines Plans. Der Plan wird bei jedem Commit ungültig
+  (siehe Plan), also auch durch `VACUUM`; ein späterer Purge braucht eine neue Vorschau
+  mit neuer Audit-Ausgabe.
+- Der Plan löst die rowid intern zur Text-ID auf und hält sie nur in der Plan-Datei;
+  ausgegeben wird sie nie.
+- Das Purge-Protokoll speichert keine Zielidentitäten (siehe Protokoll), daher kann es
+  durch neu vergebene rowids nicht falsch werden.
 
 ## Ablauf
 
-### 1. Vorschau (rein lesend)
+### 1. Vorschau (rein lesend gegenüber der Datenbank)
 
 ```text
 vmind purge DB --preview ZIEL [ZIEL ...]
 ```
 
-- Öffnet wie `audit-secrets` nur lesend in einem Snapshot; legt nichts an, migriert nicht.
-- Verlangt das aktuelle Schema; sonst Hinweis auf `doctor`, `backup` und Upgrade.
-- Ausgabe nur mit festen Bezeichnern und Zahlen: je Ziel die betroffenen Tabellen,
-  Feldnamen und Zeilenzahlen, die Folgen (Rückzug, gelöschte Prüfbefehle, getrennte
-  Aufgabe), vermutete Kopien, bekannte Sicherungsdateien (siehe unten) und eine
-  **Bestätigungskennung**. Nie Feldwerte, Ausschnitte oder Text-IDs.
-- Bestätigungskennung: Prüfsumme über die sortierten Ziele und den aktuellen Inhalt aller
-  betroffenen Zeilen. Ändert sich bis zur Ausführung irgendetwas, passt sie nicht mehr.
+- Öffnet die Datenbank wie `audit-secrets` nur lesend in einem Snapshot; legt keine
+  Datenbank an, migriert nicht.
+- Verlangt das aktuelle Schema und `journal_mode=delete`; sonst Abbruch mit Hinweis
+  (`doctor`, `backup`, Upgrade bzw. Vorbereitung bei WAL, siehe unten).
+- Ausgabe nur mit festen Bezeichnern und Zahlen: je Ziel betroffene Tabellen, Feldnamen
+  und Zeilenzahlen, die Folgen (Rückzug, gelöschte Prüfbefehle, Aufgabenschlüssel),
+  vermutete Kopien (Namensraum und numerische ID), **Anzahl** bekannter Sicherungen je
+  Herkunft und eine zufällige **Plan-ID**. Nie Feldwerte, Ausschnitte, Text-IDs oder
+  Dateipfade von Sicherungen.
+
+**Plan statt Inhaltsprüfsumme.** Eine Prüfsumme über den Inhalt, auch eine mit
+Schlüssel, wäre bei kurzen Geheimnissen ein Offline-Rateorakel. Deshalb enthält die
+Bestätigung keinen Inhaltsbezug:
+
+- Die Vorschau legt eine Plan-Datei mit Rechten 0600 an (Ort: neben der Datenbank,
+  Name aus Plan-ID). Inhalt: Plan-ID, Ziele, intern aufgelöste Schlüssel (bei
+  Gesprächen die Text-ID), Erstellungszeit und der **Dateiänderungszähler** von SQLite
+  (Header-Bytes 24–27; wird im Journalmodus `delete` bei jedem Commit erhöht). Keine
+  Feldwerte, keine Hashes über Feldwerte.
+- Die Ausführung liest den Zähler unter der Exklusivsperre erneut. Weicht er ab, hat
+  jemand geschrieben: Abbruch ohne Änderung, neue Vorschau nötig.
+- Die Plan-Datei wird nach erfolgreichem Commit (Schritt C) gelöscht; ein abgelaufener
+  oder fremder Plan wird abgewiesen.
 
 ### 2. Ausführung
 
 ```text
-vmind purge DB --confirm KENNUNG (--backup ZIEL | --no-backup) ZIEL [ZIEL ...]
+vmind purge DB --plan PLAN-ID (--backup ZIEL | --no-backup)
 ```
 
 Vorbedingungen, sonst Abbruch ohne Änderung:
@@ -90,37 +132,49 @@ Vorbedingungen, sonst Abbruch ohne Änderung:
 1. **Keine aktiven Clients.** MCP-Server, `serve`, Hooks und Skripte sind zu beenden;
    die Ausgabe fordert das ausdrücklich. SQLite kann ruhende Verbindungen nicht
    erkennen; durchgesetzt wird nur, dass während des Vorgangs niemand liest oder
-   schreibt: `PRAGMA locking_mode=EXCLUSIVE` und eine `EXCLUSIVE`-Transaktion. Bekommt
-   V-Mind die Sperre nicht innerhalb des Zeitlimits, bricht es ab. Ein Hook, der
-   währenddessen schreiben will, scheitert an der Sperre; die Beobachtung geht verloren.
-2. **Gleiche Ziele und Kennung wie in der Vorschau.**
-3. **Aktuelles Schema** und `journal_mode` `delete` (V-Mind-Standard). Steht die Datei
-   auf `wal`, muss vorher `PRAGMA wal_checkpoint(TRUNCATE)` vollständig gelingen,
-   sonst Abbruch.
+   schreibt. Bekommt V-Mind die Sperre nicht innerhalb des Zeitlimits, bricht es ab.
+   Ein Hook, der währenddessen schreiben will, scheitert an der Sperre; die
+   Beobachtung geht verloren.
+2. **Gültiger Plan** und unveränderter Dateiänderungszähler.
+3. **Aktuelles Schema und `journal_mode=delete`.** Kein Checkpoint, keine
+   Modusumstellung im Purge-Pfad.
 4. **Ausdrückliche Sicherungsentscheidung** (siehe Sicherungs-Dilemma).
 
-Schritte:
+**Sperrhaltung:** Genau eine Verbindung mit `PRAGMA locking_mode=EXCLUSIVE` und
+`PRAGMA secure_delete=ON` führt alle Schritte B bis E aus. Die exklusive Sperre wird
+mit der ersten Schreibtransaktion erworben und erst beim Schließen der Verbindung nach
+Schritt E freigegeben; zwischen den Schritten kann niemand lesen oder schreiben.
 
 | Schritt | Inhalt | Zustand bei Abbruch genau hier |
 | --- | --- | --- |
-| A | `PRAGMA secure_delete=ON` für die Verbindung, Sperre holen, Kennung erneut berechnen | Datei unverändert |
-| B | in **einer** Transaktion: Felder redigieren, Rückzug, Prüfbefehle/-läufe/Beobachtungen löschen, `memories_fts` und `memories_trigram` mit `rebuild` neu aufbauen, Protokollzeile Status `redacted` | Rollback; das `-journal` enthält bis zum Rollback die alten Seiten; beim nächsten Öffnen stellt SQLite den alten Stand wieder her. Datei logisch unverändert, Geheimnis vorhanden |
-| C | Commit | ab hier logisch entfernt |
-| D | `VACUUM` (baut die Datei neu, ohne freie Seiten) | VACUUM ist selbst atomar; bei Abbruch bleibt der Stand nach C. Reste können in freien Seiten und im gelöschten Journal auf dem Datenträger liegen |
-| E | Datei und Ordner mit `fsync` bestätigen, Protokollzeile Status `compacted` | wie D |
+| A | Verbindung öffnen, Pragmas setzen, `BEGIN EXCLUSIVE`, Zähler mit Plan vergleichen | Datei unverändert |
+| B | in derselben Transaktion: Felder redigieren, Rückzug, Prüfbefehle/-läufe/Beobachtungen löschen, `memories_fts` und `memories_trigram` mit `rebuild` neu aufbauen, Protokollzeile Status `redacted` | Rollback; das `-journal` enthält bis zum Rollback die alten Seiten; beim nächsten Öffnen stellt SQLite den alten Stand wieder her. Datei logisch unverändert, Geheimnis vorhanden |
+| C | Commit (`synchronous=FULL`), danach Plan-Datei löschen | ab hier logisch entfernt; Reste können in freien Seiten liegen (durch `secure_delete` überschrieben) und in der gelöschten Journaldatei auf dem Datenträger |
+| D | `VACUUM` (baut die Datei ohne freie Seiten neu) | VACUUM ist selbst atomar; bei Abbruch bleibt der Stand nach C |
+| E | Transaktion: Protokollzeile Status `compacted`, Commit (`synchronous=FULL`), danach `fsync` des Ordners | vor dem Commit: Status bleibt `redacted`, `--finish` holt D und E nach; danach abgeschlossen |
 
-`vmind purge DB --finish` holt D und E für alle Protokollzeilen mit Status `redacted`
-nach. `doctor` meldet offene `redacted`-Einträge.
+Der letzte Statuscommit ist damit selbst dauerhaft gesichert; erst danach gilt der
+Vorgang als `compacted`. `vmind purge DB --finish` führt D und E für alle Protokollzeilen
+mit Status `redacted` aus, mit derselben Sperrhaltung, und ist wiederholbar. `doctor`
+meldet offene `redacted`-Einträge.
+
+### WAL-Datenbanken (spätere Erweiterung)
+
+Version 1 bricht bei `journal_mode=wal` ab. Eine spätere Erweiterung braucht einen
+eigenen, dokumentierten Offline-Vorbereitungsschritt außerhalb von `purge`
+(vollständiger Checkpoint und bewusster Wechsel nach `delete`, mit eigener Prüfung), weil
+der WAL-Modus den Dateiänderungszähler nicht verlässlich erhöht und alte Seiten in der
+`-wal`-Datei hält. Nicht Teil dieses Entwurfs.
 
 ### Purge-Protokoll (neue Migration, Schema 7)
 
-- Tabelle `purges(id, created_at, target_count, status)` mit `status IN ('redacted',
-  'compacted')`, und `purge_targets(purge_id, namespace, target_id)`. Keine Inhalte,
-  keine Prüfsummen über Inhalte (sie könnten kurze Geheimnisse bestätigen), kein
-  Akteur-Freitext.
+- Tabelle `purges(id, created_at, status, memories, journal, conversations, messages,
+  checks, check_runs, observations)` mit `status IN ('redacted', 'compacted')` und je
+  Namensraum nur der **Anzahl** der Ziele. Keine Zielidentitäten, keine Inhalte, keine
+  Prüfsummen, kein Akteur-Freitext. `--finish` braucht keine Ziele.
 - `memory_events.action` erhält zusätzlich `purged`, damit `show` erklärt, warum ein
   Eintrag nur noch den Platzhalter enthält. Die Migration folgt den üblichen Regeln
-  (neue nummerierte Datei, Sicherung vor dem Upgrade).
+  (neue nummerierte Datei, Sicherung vor dem Upgrade). Offene Frage dazu: Blocker B2.
 
 ## Sicherungs-Dilemma
 
@@ -131,10 +185,12 @@ enthält aber genau das Geheimnis, das entfernt werden soll. Deshalb:
 - Mit `--backup` wird wie bei `backup` geprüft gesichert, und die Ausgabe sagt deutlich:
   „Diese Sicherung enthält das Geheimnis. Nach Prüfung des Ergebnisses selbst löschen
   oder sicher verwahren.“
-- Vorschau und Ausführung listen bekannte Sicherungen mit Pfad: automatische
-  Migrationssicherungen `*.before-schema-*.db` neben der Datei und in
-  `VMIND_BACKUP_DIR`. Andere Kopien (manuelle Sicherungen, Synchronisationsdienste,
-  Versionsverwaltung) kennt V-Mind nicht. V-Mind löscht keine Sicherung selbst.
+- Vorschau und Ausführung nennen nur die **Anzahl** bekannter Sicherungen je Herkunft
+  (automatische Migrationssicherungen `*.before-schema-*.db` neben der Datei bzw. in
+  `VMIND_BACKUP_DIR`). Dateipfade können selbst vertrauliche Bestandteile enthalten und
+  erscheinen nur mit ausdrücklichem `--list-backups`, zusammen mit diesem Hinweis.
+  Andere Kopien (manuelle Sicherungen, Synchronisationsdienste, Versionsverwaltung) kennt
+  V-Mind nicht. V-Mind löscht keine Sicherung selbst.
 
 ## Nachweis und Grenzen
 
@@ -163,33 +219,43 @@ Fundart entspricht; Testausgaben zeigen den Marker nie vollständig.
 | 1 | Marker in jedem Feld jedes Namensraums, je ein Ziel | Nach Purge: keine Tabelle, kein `MATCH` in `memories_fts`/`memories_trigram`, keine V-Mind-Operation liefert ihn; nach VACUUM nicht in den Dateibytes; `audit-secrets` ohne Fund an den Zielen |
 | 2 | Wie 1, Prüfung in **neuem Prozess** nach Wiederöffnen | gleiches Ergebnis |
 | 3 | Kopie desselben Markers in einer anderen Zeile | Vorschau listet sie als vermutete Kopie; nach Purge nur der Ziele bleibt sie erhalten und `audit-secrets` findet sie |
-| 4 | Vorschau | Datei bytegleich vorher/nachher; Ausgabe ohne Marker |
-| 5 | Inhalt zwischen Vorschau und Ausführung geändert | Abbruch, keine Änderung |
+| 4 | Vorschau | Datenbankdatei bytegleich vorher/nachher; Ausgabe ohne Marker |
+| 5 | Ein Commit zwischen Vorschau und Ausführung | Zähler weicht ab: Abbruch, keine Änderung |
 | 6 | Unbekannter Namensraum, fehlende ID, Dublette, Text-ID | Abbruch vor jeder Änderung |
 | 7 | Anderer Prozess hält eine Lesetransaktion | Abbruch nach Zeitlimit, keine Änderung |
-| 8 | Abbruch in Schritt B (Fehler im Test eingeschleust) | nach Wiederöffnen alter Stand, kein Protokolleintrag |
-| 9 | Prozess nach C, vor D beendet | Ziele redigiert, Protokoll `redacted`, `doctor` meldet es, `--finish` führt D/E aus und setzt `compacted` |
-| 10 | Validierter Eintrag als Ziel | danach zurückgezogen, nicht im Abruf als geprüft, keine Prüfbefehle mehr, `revalidate` führt nichts aus |
-| 11 | Journal-Aufgabe als Ziel | Vorschau nennt die Trennung von der Aufgabe; `resume` danach ohne Marker |
-| 12 | Ohne `--backup`/`--no-backup` | Abbruch ohne Änderung |
-| 13 | Mit `--backup` | geprüfte Sicherung angelegt, Warnhinweis ausgegeben, Sicherung enthält den Marker (dokumentiertes Verhalten) |
-| 14 | Altes oder fremdes Schema, fehlende Datei | Abbruch, nichts angelegt oder migriert |
-| 15 | `journal_mode=wal` mit nicht vollständig möglichem Checkpoint | Abbruch ohne Änderung |
-| 16 | Alle Fehlermeldungen und Ausgaben (stdout, stderr, JSON) | enthalten weder Marker noch Teile davon noch Text-IDs |
-| 17 | Purge-Protokoll | enthält nur Namensraum, numerische ID, Zeit und Status |
+| 8 | Abbruch in Schritt B (Fehler im Test eingeschleust) | nach Wiederöffnen alter Stand, kein Protokolleintrag, Plan noch gültig |
+| 9 | Prozess nach C, vor D beendet | Ziele redigiert, Protokoll `redacted`, Plan gelöscht, `doctor` meldet es, `--finish` führt D/E aus und setzt `compacted` |
+| 10 | Prozess nach D, vor dem Statuscommit in E beendet | Status `redacted`; `--finish` erneut ausführbar, Ergebnis `compacted` |
+| 11 | Validierter Eintrag als Ziel | danach zurückgezogen, nicht im Abruf als geprüft, keine Prüfbefehle mehr, `revalidate` führt nichts aus |
+| 12 | Aufgabe mit mehreren Journalzeilen (nach Entscheidung B1) | nie Teilredaktion; bei Option B alle Zeilen einheitlich, jüngster Stand bleibt jüngster; bei Option A Fund im Schlüssel als nicht entfernbar gemeldet |
+| 13 | Ohne `--backup`/`--no-backup` | Abbruch ohne Änderung |
+| 14 | Mit `--backup` | geprüfte Sicherung angelegt, Warnhinweis ausgegeben, Sicherung enthält den Marker (dokumentiertes Verhalten) |
+| 15 | Altes oder fremdes Schema, fehlende Datei | Abbruch, nichts angelegt oder migriert |
+| 16 | `journal_mode=wal` | Abbruch ohne Checkpoint und ohne Modusänderung |
+| 17 | Alle Fehlermeldungen und Ausgaben (stdout, stderr, JSON) | enthalten weder Marker noch Teile davon noch Text-IDs noch Sicherungspfade (außer mit `--list-backups`) |
+| 18 | Plan-Datei | Rechte 0600; enthält keinen Marker, keine Feldwerte, keine Hashes über Inhalte; nach C gelöscht; fremde oder veraltete Plan-ID abgewiesen |
+| 19 | Purge-Protokoll | enthält nur Zeit, Status und Anzahlen |
+| 20 | Gespräch als Ziel, danach VACUUM | Protokoll weiterhin korrekt; alter Plan nach VACUUM abgewiesen |
 
-## Offene Fragen zur gemeinsamen Entscheidung
+## Blocker vor einer Umsetzung
 
-1. **Text-IDs und Bereichsnamen:** Ein Geheimnis in `conversations.id` oder in einem
-   `scope` lässt sich nicht redigieren, ohne Verweise umzuschreiben. Vorschlag: in
-   Version 1 nur melden („nicht entfernbar, Gespräch/Bereich neu anlegen“).
-2. **Ganze Gespräche:** Reicht `message:N` je Nachricht, oder braucht es
-   `conversation:R --all-messages`? Vorschlag: zunächst nicht, Vorschau pro Nachricht.
-3. **Kopiensuche:** Die interne Suche nach demselben Wert hält den Wert kurz im
-   Speicher. Akzeptabel, solange er nie ausgegeben, protokolliert oder gespeichert wird?
-4. **`secure_delete`:** Das Systemwerkzeug `sqlite3` meldet hier `1`; für das
-   gebündelte SQLite wird es explizit gesetzt. Reicht das zusammen mit VACUUM, oder
-   zusätzlich `PRAGMA incremental_vacuum` vermeiden?
-5. **Schema 7:** Eigene Migration nur für das Protokoll, oder Protokoll weglassen und
-   den Zustand `redacted` nur über Platzhaltertexte erkennen? Vorschlag: Protokoll,
-   weil `--finish` und `doctor` sonst Textmuster suchen müssten.
+Diese Punkte müssen gemeinsam entschieden sein, bevor Code entsteht:
+
+- **B1 Aufgabenschlüssel:** Option A oder B (siehe [Aufgabenschlüssel](#aufgabenschlüssel)).
+- **B2 Schema 7:** Protokoll als eigene Migration wie oben, oder ohne Protokoll und
+  `--finish` nur als „VACUUM erneut ausführen“? Vorschlag: Protokoll, weil `doctor` sonst
+  einen abgebrochenen Purge nicht erkennen kann.
+- **B3 Plan-Datei:** Ort neben der Datenbank (gleiche Rechte, gleicher Datenträger)
+  oder eigenes Verzeichnis? Lebensdauer begrenzen (z. B. eine Stunde)?
+- **B4 Kopiensuche:** Die interne Suche nach demselben Wert hält den Wert kurz im
+  Speicher. Akzeptabel, solange er nie ausgegeben, protokolliert, gehasht oder
+  gespeichert wird?
+- **B5 `secure_delete`:** Das Systemwerkzeug `sqlite3` meldet hier `1`; im gebündelten
+  SQLite wird es ausdrücklich gesetzt. Reicht das zusammen mit VACUUM?
+
+## Bewusst nicht in Version 1
+
+- Text-IDs von Gesprächen und Bereichsnamen: werden gemeldet („nicht entfernbar,
+  Gespräch/Bereich neu anlegen“), nicht umgeschrieben.
+- Ganze Gespräche auf einmal: zunächst nur `message:N` je Nachricht.
+- WAL-Datenbanken: siehe oben.
