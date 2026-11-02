@@ -1,8 +1,13 @@
 # Changelog
 
-## Unreleased (on `main`)
+## Unreleased: candidate 0.3.0-rc.1 (on `main`)
 
-Not released yet. The next version requires a database migration from schema 5 to 6;
+Not released yet. The source now reports version `0.3.0-rc.1` (`vmind --version`, MCP
+server info); there is no tag, no published download and no installation of it.
+Development builds made before this change still report `0.2.0` but are not the
+released 0.2.0; identify them by commit or SHA-256, not by `--version`.
+
+The next version requires a database migration from schema 5 to 6;
 the automatic verified backup from #10 runs first (see "Upgrading" below). Release
 acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (German).
 
