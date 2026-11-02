@@ -12,6 +12,10 @@
   checked, the upgrade does not happen. `VMIND_BACKUP_DIR` chooses another folder. (#10)
 - `vmind report DB`: readable Markdown project report for people, strictly read-only,
   verified knowledge and unverified proposals in separate sections. (#12)
+- English start instructions (`prompts/start.en.md`, `vmind start-prompt en`) with the
+  same sections, operations and limits as the German original, checked by a test; German
+  stays the default. English Claude Code guide `docs/claude-code.en.md` (MCP, start
+  instructions, hooks) that says what is tested. Release packages must contain both.
 
 ### Changed
 

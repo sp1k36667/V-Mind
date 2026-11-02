@@ -15,7 +15,7 @@ use vmind_core::{MemoryStore, Record};
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 const HELP: &str = "V-Mind – lokales Gedächtnis für KI-Werkzeuge
 Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
-  start-prompt                  (Startanweisung für die nutzende KI)
+  start-prompt [de|en]          (Startanweisung für die nutzende KI; Standard de)
   init DB
   doctor DB                     (nur lesen: Schema, Integrität, Fremdschlüssel)
   backup DB ZIEL                (geprüfte SQLite-Sicherung, überschreibt niemals)
@@ -243,11 +243,15 @@ fn run() -> Result<()> {
     match args.as_slice() {
         [] => println!("{HELP}"),
         [cmd] if cmd == "--help" || cmd == "help" => println!("{HELP}"),
-        [cmd] if cmd == "start-prompt" => emit(
-            json!({"prompt":prompt::START_PROMPT}),
-            prompt::START_PROMPT.into(),
-            json_mode,
-        )?,
+        [cmd, lang @ ..] if cmd == "start-prompt" && lang.len() <= 1 => {
+            let (language, text) = prompt::start_prompt(lang.first().map(String::as_str))
+                .ok_or_else(|| io::Error::other("Sprache muss de oder en sein"))?;
+            emit(
+                json!({"prompt":text,"language":language}),
+                text.into(),
+                json_mode,
+            )?
+        }
         [cmd] if cmd == "--version" => println!("vmind {}", env!("CARGO_PKG_VERSION")),
         [cmd, db] if cmd == "doctor" => {
             let report = vmind_core::inspect_database(db)?;

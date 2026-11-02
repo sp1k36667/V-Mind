@@ -21,6 +21,12 @@ werden beim nächsten Build bzw. erneuten Installieren übernommen.
 vmind start-prompt
 ```
 
+Englische, inhaltsgleiche Fassung (`prompts/start.en.md`):
+
+```sh
+vmind start-prompt en
+```
+
 Für externe KI-Clients die Anweisung als Startkonfiguration übernehmen und zusätzlich
 die realen Werkzeuge, Datenbank, Projektbereich und Gesprächs-ID anbinden. Der Prompt
 richtet keine Verbindung ein. Details: [docs/start-prompt.md](start-prompt.md).

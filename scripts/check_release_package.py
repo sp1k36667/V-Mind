@@ -22,6 +22,7 @@ def check(package):
     required = [binary, *(package / p for p in [
         "README.md", "README.de.md", "LICENSE", "CHANGELOG.md",
         "CONTRIBUTING.md", "AGENTS.md", "docs/operations.md", "prompts/start.de.md",
+        "prompts/start.en.md", "docs/claude-code.en.md",
     ])]
     for path in required:
         if not path.is_file():

@@ -615,3 +615,25 @@ fn validation_errors_are_shown_without_sqlite_jargon() {
     assert!(message.starts_with("V-Mind: "), "{message}");
     assert!(!message.contains("Invalid parameter name"), "{message}");
 }
+
+#[test]
+fn start_prompt_defaults_to_german_and_offers_english() {
+    let default = cli(&["start-prompt"]);
+    assert_eq!(default["language"], "de");
+    assert!(
+        default["prompt"]
+            .as_str()
+            .unwrap()
+            .contains("Startanweisung")
+    );
+    let english = cli(&["start-prompt", "en"]);
+    assert_eq!(english["language"], "en");
+    assert!(
+        english["prompt"]
+            .as_str()
+            .unwrap()
+            .contains("start instructions")
+    );
+    let (ok, _) = cli_status(&["start-prompt", "fr"]);
+    assert!(!ok);
+}

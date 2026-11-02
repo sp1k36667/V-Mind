@@ -1,8 +1,11 @@
 # Startanweisung und Host-Anbindung
 
 `prompts/start.de.md` ist die gemeinsame Quelle für den KI-Startprompt.
-`vmind start-prompt` gibt den vollständigen Text aus; mit `--json` erscheint er unter
-`prompt`. Der lokale Ollama-Adapter bindet dieselbe Datei beim Kompilieren ein.
+`prompts/start.en.md` ist eine inhaltsgleiche englische Fassung; ein Test prüft, dass
+beide dieselben Abschnitte, Operationen und Prüfzustände nennen. Änderungen immer in
+beiden Dateien vornehmen. `vmind start-prompt [de|en]` gibt den vollständigen Text aus
+(ohne Angabe Deutsch); mit `--json` erscheint er unter `prompt`, die Sprache unter
+`language`. Der lokale Ollama-Adapter bindet die deutsche Datei beim Kompilieren ein.
 
 ## Lokaler Ollama-Testclient
 
