@@ -36,7 +36,8 @@ zum Abbruch **vor** jeder Änderung.
 | Ziel | Tabelle (Schlüssel) | Was entfernt wird |
 | --- | --- | --- |
 | `memory:N` | `memories.id` | problem, solution, source, validated_by, evidence des Eintrags; dazu alle Zeilen in `memory_events` (actor, reason) und `invalidations` (actor, reason) dieses Eintrags; alle `memory_checks` und deren `check_runs` des Eintrags werden gelöscht |
-| `journal:N` | `project_journal.id` | body, source; `task_key` siehe [Aufgabenschlüssel](#aufgabenschlüssel) |
+| `journal:N` | `project_journal.id` | body, source; nie `task_key` |
+| `task:N` | alle `project_journal`-Zeilen mit Bereich und `task_key` der Zeile N | `task_key` einheitlich, siehe [Aufgabenschlüssel](#aufgabenschlüssel) |
 | `conversation:R` | `conversations.rowid` | title; die Text-ID bleibt (siehe [Bezug auf Gespräche](#stabiler-bezug-auf-gespräche)) |
 | `message:N` | `chat_messages.id` | content |
 | `check_run:N` | `check_runs.id` | output |
@@ -58,21 +59,15 @@ zurückgezogene Einträge ohnehin ab).
 ### Aufgabenschlüssel
 
 `resume` bestimmt den aktuellen Stand einer Aufgabe über die jüngste Journalzeile mit
-demselben Bereich und `task_key`. Würde nur in einer Zeile der Schlüssel ersetzt, könnte
-ein älterer Stand derselben Aufgabe wieder als aktuell erscheinen. Teilredaktion des
-Schlüssels einzelner Zeilen ist deshalb **ausgeschlossen**. Zwei Optionen, Entscheidung
-offen (Blocker B1):
+demselben Bereich und `task_key` (`max(id)`). Würde nur in einer Zeile der Schlüssel
+ersetzt, könnte ein älterer Stand derselben Aufgabe wieder als aktuell erscheinen.
+Teilredaktion des Schlüssels einzelner Zeilen ist deshalb **ausgeschlossen**.
 
-- **Option A (eng):** `task_key` wird nie redigiert. Steckt der Fund im Schlüssel, meldet
-  die Vorschau das Ziel als „in Version 1 nicht entfernbar“; nur `body`/`source` sind
-  redigierbar.
-- **Option B (empfohlen):** Ein eigenes Ziel `task:N` (N = eine Journal-ID der Aufgabe)
-  ersetzt den Schlüssel in **allen** Journalzeilen desselben Bereichs und Schlüssels
-  einheitlich durch `purged-P`. Die Vorschau listet alle betroffenen IDs. Die Aufgabe
-  bleibt zusammenhängend; ihr jüngster Stand bleibt der jüngste.
-
-Wird nur `body` oder `source` einer Aufgabenzeile redigiert, bleibt der Schlüssel
-unverändert und der Aufgabenverlauf unberührt.
+**Entschieden (#138):** Ein eigenes Ziel `task:N` (N = eine Journal-ID der Aufgabe)
+ersetzt den Schlüssel in **allen** Journalzeilen desselben Bereichs und Schlüssels
+einheitlich durch `purged-P`. Die Vorschau listet vorher alle betroffenen IDs. Die
+Aufgabe bleibt zusammenhängend; ihr jüngster Stand bleibt der jüngste. `journal:N`
+allein verändert `task_key` nie, nur `body` und `source`.
 
 ### Stabiler Bezug auf Gespräche
 
@@ -116,8 +111,16 @@ Bestätigung keinen Inhaltsbezug:
   Gesprächen die Text-ID), Erstellungszeit und der **Dateiänderungszähler** von SQLite
   (Header-Bytes 24–27; wird im Journalmodus `delete` bei jedem Commit erhöht). Keine
   Feldwerte, keine Hashes über Feldwerte.
-- Die Ausführung liest den Zähler unter der Exklusivsperre erneut. Weicht er ab, hat
-  jemand geschrieben: Abbruch ohne Änderung, neue Vorschau nötig.
+- Die Ausführung liest den Zähler unter der Exklusivsperre erneut. Weicht er ab:
+  Abbruch ohne Änderung, neue Vorschau nötig.
+- Der Plan wird zusätzlich an die Identität der Datenbank gebunden (z. B. Gerät,
+  Inode, Dateigröße, Schemaversion; konkrete Auswahl offen), damit ein Austausch oder
+  Rückspielen der Datei nicht unbemerkt bleibt.
+- **Noch nicht belegt (Blocker B6):** Dass der Zähler jede Änderung zuverlässig anzeigt,
+  ist eine Annahme. Vor einer Umsetzung separat zu prüfen: Austausch/Rückspielen einer
+  Datei mit gleichem Zählerstand, Überlauf des 32-Bit-Zählers, Verhalten bei mehreren
+  Commits unter `locking_mode=EXCLUSIVE`. Bis dahin ist der Zähler kein bewiesener
+  Ersatz für eine Inhaltsprüfung.
 - Die Plan-Datei wird nach erfolgreichem Commit (Schritt C) gelöscht; ein abgelaufener
   oder fremder Plan wird abgewiesen.
 
@@ -227,7 +230,8 @@ Fundart entspricht; Testausgaben zeigen den Marker nie vollständig.
 | 9 | Prozess nach C, vor D beendet | Ziele redigiert, Protokoll `redacted`, Plan gelöscht, `doctor` meldet es, `--finish` führt D/E aus und setzt `compacted` |
 | 10 | Prozess nach D, vor dem Statuscommit in E beendet | Status `redacted`; `--finish` erneut ausführbar, Ergebnis `compacted` |
 | 11 | Validierter Eintrag als Ziel | danach zurückgezogen, nicht im Abruf als geprüft, keine Prüfbefehle mehr, `revalidate` führt nichts aus |
-| 12 | Aufgabe mit mehreren Journalzeilen (nach Entscheidung B1) | nie Teilredaktion; bei Option B alle Zeilen einheitlich, jüngster Stand bleibt jüngster; bei Option A Fund im Schlüssel als nicht entfernbar gemeldet |
+| 12 | Aufgabe mit mehreren Journalzeilen | `task:N` redigiert alle Zeilen einheitlich, jüngster Stand bleibt jüngster; `journal:N` ändert den Schlüssel nie |
+| 21 | Datei zwischen Vorschau und Ausführung ausgetauscht oder zurückgespielt | Abbruch ohne Änderung (setzt Klärung von B6 voraus) |
 | 13 | Ohne `--backup`/`--no-backup` | Abbruch ohne Änderung |
 | 14 | Mit `--backup` | geprüfte Sicherung angelegt, Warnhinweis ausgegeben, Sicherung enthält den Marker (dokumentiertes Verhalten) |
 | 15 | Altes oder fremdes Schema, fehlende Datei | Abbruch, nichts angelegt oder migriert |
@@ -241,7 +245,10 @@ Fundart entspricht; Testausgaben zeigen den Marker nie vollständig.
 
 Diese Punkte müssen gemeinsam entschieden sein, bevor Code entsteht:
 
-- **B1 Aufgabenschlüssel:** Option A oder B (siehe [Aufgabenschlüssel](#aufgabenschlüssel)).
+- **B1 Aufgabenschlüssel:** entschieden (#138): eigenes Ziel `task:N`, siehe
+  [Aufgabenschlüssel](#aufgabenschlüssel).
+- **B6 Änderungsnachweis des Plans:** Dateiänderungszähler und Bindung an die
+  Datenbankidentität sind ungeprüfte Annahmen (siehe Plan); Prüfung vor Umsetzung.
 - **B2 Schema 7:** Protokoll als eigene Migration wie oben, oder ohne Protokoll und
   `--finish` nur als „VACUUM erneut ausführen“? Vorschlag: Protokoll, weil `doctor` sonst
   einen abgebrochenen Purge nicht erkennen kann.
