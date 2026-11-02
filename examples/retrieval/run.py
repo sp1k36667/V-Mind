@@ -1,10 +1,12 @@
-"""Abrufkorpus v1: baut eine frische Datenbank nur über die CLI und misst `recall`.
+"""Abrufkorpus: baut eine frische Datenbank nur über die CLI und misst `recall`.
 
 Aufruf:
-  python3 examples/retrieval/run.py VMIND_BINARY AUSGABEORDNER
+  python3 examples/retrieval/run.py VMIND_BINARY AUSGABEORDNER [KORPUS.json]
   python3 examples/retrieval/run.py --self-test
 
-Plan und Kriterien: docs/experiments/abruf-korpus-plan.md. Kein Sprachmodell beteiligt.
+Ohne KORPUS wird corpus.json (v1) verwendet. Pläne und Kriterien:
+docs/experiments/abruf-korpus-plan.md (v1), docs/experiments/abruf-korpus-v2-plan.md (v2).
+Kein Sprachmodell beteiligt.
 """
 import json
 import subprocess
@@ -76,6 +78,7 @@ def score(rows, queries):
     per = defaultdict(lambda: dict(n=0, at1=0, at5=0, rr=0.0, empty=0, returned=0,
                                    before_distractor=0, distractor_n=0))
     violations = []
+    positives = extra = 0
     for row in rows:
         q = by_id[row['id']]
         violations += [(row['id'], *v) for v in leaks(row, q)]
@@ -87,6 +90,8 @@ def score(rows, queries):
             c['at1'] += r == 1
             c['at5'] += r is not None
             c['rr'] += 1 / r if r else 0.0
+            positives += 1
+            extra += len(row['hits']) - (r is not None)
             for d in q.get('distractors', []):
                 c['distractor_n'] += 1
                 rd = rank(row, d)
@@ -104,6 +109,9 @@ def score(rows, queries):
         else:
             s.update(leer=c['empty'], mittlere_treffer=round(c['returned'] / c['n'], 2))
         summary[f'{cat}/{kind}'] = s
+    if positives:
+        # Beifang: zurückgegebene Treffer außer dem erwarteten, je Frage mit erwartetem Eintrag.
+        summary['beifang_je_positivfrage'] = round(extra / positives, 2)
     return summary, violations
 
 
@@ -120,6 +128,7 @@ def self_test():
     summary, violations = score(rows, queries)
     assert summary['k/positiv'] == {'fragen': 1, 'treffer_at1': 0, 'treffer_at5': 1,
                                     'mrr': 0.5, 'vor_ablenker': 0}, summary
+    assert summary['beifang_je_positivfrage'] == 1.0, summary
     assert summary['n/negativ'] == {'fragen': 1, 'leer': 0, 'mittlere_treffer': 5.0}, summary
     assert sorted(violations) == [('b', 'bereich', 'p'), ('b', 'status', 'q'),
                                   ('b', 'status', 'r'), ('b', 'verboten', 'z')], violations
@@ -131,11 +140,12 @@ def self_test():
 def main():
     if sys.argv[1:] == ['--self-test']:
         return self_test()
-    if len(sys.argv) != 3:
+    if len(sys.argv) not in (3, 4):
         raise SystemExit(__doc__)
     binary, out_dir = sys.argv[1], Path(sys.argv[2])
+    corpus_path = Path(sys.argv[3]) if len(sys.argv) == 4 else CORPUS
     out_dir.mkdir(parents=True, exist_ok=False)
-    corpus = json.loads(CORPUS.read_text(encoding='utf-8'))
+    corpus = json.loads(corpus_path.read_text(encoding='utf-8'))
     runs = []
     for attempt in (1, 2):
         with tempfile.TemporaryDirectory(prefix='vmind-abruf-') as folder:
@@ -147,6 +157,7 @@ def main():
     summary, violations = score(runs[0], corpus['queries'])
     _, violations_2 = score(runs[1], corpus['queries'])
     result = {
+        'korpus': corpus['meta']['name'],
         'limit': LIMIT,
         'reproduzierbar': reproducible,
         'verstoesse': violations + violations_2,
@@ -155,6 +166,10 @@ def main():
     }
     with open(out_dir / 'results.jsonl', 'w', encoding='utf-8') as f:
         for row in runs[0]:
+            f.write(json.dumps(row, ensure_ascii=False) + '\n')
+    # Auch der Kontrolllauf wird archiviert, nicht nur verglichen.
+    with open(out_dir / 'results-run2.jsonl', 'w', encoding='utf-8') as f:
+        for row in runs[1]:
             f.write(json.dumps(row, ensure_ascii=False) + '\n')
     (out_dir / 'summary.json').write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n',
                                           encoding='utf-8')

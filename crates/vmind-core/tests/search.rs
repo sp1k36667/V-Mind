@@ -70,6 +70,49 @@ fn short_terms_and_fts_syntax_do_not_break_partial_search() {
 }
 
 #[test]
+fn longer_inflected_query_forms_find_the_shorter_stored_word() {
+    let s = MemoryStore::in_memory().unwrap();
+    let money = validated(&s, "global", "Rundungsfehler bei Geldbeträgen");
+    let cert = validated(&s, "global", "TLS-Zertifikat ist abgelaufen");
+    assert_eq!(
+        s.recall("Rundungsfehlern", "global", 5).unwrap()[0].id,
+        money
+    );
+    assert_eq!(
+        s.recall("abgelaufene Zertifikate", "global", 5).unwrap()[0].id,
+        cert
+    );
+    // Umlaut-Plurale bleiben eine bekannte Grenze des einfachen Stamms.
+    validated(&s, "global", "Passwort ist zu kurz");
+    assert!(s.recall("Passwörter", "global", 5).unwrap().is_empty());
+}
+
+#[test]
+fn negation_alone_finds_nothing_and_weakly_covered_hits_are_dropped() {
+    let s = MemoryStore::in_memory().unwrap();
+    validated(&s, "global", "Drucker druckt nicht");
+    let service = validated(&s, "global", "Dienst startet nach dem Neustart nicht");
+    let other = validated(&s, "global", "Dienst meldet Fehler");
+    assert!(s.recall("nicht", "global", 5).unwrap().is_empty());
+    // Der beste Treffer enthält beide Suchwörter; einer mit nur einem von zwei bleibt.
+    let ids: Vec<i64> = s
+        .recall("Dienst startet nicht", "global", 5)
+        .unwrap()
+        .iter()
+        .map(|r| r.id)
+        .collect();
+    assert_eq!(ids, [service, other]);
+    // Bei vier Suchwörtern braucht ein Treffer mindestens zwei davon.
+    let ids: Vec<i64> = s
+        .recall("Dienst startet Neustart automatisch", "global", 5)
+        .unwrap()
+        .iter()
+        .map(|r| r.id)
+        .collect();
+    assert_eq!(ids, [service]);
+}
+
+#[test]
 fn partial_index_follows_updates_after_withdrawal() {
     let s = MemoryStore::in_memory().unwrap();
     let id = validated(&s, "global", "Schemamigration");

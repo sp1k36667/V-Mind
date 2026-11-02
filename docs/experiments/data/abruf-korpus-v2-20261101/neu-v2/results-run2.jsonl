@@ -1,0 +1,37 @@
+{"id": "v01", "scope": "gamma", "category": "wortform_lang", "text": "abgelaufene Zertifikate", "hits": [{"id": 1, "key": "zertifikat", "scope": "gamma", "status": "validated", "invalidated": false}]}
+{"id": "v02", "scope": "gamma", "category": "wortform_lang", "text": "Druckern", "hits": [{"id": 2, "key": "drucker", "scope": "global", "status": "validated", "invalidated": false}]}
+{"id": "v03", "scope": "gamma", "category": "wortform_lang", "text": "Cronjobs", "hits": [{"id": 3, "key": "cronjob", "scope": "gamma", "status": "validated", "invalidated": false}]}
+{"id": "v04", "scope": "gamma", "category": "wortform_lang", "text": "Passwörter", "hits": []}
+{"id": "v05", "scope": "gamma", "category": "wortform_lang", "text": "Indizes", "hits": []}
+{"id": "v06", "scope": "gamma", "category": "wortform_lang", "text": "Speichermangels", "hits": [{"id": 6, "key": "speichermangel", "scope": "global", "status": "validated", "invalidated": false}]}
+{"id": "v07", "scope": "gamma", "category": "wortform_lang", "text": "Endlosschleifen", "hits": [{"id": 7, "key": "endlosschleife", "scope": "gamma", "status": "validated", "invalidated": false}]}
+{"id": "v08", "scope": "gamma", "category": "wortform_lang", "text": "Datenbankverbindungen", "hits": [{"id": 8, "key": "verbindung", "scope": "gamma", "status": "validated", "invalidated": false}]}
+{"id": "v09", "scope": "gamma", "category": "wortform_lang", "text": "Übersetzungen", "hits": [{"id": 9, "key": "uebersetzung", "scope": "gamma", "status": "validated", "invalidated": false}]}
+{"id": "v10", "scope": "gamma", "category": "wortform_lang", "text": "Abhängigkeiten", "hits": [{"id": 10, "key": "abhaengigkeit", "scope": "global", "status": "validated", "invalidated": false}]}
+{"id": "v11", "scope": "gamma", "category": "wortform_kurz", "text": "Zertifikat", "hits": [{"id": 1, "key": "zertifikat", "scope": "gamma", "status": "validated", "invalidated": false}]}
+{"id": "v12", "scope": "gamma", "category": "wortform_kurz", "text": "Cronjob", "hits": [{"id": 3, "key": "cronjob", "scope": "gamma", "status": "validated", "invalidated": false}]}
+{"id": "v13", "scope": "gamma", "category": "wortform_kurz", "text": "Verbindung", "hits": [{"id": 8, "key": "verbindung", "scope": "gamma", "status": "validated", "invalidated": false}]}
+{"id": "v14", "scope": "gamma", "category": "wortform_kurz", "text": "Schleife", "hits": [{"id": 7, "key": "endlosschleife", "scope": "gamma", "status": "validated", "invalidated": false}]}
+{"id": "v15", "scope": "gamma", "category": "getrennt", "text": "Rechnungen", "hits": [{"id": 11, "key": "rechnung", "scope": "gamma", "status": "validated", "invalidated": false}]}
+{"id": "v16", "scope": "gamma", "category": "getrennt", "text": "Rechners", "hits": [{"id": 12, "key": "rechner", "scope": "global", "status": "validated", "invalidated": false}]}
+{"id": "v17", "scope": "gamma", "category": "getrennt", "text": "Rechnern", "hits": [{"id": 11, "key": "rechnung", "scope": "gamma", "status": "validated", "invalidated": false}, {"id": 12, "key": "rechner", "scope": "global", "status": "validated", "invalidated": false}]}
+{"id": "v18", "scope": "gamma", "category": "getrennt", "text": "Lesern", "hits": [{"id": 13, "key": "leser", "scope": "global", "status": "validated", "invalidated": false}]}
+{"id": "v19", "scope": "gamma", "category": "getrennt", "text": "Lesezeichens", "hits": [{"id": 14, "key": "lesezeichen", "scope": "global", "status": "validated", "invalidated": false}]}
+{"id": "v20", "scope": "gamma", "category": "getrennt", "text": "Kostenstellen", "hits": [{"id": 15, "key": "kostenstelle", "scope": "gamma", "status": "validated", "invalidated": false}]}
+{"id": "v21", "scope": "gamma", "category": "getrennt", "text": "Kosten", "hits": [{"id": 16, "key": "cloud-kosten", "scope": "global", "status": "validated", "invalidated": false}, {"id": 15, "key": "kostenstelle", "scope": "gamma", "status": "validated", "invalidated": false}]}
+{"id": "v22", "scope": "gamma", "category": "englisch", "text": "No such file or directory", "hits": [{"id": 17, "key": "enoent", "scope": "gamma", "status": "validated", "invalidated": false}]}
+{"id": "v23", "scope": "gamma", "category": "englisch", "text": "404 Not Found health", "hits": [{"id": 18, "key": "http-404", "scope": "gamma", "status": "validated", "invalidated": false}]}
+{"id": "v24", "scope": "gamma", "category": "englisch", "text": "Segmentation fault core dumped", "hits": [{"id": 19, "key": "segfault", "scope": "global", "status": "validated", "invalidated": false}]}
+{"id": "v25", "scope": "gamma", "category": "englisch", "text": "Connection refused", "hits": [{"id": 20, "key": "refused", "scope": "global", "status": "validated", "invalidated": false}]}
+{"id": "v26", "scope": "gamma", "category": "negation", "text": "Dienst startet nicht", "hits": [{"id": 21, "key": "dienst-autostart", "scope": "gamma", "status": "validated", "invalidated": false}, {"id": 20, "key": "refused", "scope": "global", "status": "validated", "invalidated": false}]}
+{"id": "v27", "scope": "gamma", "category": "negation", "text": "Mails kommen nicht an", "hits": [{"id": 22, "key": "mail-zustellung", "scope": "global", "status": "validated", "invalidated": false}]}
+{"id": "v28", "scope": "gamma", "category": "kein_treffer", "text": "Warum funktioniert das nicht", "hits": []}
+{"id": "v29", "scope": "gamma", "category": "kein_treffer", "text": "Datei wird nicht gespeichert", "hits": [{"id": 17, "key": "enoent", "scope": "gamma", "status": "validated", "invalidated": false}, {"id": 9, "key": "uebersetzung", "scope": "gamma", "status": "validated", "invalidated": false}]}
+{"id": "v30", "scope": "gamma", "category": "kein_treffer", "text": "Wie installiere ich Schriftarten", "hits": []}
+{"id": "v31", "scope": "gamma", "category": "kein_treffer", "text": "Kaffeemaschine entkalken", "hits": []}
+{"id": "v32", "scope": "gamma", "category": "kein_treffer", "text": "Vor dem Urlaub die Heizung herunterdrehen", "hits": []}
+{"id": "v33", "scope": "gamma", "category": "kein_treffer", "text": "Tastatur reagiert nicht", "hits": []}
+{"id": "v34", "scope": "gamma", "category": "bereich", "text": "Vault-Token Staging", "hits": []}
+{"id": "v35", "scope": "delta", "category": "bereich", "text": "Vault-Token Staging", "hits": [{"id": 26, "key": "vault-token", "scope": "delta", "status": "validated", "invalidated": false}]}
+{"id": "v36", "scope": "gamma", "category": "status", "text": "Festplatte voll beim Backup", "hits": [{"id": 25, "key": "video", "scope": "global", "status": "validated", "invalidated": false}]}
+{"id": "v37", "scope": "gamma", "category": "status", "text": "Uhrzeit im Container", "hits": [{"id": 6, "key": "speichermangel", "scope": "global", "status": "validated", "invalidated": false}]}

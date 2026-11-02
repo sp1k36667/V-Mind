@@ -6,6 +6,7 @@ pub use maintenance::{BackupReport, DoctorReport, backup_database, inspect_datab
 mod observations;
 mod paths;
 mod project;
+mod query;
 pub use checks::{Applied, Check, CheckResult, CheckRun, Outcome};
 pub use observations::{Observation, SessionSummary};
 pub use paths::literal_file_path;
@@ -99,39 +100,8 @@ fn nonblank(value: &str) -> Result<()> {
     }
 }
 
-/// Suchbegriffe ohne Stoppwörter, klein geschrieben, ohne Dubletten, höchstens 24.
-fn search_terms(query: &str) -> Vec<String> {
-    let stop = [
-        "der", "die", "das", "ein", "eine", "einer", "einem", "einen", "und", "oder", "ist",
-        "sind", "mit", "für", "von", "zu", "im", "in", "am", "an", "wie", "was", "ich", "wir",
-        "beim", "den", "dem", "des", "es", "the", "a", "an", "and", "or", "is", "to", "of", "how",
-    ];
-    let mut terms = Vec::new();
-    for term in query
-        .split(|c: char| !c.is_alphanumeric())
-        .filter(|s| !s.is_empty())
-    {
-        let term = term.to_lowercase();
-        if !stop.contains(&term.as_str()) && !terms.contains(&term) {
-            terms.push(term);
-        }
-        if terms.len() == 24 {
-            break;
-        }
-    }
-    terms
-}
-
-// Nur gequotete Begriffe gelangen in MATCH, keine vom Aufrufer gelieferte FTS-Syntax.
-fn match_expression<'a>(terms: impl Iterator<Item = &'a String>) -> String {
-    terms
-        .map(|t| format!("\"{t}\""))
-        .collect::<Vec<_>>()
-        .join(" OR ")
-}
-
-/// Der Trigramm-Index braucht mindestens drei Zeichen je Begriff.
-const MIN_PARTIAL_TERM_CHARS: usize = 3;
+/// Kandidaten je Index vor der Mindestabdeckung, als Vielfaches des Limits.
+const CANDIDATE_FACTOR: usize = 4;
 
 /// Legt eine noch nicht vorhandene Datenbankdatei unter Unix nur für den Besitzer
 /// lesbar an (0600). Vorhandene Dateien, `:memory:` und SQLite-URIs bleiben unberührt.
@@ -374,7 +344,8 @@ impl MemoryStore {
         .collect()
     }
     /// BM25-Volltextsuche, nur validierte aktive Einträge; Projekt plus global.
-    /// Zuerst ganze Wörter, danach füllen Teilworttreffer auf (Beugungen, Komposita).
+    /// Zuerst ganze Wörter, danach Teilworttreffer über Wortstämme (Beugungen, Komposita).
+    /// Treffer mit weniger als halb so vielen Suchwörtern wie der beste entfallen.
     pub fn recall(&self, query: &str, scope: &str, limit: usize) -> Result<Vec<Record>> {
         nonblank(scope)?;
         if query.chars().count() > 2000 {
@@ -383,29 +354,23 @@ impl MemoryStore {
         if !(1..=20).contains(&limit) {
             return Err(invalid("Limit muss 1 bis 20 sein"));
         }
-        let terms = search_terms(query);
+        let terms = query::search_terms(query);
+        let pool = limit * CANDIDATE_FACTOR;
         self.read_snapshot(|store| {
             let mut found = store.ranked(
                 "memories_fts",
-                &match_expression(terms.iter()),
+                &query::match_expression(terms.iter()),
                 scope,
-                limit,
+                pool,
             )?;
-            if found.len() < limit {
-                let partial = match_expression(
-                    terms
-                        .iter()
-                        .filter(|t| t.chars().count() >= MIN_PARTIAL_TERM_CHARS),
-                );
-                for extra in store.ranked("memories_trigram", &partial, scope, limit)? {
-                    if found.len() == limit {
-                        break;
-                    }
-                    if !found.iter().any(|r| r.id == extra.id) {
-                        found.push(extra);
-                    }
+            let partial = query::match_expression(query::partial_terms(&terms).iter());
+            for extra in store.ranked("memories_trigram", &partial, scope, pool)? {
+                if !found.iter().any(|r| r.id == extra.id) {
+                    found.push(extra);
                 }
             }
+            let mut found = query::keep_covering(found, &terms);
+            found.truncate(limit);
             store.enrich_records(found)
         })
     }

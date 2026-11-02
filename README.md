@@ -149,6 +149,7 @@ repository):
 | 5 | Does the fix help, and does the format matter? | Gemma 4 12B | done, 80 pre-registered calls | Obsolete next steps: JSON 1→0, text 2→0 (out of 15 each); no overall accuracy gain. [Report](docs/experiments/continuity-2x2.md) |
 | 6 | Does one correct, verified lesson help on *new* tasks? | Gemma 4 12B | draft | – [Draft](docs/experiments/transfer-pilot-plan.md) |
 | 7 | Does `recall` find the right entry and keep scope and status limits? | no model | done, pre-registered, synthetic corpus | Limits held without exception; word-matching queries 10/10 at rank 1; word-form queries 3/5; post-hoc single-word probe 0/5; on average 2.6 unrelated extra hits per query with an expected entry. [Report (German)](docs/experiments/abruf-korpus.md) |
+| 8 | Does stem-based search find longer German word forms with fewer unrelated hits? | no model | done, pre-registered, new synthetic corpus | Longer word forms 0/10 → 8/10, far fewer unrelated hits, limits held; **one regression criterion missed:** two v1 queries that previously matched only through function words now find nothing. [Report (German)](docs/experiments/abruf-korpus-v2.md) |
 
 New experiments use **Gemma 4 12B only**. In tests 2 and 3, 12B fixed its own errors far more
 often and wrote far fewer wrong lessons than E2B, so it is the better basis for testing
