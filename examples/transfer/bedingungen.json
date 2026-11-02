@@ -14,13 +14,13 @@
     "L": [
       {
         "problem": "JSON-Objektschlüssel sind nach dem Laden immer Strings; Einträge, die unter numerischen IDs gespeichert wurden, haben dann Text-Schlüssel.",
-        "loesung": "Wer intern mit int-IDs arbeitet, wandelt die Schlüssel beim Laden in Ganzzahlen um, bevor IDs verglichen, gesucht oder hochgezählt werden."
+        "loesung": "Eine Möglichkeit für intern int-indizierte Dictionaries: numerische Schlüssel nach json.loads in int umwandeln. Konsistente String-Schlüssel sind eine Alternative."
       }
     ],
     "P": [
       {
-        "problem": "HTTP-Statuscodes sind in Klassen geordnet; Codes ab 400 melden Fehler der Anfrage, Codes ab 500 Fehler auf der Seite des Webservers.",
-        "loesung": "Fehler der 500er-Klasse sind oft vorübergehend, und ein späterer Versuch kann helfen; viele 400er-Fehler bleiben, bis die Anfrage geändert wird."
+        "problem": "HTTP-Statuscodes werden in Klassen eingeteilt: 4xx bezeichnet Clientfehler, 5xx Serverfehler; ein Statuscode allein erklärt nicht jede Fehlerursache.",
+        "loesung": "Den Statuscode und die Antwort gemeinsam lesen und die API-Dokumentation heranziehen. Ein 5xx-Status garantiert nicht, dass Wiederholen erfolgreich ist."
       }
     ]
   },

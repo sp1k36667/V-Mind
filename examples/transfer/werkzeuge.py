@@ -8,7 +8,8 @@ import shutil
 import signal
 import subprocess
 import sys
-import threading
+import selectors
+import time
 from pathlib import Path
 
 BASIS = Path(__file__).resolve().parent
@@ -52,30 +53,35 @@ def abnahme_ausfuehren(ziel, test=None):
     prozess = subprocess.Popen(befehl, cwd=ziel, stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT, env=umgebung, start_new_session=True)
     gelesen = bytearray()
-    zu_viel = threading.Event()
-
-    def lesen():
-        while chunk := prozess.stdout.read(65536):
-            platz = MAX_AUSGABE_BYTES - len(gelesen)
-            gelesen.extend(chunk[:max(platz, 0)])
-            if len(chunk) > platz:
-                zu_viel.set()
-                _prozessgruppe_beenden(prozess)
-                break
-
-    leser = threading.Thread(target=lesen, daemon=True)
-    leser.start()
     abbruch = None
-    try:
-        exit_code = prozess.wait(timeout=ABNAHME_ZEITLIMIT)
-    except subprocess.TimeoutExpired:
+    ende = time.monotonic() + ABNAHME_ZEITLIMIT
+    os.set_blocking(prozess.stdout.fileno(), False)
+    with selectors.DefaultSelector() as auswahl:
+        auswahl.register(prozess.stdout, selectors.EVENT_READ)
+        offen = True
+        while offen or prozess.poll() is None:
+            rest = ende - time.monotonic()
+            if rest <= 0:
+                abbruch = "zeitlimit"
+                break
+            for key, _ in auswahl.select(timeout=min(rest, 0.05)):
+                chunk = os.read(key.fd, 65536)
+                if not chunk:
+                    auswahl.unregister(prozess.stdout)
+                    offen = False
+                    continue
+                platz = MAX_AUSGABE_BYTES - len(gelesen)
+                gelesen.extend(chunk[:max(platz, 0)])
+                if len(chunk) > platz:
+                    abbruch = "ausgabelimit"
+                    break
+            if abbruch:
+                break
+    if abbruch:
+        # Auch nach Ende des Elternprozesses koennen Enkel dieselbe Pipe offenhalten.
         _prozessgruppe_beenden(prozess)
-        exit_code = prozess.wait()
-        abbruch = "zeitlimit"
-    leser.join(timeout=10)
+    exit_code = prozess.wait()
     prozess.stdout.close()
-    if zu_viel.is_set():
-        abbruch = "ausgabelimit"
     text = bytes(gelesen).decode("utf-8", errors="replace")
     if abbruch == "zeitlimit":
         text += f"\n[Zeitlimit von {ABNAHME_ZEITLIMIT} s überschritten, Prozessgruppe beendet]"

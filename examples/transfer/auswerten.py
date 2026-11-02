@@ -13,6 +13,7 @@ import json
 import sys
 from collections import defaultdict
 from math import comb
+from fractions import Fraction
 from pathlib import Path
 
 from werkzeuge import BASIS, plan_laden, zeitplan
@@ -98,7 +99,8 @@ def haupt(ergebnisse, einstellungen=None):
         paare[(e["aufgabe"], e["seed"])][e["bedingung"]] = e["ziel_bestanden"]
     b = sum(v.get("L", False) and not v.get("O", False) for v in paare.values())
     c = sum(v.get("O", False) and not v.get("L", False) for v in paare.values())
-    rate = {k: 100 * werte.get(k, {"ziel_anteil": 0})["ziel_anteil"] for k in "OLP"}
+    rate = {k: 100 * Fraction(werte[k]["ziel"], werte[k]["laeufe"]) if k in werte else Fraction(0)
+            for k in "OLP"}
     je_aufgabe = defaultdict(lambda: {"O": 0, "L": 0, "P": 0})
     for (aufgabe, _), v in paare.items():
         for bedingung, ok in v.items():
@@ -107,20 +109,20 @@ def haupt(ergebnisse, einstellungen=None):
 
     def uebrige(k):
         w = werte.get(k)
-        return 100 * w["uebrige_ok"] / w["uebrige_von"] if w and w["uebrige_von"] else 0.0
+        return 100 * Fraction(w["uebrige_ok"], w["uebrige_von"]) if w and w["uebrige_von"] else Fraction(0)
 
     kriterien = {
-        "L_ueber_O_pp": round(rate["L"] - rate["O"], 1), "mcnemar_b_c": [b, c],
-        "mcnemar_p": round(p_wert, 4), "L_ueber_P_pp": round(rate["L"] - rate["P"], 1),
+        "L_ueber_O_pp": round(float(rate["L"] - rate["O"]), 1), "mcnemar_b_c": [b, c],
+        "mcnemar_p": round(p_wert, 4), "L_ueber_P_pp": round(float(rate["L"] - rate["P"]), 1),
         "aufgaben_L_ueber_O": sum(v["L"] > v["O"] for v in je_aufgabe.values()),
-        "schaden_uebrige_pp": round(uebrige("O") - uebrige("L"), 1),
+        "schaden_uebrige_pp": round(float(uebrige("O") - uebrige("L")), 1),
     }
-    erfolg = (not probleme and kriterien["L_ueber_O_pp"] >= MIN_L_UEBER_O_PP and p_wert < ALPHA
-              and kriterien["L_ueber_P_pp"] >= MIN_L_UEBER_P_PP
+    erfolg = (not probleme and rate["L"] - rate["O"] >= MIN_L_UEBER_O_PP and p_wert < ALPHA
+              and rate["L"] - rate["P"] >= MIN_L_UEBER_P_PP
               and kriterien["aufgaben_L_ueber_O"] >= MIN_AUFGABEN_L_UEBER_O)
     return {"gueltig": not probleme, "probleme": probleme, "kennzahlen": werte,
             "je_aufgabe": dict(je_aufgabe), "kriterien": kriterien, "erfolgskriterium": erfolg,
-            "schadensgrenze_uebrige": not probleme and kriterien["schaden_uebrige_pp"] <= MAX_SCHADEN_PP}
+            "schadensgrenze_uebrige": not probleme and uebrige("O") - uebrige("L") <= MAX_SCHADEN_PP}
 
 
 def gegenfall(ergebnisse, einstellungen=None):

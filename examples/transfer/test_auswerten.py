@@ -81,6 +81,19 @@ class Haupt(unittest.TestCase):
         self.assertTrue(bericht["erfolgskriterium"])
         self.assertFalse(bericht["schadensgrenze_uebrige"])
 
+    def test_schadensgrenze_verwendet_ungerundete_werte(self):
+        daten = stufe("haupt", klarer_effekt)
+        extra = True
+        for e in daten:
+            e["uebrige_von"] = 1000
+            e["uebrige_ok"] = 900 if e["bedingung"] == "L" else 1000
+            if e["bedingung"] == "L" and extra:
+                e["uebrige_ok"] -= 1
+                extra = False
+        bericht = auswerten.haupt(daten)
+        self.assertEqual(bericht["kriterien"]["schaden_uebrige_pp"], 10.0)
+        self.assertFalse(bericht["schadensgrenze_uebrige"])
+
 
 class VorlaufUndGesamt(unittest.TestCase):
     def test_grenze_sechzig_prozent(self):
@@ -204,6 +217,15 @@ class AbnahmeLimits(unittest.TestCase):
                             "subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])\n"
                             "time.sleep(60)\n", zeitlimit=1)
         self.assertEqual(e["abbruch"], "zeitlimit")
+
+    def test_beendeter_elternprozess_mit_offener_enkel_pipe_hat_auch_ein_zeitlimit(self):
+        import time
+        start = time.monotonic()
+        e = self.ausfuehren("import subprocess, sys\n"
+                            "subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(2)'])\n",
+                            zeitlimit=0.2)
+        self.assertEqual(e["abbruch"], "zeitlimit")
+        self.assertLess(time.monotonic() - start, 1.5)
 
     def test_formatfehler_wird_getrennt_erkannt(self):
         import selbsttest

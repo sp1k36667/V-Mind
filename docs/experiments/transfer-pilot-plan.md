@@ -63,13 +63,13 @@ scheitern (geprüft).
 | Kürzel | `gedaechtnis` im Prompt |
 |---|---|
 | O | leer |
-| L | Problem: „JSON-Objektschlüssel sind nach dem Laden immer Strings; Einträge, die unter numerischen IDs gespeichert wurden, haben dann Text-Schlüssel.“ Lösung: „Wer intern mit int-IDs arbeitet, wandelt die Schlüssel beim Laden in Ganzzahlen um, bevor IDs verglichen, gesucht oder hochgezählt werden.“ |
-| P | Problem: „HTTP-Statuscodes sind in Klassen geordnet; Codes ab 400 melden Fehler der Anfrage, Codes ab 500 Fehler auf der Seite des Webservers.“ Lösung: „Fehler der 500er-Klasse sind oft vorübergehend, und ein späterer Versuch kann helfen; viele 400er-Fehler bleiben, bis die Anfrage geändert wird.“ |
+| L | Problem: „JSON-Objektschlüssel sind nach dem Laden immer Strings; Einträge, die unter numerischen IDs gespeichert wurden, haben dann Text-Schlüssel.“ Lösung: „Eine Möglichkeit für intern int-indizierte Dictionaries: numerische Schlüssel nach json.loads in int umwandeln. Konsistente String-Schlüssel sind eine Alternative.“ |
+| P | Problem: „HTTP-Statuscodes werden in Klassen eingeteilt: 4xx bezeichnet Clientfehler, 5xx Serverfehler; ein Statuscode allein erklärt nicht jede Fehlerursache.“ Lösung: „Den Statuscode und die Antwort gemeinsam lesen und die API-Dokumentation heranziehen. Ein 5xx-Status garantiert nicht, dass Wiederholen erfolgreich ist.“ |
 
 L ist ein korrekter, nicht ausschließlicher Hinweis: Eine Lösung, die intern konsequent
 mit Text-Schlüsseln arbeitet und nur an der Schnittstelle umwandelt, ist ebenso richtig
 und besteht die Zielprüfung. P ist wahr und themenfern (keine Zeit- oder Datumsregel,
-weil eine Aufgabe Termine verwaltet). L und P sind genau gleich lang (276 Zeichen). Die Prompts der drei Bedingungen
+weil eine Aufgabe Termine verwaltet). L und P sind genau gleich lang (301 Zeichen). Die Prompts der drei Bedingungen
 unterscheiden sich nur im Feld `gedaechtnis` (getestet). Die Erfahrung steht direkt im
 Prompt, ohne Suche.
 
@@ -177,3 +177,9 @@ nötig. P und die Aufgabenregel senken die Trennschärfe weiter.
 
 Review: Codex (Teamkanal #20, #165) – Vorlauf getrennt, Randomisierung, gepaarter Test,
 Gegenfall nur beschreibend, kein Nachbessern auf denselben Seeds; eingearbeitet.
+
+Zusätzliche unabhängige Host-Prüfung: Das Zeitlimit gilt auch, wenn der Elternprozess
+endet und ein Enkel die Ausgabepipe offen hält. Der vorherige Thread-/wait-Ansatz
+überschritt in einer synthetischen Probe 0,2 s um den Faktor 10; der Selektor-Loop
+begrenzt nun die Gesamtdauer. Auswertungsgrenzen verwenden exakte Brüche statt
+gerundeter Berichtswerte. Placebo-Klassifikation: [RFC 9110, Abschnitt 15](https://www.rfc-editor.org/rfc/rfc9110.html#section-15).
