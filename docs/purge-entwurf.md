@@ -10,9 +10,10 @@ entschieden; vorher wird nichts umgesetzt.
 ## Ziel und Nicht-Ziele
 
 **Ziel:** Ein versehentlich gespeichertes Geheimnis aus genau benannten Zeilen einer
-V-Mind-Datenbank so entfernen, dass es (1) über keine V-Mind-Operation mehr lesbar ist,
-(2) in keinem Suchindex mehr gefunden wird und (3) nach Abschluss nicht mehr in den
-Bytes der Datenbankdatei steht.
+V-Mind-Datenbank entfernen. Die ausgewählten Ziele einschließlich ihrer ausdrücklich
+zugeordneten Historien/Indizes dürfen den Wert danach nicht mehr liefern. Identische
+Werte in nicht gewählten Zeilen bleiben bestehen. Die Abwesenheit in der gesamten
+Datenbankdatei ist nur erreichbar, wenn keine solchen weiteren Kopien verbleiben.
 
 **Nicht-Ziele:**
 
@@ -65,7 +66,9 @@ Teilredaktion des Schlüssels einzelner Zeilen ist deshalb **ausgeschlossen**.
 
 **Entschieden (#138):** Ein eigenes Ziel `task:N` (N = eine Journal-ID der Aufgabe)
 ersetzt den Schlüssel in **allen** Journalzeilen desselben Bereichs und Schlüssels
-einheitlich durch `purged-P`. Die Vorschau listet vorher alle betroffenen IDs. Die
+einheitlich durch `purged-P-T` (T = kleinste Journal-ID der Zielaufgabe). Verschiedene
+Aufgaben erhalten verschiedene Schlüssel; eine Kollision mit einer anderen bestehenden
+Aufgabe führt vor der Redaktion zum Abbruch. Die Vorschau listet alle betroffenen IDs. Die
 Aufgabe bleibt zusammenhängend; ihr jüngster Stand bleibt der jüngste. `journal:N`
 allein verändert `task_key` nie, nur `body` und `source`.
 
@@ -76,9 +79,9 @@ Alle Zieltabellen außer `conversations` haben einen `INTEGER PRIMARY KEY`; dies
 `VACUUM` laut SQLite-Dokumentation neu vergeben darf
 ([lang_vacuum](https://sqlite.org/lang_vacuum.html)). Deshalb:
 
-- Eine rowid gilt nur innerhalb eines Plans. Der Plan wird bei jedem Commit ungültig
-  (siehe Plan), also auch durch `VACUUM`; ein späterer Purge braucht eine neue Vorschau
-  mit neuer Audit-Ausgabe.
+- Eine rowid gilt nur innerhalb eines nachweislich unveränderten Plans. Wie Änderungen
+  sicher erkannt werden, ist noch offen (Blocker B6); der vorgeschlagene Headerzähler
+  reicht nicht. Ein späterer Purge nach `VACUUM` braucht eine neue Vorschau/Audit-Ausgabe.
 - Der Plan löst die rowid intern zur Text-ID auf und hält sie nur in der Plan-Datei;
   ausgegeben wird sie nie.
 - Das Purge-Protokoll speichert keine Zielidentitäten (siehe Protokoll), daher kann es
@@ -102,25 +105,29 @@ vmind purge DB --preview ZIEL [ZIEL ...]
   Herkunft und eine zufällige **Plan-ID**. Nie Feldwerte, Ausschnitte, Text-IDs oder
   Dateipfade von Sicherungen.
 
-**Plan statt Inhaltsprüfsumme.** Eine Prüfsumme über den Inhalt, auch eine mit
-Schlüssel, wäre bei kurzen Geheimnissen ein Offline-Rateorakel. Deshalb enthält die
-Bestätigung keinen Inhaltsbezug:
+**Plan statt Inhaltsprüfsumme.** Eine öffentlich ausgegebene ungekeyte Inhaltsprüfsumme kann bei kurzen Geheimnissen
+ein Offline-Rateorakel sein. Eine zufällige öffentliche Plan-ID soll daher keinen
+Inhaltsbezug haben. Ein Fingerprint mit getrennt geschütztem, niemals ausgegebenem
+Schlüssel wäre eine andere Möglichkeit, ist hier aber noch nicht festgelegt:
 
 - Die Vorschau legt eine Plan-Datei mit Rechten 0600 an (Ort: neben der Datenbank,
   Name aus Plan-ID). Inhalt: Plan-ID, Ziele, intern aufgelöste Schlüssel (bei
   Gesprächen die Text-ID), Erstellungszeit und der **Dateiänderungszähler** von SQLite
-  (Header-Bytes 24–27; wird im Journalmodus `delete` bei jedem Commit erhöht). Keine
+  (Header-Bytes 24–27; als alleiniger Änderungsnachweis bereits widerlegt, siehe B6). Keine
   Feldwerte, keine Hashes über Feldwerte.
 - Die Ausführung liest den Zähler unter der Exklusivsperre erneut. Weicht er ab:
   Abbruch ohne Änderung, neue Vorschau nötig.
 - Der Plan wird zusätzlich an die Identität der Datenbank gebunden (z. B. Gerät,
   Inode, Dateigröße, Schemaversion; konkrete Auswahl offen), damit ein Austausch oder
   Rückspielen der Datei nicht unbemerkt bleibt.
-- **Noch nicht belegt (Blocker B6):** Dass der Zähler jede Änderung zuverlässig anzeigt,
-  ist eine Annahme. Vor einer Umsetzung separat zu prüfen: Austausch/Rückspielen einer
-  Datei mit gleichem Zählerstand, Überlauf des 32-Bit-Zählers, Verhalten bei mehreren
-  Commits unter `locking_mode=EXCLUSIVE`. Bis dahin ist der Zähler kein bewiesener
-  Ersatz für eine Inhaltsprüfung.
+- **Widerlegt (Blocker B6):** Codex prüfte zwei neue temporäre SQLite-Dateien:
+  drei Inserts mit je Commit ergaben bei `locking_mode=normal` die Headerzähler
+  `[2, 3, 4]`, bei `locking_mode=exclusive` dagegen `[2, 2, 2]`. Der Zähler allein
+  erkennt also nicht jeden Commit. Zusätzlich offen: Austausch/Rückspielen einer
+  Datei, 32-Bit-Überlauf, verlässliche Bindung an die Datenbankidentität und Prüfung
+  unter dem tatsächlich gebündelten SQLite. Vor Implementierung muss ein anderer
+  belastbarer Änderungsnachweis festgelegt und getestet werden. Die folgenden
+  Ausführungsschritte sind bis dahin kein freigegebenes Verfahren.
 - Die Plan-Datei wird nach erfolgreichem Commit (Schritt C) gelöscht; ein abgelaufener
   oder fremder Plan wird abgewiesen.
 
@@ -138,7 +145,7 @@ Vorbedingungen, sonst Abbruch ohne Änderung:
    schreibt. Bekommt V-Mind die Sperre nicht innerhalb des Zeitlimits, bricht es ab.
    Ein Hook, der währenddessen schreiben will, scheitert an der Sperre; die
    Beobachtung geht verloren.
-2. **Gültiger Plan** und unveränderter Dateiänderungszähler.
+2. **Gültiger Plan** und belastbarer Änderungsnachweis (B6 noch ungelöst).
 3. **Aktuelles Schema und `journal_mode=delete`.** Kein Checkpoint, keine
    Modusumstellung im Purge-Pfad.
 4. **Ausdrückliche Sicherungsentscheidung** (siehe Sicherungs-Dilemma).
@@ -150,7 +157,7 @@ Schritt E freigegeben; zwischen den Schritten kann niemand lesen oder schreiben.
 
 | Schritt | Inhalt | Zustand bei Abbruch genau hier |
 | --- | --- | --- |
-| A | Verbindung öffnen, Pragmas setzen, `BEGIN EXCLUSIVE`, Zähler mit Plan vergleichen | Datei unverändert |
+| A | Verbindung öffnen, Pragmas setzen, `BEGIN EXCLUSIVE`, freigegebenen Änderungsnachweis prüfen (B6 offen) | Datei unverändert |
 | B | in derselben Transaktion: Felder redigieren, Rückzug, Prüfbefehle/-läufe/Beobachtungen löschen, `memories_fts` und `memories_trigram` mit `rebuild` neu aufbauen, Protokollzeile Status `redacted` | Rollback; das `-journal` enthält bis zum Rollback die alten Seiten; beim nächsten Öffnen stellt SQLite den alten Stand wieder her. Datei logisch unverändert, Geheimnis vorhanden |
 | C | Commit (`synchronous=FULL`), danach Plan-Datei löschen | ab hier logisch entfernt; Reste können in freien Seiten liegen (durch `secure_delete` überschrieben) und in der gelöschten Journaldatei auf dem Datenträger |
 | D | `VACUUM` (baut die Datei ohne freie Seiten neu) | VACUUM ist selbst atomar; bei Abbruch bleibt der Stand nach C |
@@ -199,11 +206,12 @@ enthält aber genau das Geheimnis, das entfernt werden soll. Deshalb:
 
 Nach Schritt E gilt als geprüft (und nur das):
 
-- Keine V-Mind-Operation (`show`, `recall`, `search`, `journal`, `messages`, `resume`,
-  `report`, MCP/JSONL) liefert das Geheimnis.
+- Keine V-Mind-Operation liefert den Wert aus den ausgewählten Zielen oder ihren
+  ausdrücklich zugeordneten Kopien; ungewählte andere Zeilen sind davon ausgenommen.
 - `audit-secrets` meldet an den Zielen keinen Fund mehr.
-- Die Bytes der Datenbankdatei enthalten den Wert nicht mehr (nur in Tests mit bekanntem
-  Zufallsmarker prüfbar; in echten Daten wird der Wert nicht erneut verarbeitet).
+- Wenn keine ungewählten Kopien verbleiben, enthalten die Bytes der Datenbankdatei den
+  Wert nicht mehr (mit bekanntem Zufallsmarker in Tests zu prüfen). Bleiben Kopien
+  bestehen, darf keine globale Abwesenheit im Dateibild behauptet werden.
 
 Nicht geprüft und nicht versprochen:
 
@@ -223,7 +231,7 @@ Fundart entspricht; Testausgaben zeigen den Marker nie vollständig.
 | 2 | Wie 1, Prüfung in **neuem Prozess** nach Wiederöffnen | gleiches Ergebnis |
 | 3 | Kopie desselben Markers in einer anderen Zeile | Vorschau listet sie als vermutete Kopie; nach Purge nur der Ziele bleibt sie erhalten und `audit-secrets` findet sie |
 | 4 | Vorschau | Datenbankdatei bytegleich vorher/nachher; Ausgabe ohne Marker |
-| 5 | Ein Commit zwischen Vorschau und Ausführung | Zähler weicht ab: Abbruch, keine Änderung |
+| 5 | Änderung zwischen Vorschau und Ausführung, auch mehrere Commits unter EXCLUSIVE | Freigegebener Änderungsnachweis verwirft den Plan: Abbruch, keine Änderung (B6 offen) |
 | 6 | Unbekannter Namensraum, fehlende ID, Dublette, Text-ID | Abbruch vor jeder Änderung |
 | 7 | Anderer Prozess hält eine Lesetransaktion | Abbruch nach Zeitlimit, keine Änderung |
 | 8 | Abbruch in Schritt B (Fehler im Test eingeschleust) | nach Wiederöffnen alter Stand, kein Protokolleintrag, Plan noch gültig |
@@ -247,8 +255,8 @@ Diese Punkte müssen gemeinsam entschieden sein, bevor Code entsteht:
 
 - **B1 Aufgabenschlüssel:** entschieden (#138): eigenes Ziel `task:N`, siehe
   [Aufgabenschlüssel](#aufgabenschlüssel).
-- **B6 Änderungsnachweis des Plans:** Dateiänderungszähler und Bindung an die
-  Datenbankidentität sind ungeprüfte Annahmen (siehe Plan); Prüfung vor Umsetzung.
+- **B6 Änderungsnachweis des Plans:** Headerzähler als alleinige Lösung widerlegt;
+  Ersatzverfahren und Bindung an Datenbankidentität fehlen (siehe Plan). Blockiert Umsetzung.
 - **B2 Schema 7:** Protokoll als eigene Migration wie oben, oder ohne Protokoll und
   `--finish` nur als „VACUUM erneut ausführen“? Vorschlag: Protokoll, weil `doctor` sonst
   einen abgebrochenen Purge nicht erkennen kann.
@@ -266,3 +274,10 @@ Diese Punkte müssen gemeinsam entschieden sein, bevor Code entsteht:
   Gespräch/Bereich neu anlegen“), nicht umgeschrieben.
 - Ganze Gespräche auf einmal: zunächst nur `message:N` je Nachricht.
 - WAL-Datenbanken: siehe oben.
+
+## Ergebnis der unabhängigen Entwurfsprüfung
+
+Die Überarbeitung verbessert Aufgabenbezüge, WAL-Abgrenzung und die Durabilitätsfolge.
+Die Headerzähler-Probe widerlegt jedoch eine zentrale Annahme. Dieser Stand wird als
+Diskussionsentwurf aufbewahrt, nicht als Freigabe für Code oder echte Datenänderungen.
+Die Abnahmematrix darf erst nach Auflösung von B6 als ausführbarer Plan gelten.
