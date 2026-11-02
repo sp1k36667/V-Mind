@@ -1,8 +1,10 @@
-# Entwurf: Transfer-Pilot mit Gemma 4 12B
+# Plan: Transfer-Pilot mit Gemma 4 12B
 
-**Status: Entwurf zur Abstimmung zwischen Claude, Codex und dem Nutzer. Nicht freigegeben;
-kein Lauf gestartet.** Nach Freigabe wird dieser Plan vor dem ersten gezählten Lauf
-eingefroren (Commit-Hash im Bericht). Hintergrund: [lernkurve.md](lernkurve.md).
+**Status: vorbereitet, nicht eingefroren, kein Modelllauf.** Aufgaben, Prüfungen, Host,
+Auswertung und Selbsttests liegen in [`examples/transfer/`](../../examples/transfer/).
+Vor dem ersten gezählten Lauf prüft Codex Plan und Host unabhängig; danach wird der
+Commit eingefroren und im Bericht genannt. Offene Entscheidungen stehen am Ende; solange
+sie offen sind, gibt es keinen gezählten Lauf. Hintergrund: [lernkurve.md](lernkurve.md).
 
 ## Frage
 
@@ -15,119 +17,147 @@ Prompt landete. Dieser Pilot misst einen Fehlertyp, ohne Suche, mit eigener Ziel
 
 ## Fehlertyp
 
-„JSON-Objektschlüssel sind nach dem Laden Strings. Vor dem Rechnen mit numerischen IDs,
-die als Schlüssel gespeichert sind, in Ganzzahlen umwandeln.“
+JSON-Objektschlüssel sind nach dem Laden Strings. Wer Einträge unter numerischen IDs als
+Schlüssel speichert, muss sie beim Laden in Ganzzahlen umwandeln. 12B machte diesen
+Fehler in der Lernkurve selbst (Einkaufsliste, Aufgabenplaner); er ist eindeutig prüfbar,
+und es gibt einen echten Gegenfall: Schlüssel, die Namen sind.
 
-Begründung: 12B machte diesen Fehler in mehreren Durchgängen und Aufgaben selbst
-(Einkaufsliste, Aufgabenplaner), er ist eindeutig prüfbar, und es gibt einen echten
-Gegenfall.
+## Modell und Einstellungen
 
-**Gegenfall:** Daten sind nach Namen geschlüsselt (z. B. Vorratsliste nach Artikelname).
-Eine Umwandlung der Schlüssel in Ganzzahlen ist dort falsch und führt zum Absturz.
+- `hf.co/google/gemma-4-12B-it-qat-q4_0-gguf:Q4_0`, Digest
+  `18a4d9511d9965d973356e62310a2793771c22456be408cc06a05f04a6376acd` (lokal installiert,
+  derselbe Digest wie in den Fortsetzungsläufen). Der Host bricht ab, wenn Name oder
+  Digest abweichen. Kein E2B, kein Download, keine Änderung an ROCm.
+- Nur erster Versuch, Temperatur 0,7, `num_ctx` 8192, `num_predict` 2400, `think: false`,
+  Modell vor jedem Lauf entladen. Alle Werte in `bedingungen.json`, nicht per Argument
+  änderbar.
 
 ## Aufgaben
 
-- 4 neue Transferaufgaben, die nicht im Lernkurvenexperiment vorkamen. Jede speichert
-  Einträge als JSON-Objekt mit numerischen ID-Schlüsseln und verlangt nach dem Neuladen
-  eine fortlaufende ID. Die Spezifikation nennt das Speicherformat, aber nicht die
-  Falle.
-- 1 Gegenfallaufgabe mit Namensschlüsseln.
-- Je Aufgabe eine **Zielprüfung** (Neuladen, dann neuen Eintrag anlegen, ID korrekt) und
-  die vorhandenen allgemeinen Prüfungen als Schadensmaß.
-- Referenzlösungen und Mutations-Selbsttest wie bisher, bevor gezählt wird.
+Vier neue Transferaufgaben, die in der Lernkurve nicht vorkamen: `ausgaben`, `leihliste`,
+`rezepte`, `termine`. Die allgemeine Anforderung schreibt das Speicherformat vor:
+`{"next_id": …, "items": {"<ID>": {…}}}`, IDs als `int`. Die Falle selbst wird nicht
+genannt. Gegenfall `vorrat`: Format `{"items": {"<Name>": Menge}}`.
+
+Je Aufgabe:
+
+- **Zielprüfung** (`test_ziel_ids_nach_neuladen`): elf Einträge anlegen, Datei hat das
+  vorgeschriebene Format, nach dem Neuladen sind die IDs `int`, Ändern und Löschen per
+  `int`-ID wirken, die nächste ID stimmt. Eine Formatverletzung (etwa Liste statt Objekt)
+  umgeht die Falle und zählt deshalb als nicht bestanden; die Fehlermeldung beginnt dann
+  mit „Format“ und wird getrennt berichtet.
+- **Übrige Prüfungen** (Schadensmaß, je 7): leere Eingabe, unbekannte ID, beschädigte
+  Datei bleibt erhalten, CLI-Exitcode, IDs steigen in einer Instanz, Texte nach Neuladen
+  (ohne ID-Vergleich) und eine aufgabenspezifische Prüfung. Sie hängen bewusst nicht von
+  der Schlüsselbehandlung ab.
+- Gegenfall: Zielprüfung `test_ziel_namen_nach_neuladen` plus 5 übrige Prüfungen.
+
+`selbsttest.py` belegt ohne Modell: Referenzen bestehen alles; eine Referenz **ohne**
+Schlüsselumwandlung scheitert nur an der Zielprüfung und besteht alle übrigen; eine
+Gegenfall-Referenz **mit** Umwandlung scheitert an der Zielprüfung; sechs allgemeine
+Mutationen werden erkannt. Eine absichtlich entschärfte Zielprüfung lässt den Selbsttest
+scheitern (geprüft).
 
 ## Bedingungen
 
-| Kürzel | Inhalt im Prompt |
+| Kürzel | `gedaechtnis` im Prompt |
 |---|---|
-| O | keine Erfahrung |
-| L | die Erfahrung (Wortlaut oben, ohne Quelltext) |
-| P | Placebo: wahre, gleich lange Erfahrung ohne Bezug (z. B. zu Zeitzonen) |
+| O | leer |
+| L | Problem: „JSON-Objektschlüssel sind nach dem Laden immer Strings; als Schlüssel gespeicherte numerische IDs kommen als Text zurück.“ Lösung: „Beim Laden solche Schlüssel in Ganzzahlen umwandeln, bevor mit den IDs verglichen, gesucht oder gerechnet wird.“ |
+| P | Problem: „Zeitstempel ohne Zeitzone sind mehrdeutig; lokale Uhrzeiten springen bei der Umstellung auf die Sommerzeit und zurück.“ Lösung: „Zeitpunkte mit Zeitzone in UTC speichern und erst bei der Anzeige in die lokale Zeit umrechnen, niemals umgekehrt.“ |
 
-Die Erfahrung wird **direkt** in den Prompt gegeben, an derselben Stelle wie bisher
-abgerufene Lehren. Keine Suche, damit Suchqualität keine Rolle spielt.
+L und P sind genau gleich lang (232 Zeichen). Die Prompts der drei Bedingungen
+unterscheiden sich nur im Feld `gedaechtnis` (getestet). Die Erfahrung steht direkt im
+Prompt, ohne Suche.
 
 ## Ablauf
 
-0. **Vorlauf (Bedingung O allein, Machbarkeit):** 4 Aufgaben × 5 eigene Seeds
-   (901 bis 905), nur erster Versuch. Weiter nur, wenn die Zielprüfung in **höchstens
-   60 %** der Läufe besteht (sonst gibt es zu wenig zu verbessern; dann anderen
-   Fehlertyp wählen). Die Grenze ist vorab eingefroren; bei Fehlschlag wird nicht auf
-   denselben Seeds an Aufgaben oder Prompt nachgebessert. Der Vorlauf geht **nicht** in
-   die Hauptauswertung ein, weil er nach seiner niedrigen Erfolgsquote ausgewählt wird
-   (Selektionsverzerrung).
-1. **Obergrenze:** O, L und P mit frischen Seeds 1001 bis 1010 auf denselben 4 Aufgaben,
-   also 40 gepaarte Läufe je Bedingung (gleiche Aufgabe und gleicher Seed in O, L und P).
-   Die Reihenfolge von O, L und P wird je Paar zufällig festgelegt (Startwert im
-   eingefrorenen Plan). Die Erfahrung ist hier von Hand geschrieben und korrekt.
-2. Nur wenn 1 das Erfolgskriterium erfüllt: **Erwerb.** 12B löst eine Quellaufgabe mit
-   dieser Falle bis zum Bestehen; aus dem bereinigten Diff entsteht eine Erfahrung. Sie
-   gilt nur, wenn
-   a) eine vom Modellcode unabhängige Faktprüfung besteht (`json.loads(json.dumps({1: "a"}))`
-      liefert Schlüssel vom Typ `str`) und
-   b) die Rücknahme genau dieser Änderung die Zielprüfung wieder scheitern lässt.
-3. **Transfer** mit der selbst erworbenen Erfahrung, gleicher Aufbau und gleiche
-   Kriterien wie 1.
+0. **Vorlauf** (nur O, Machbarkeit): 4 Aufgaben × Seeds 901–905 = 20 Läufe. Weiter nur,
+   wenn die Zielprüfung in **höchstens 12 von 20** (60 %) besteht **und** höchstens 2
+   Läufe technisch ausfallen (HTTP-Fehler oder abgeschnittene Antwort). Bei zu vielen
+   technischen Ausfällen wird der Host repariert und der Vorlauf einmal mit neuen Seeds
+   911–915 wiederholt; bei zu hoher Erfolgsquote wird ein anderer Fehlertyp gewählt. Nie
+   wird auf denselben Seeds nachgebessert. Der Vorlauf geht nicht in die Hauptauswertung
+   ein (Selektionsverzerrung).
+1. **Hauptlauf**: O, L, P mit Seeds 1001–1010 auf den 4 Aufgaben = 40 Paare, 120 Läufe.
+   Reihenfolge der Paare und der Bedingungen je Paar zufällig, festgelegt durch
+   `reihenfolge_seed` 20261102 (wiederholbar, getestet).
+2. **Gegenfall**: `vorrat`, O, L, P mit Seeds 1101–1110 = 30 Läufe.
+3. Erwerb und Transfer einer selbst erworbenen Erfahrung werden ein eigener Plan, erst
+   nach Auswertung von 1 (mit Codex vereinbart).
 
-Gegenfall: 10 Seeds je Bedingung O, L, P.
+Insgesamt 170 Modellaufrufe mit je einem Versuch.
 
-Einstellungen: nur erster Versuch, Temperatur 0,7, Seeds wie oben (nie zuvor benutzt),
-Modell vor jedem Lauf entladen wie bisher.
+**Durchführung:** Gezählte Läufe nur an einem Commit ohne uneingecheckte Änderungen in
+`examples/transfer` (der Host prüft das). Abgeschlossene Läufe werden nie wiederholt; ein
+unvollständiger Laufordner stoppt den Host zur Prüfung. Technische Fehler und
+abgeschnittene Antworten zählen als nicht bestanden und werden getrennt berichtet;
+liegen sie in einer Stufe über 10 %, gilt die Stufe als technisch gescheitert.
 
-## Erfolgskriterium (vorab, für Schritt 1 und 3 gleich)
+**Ausführung des Modellcodes:** ohne Shell, mit Zeitlimit 90 s je Abnahme und 20 s je
+CLI-Aufruf, Ausgabe auf 200 kB begrenzt, `HOME` auf den Laufordner gesetzt. Das ist
+**keine Sandbox**: Der Code läuft mit den Rechten des Nutzers. Rohdaten je Lauf: Anfrage,
+Antwort, `app.py`, Abnahmeausgabe, `ergebnis.json`; sie gehören nicht ins Repository.
 
-Zielprüfung bestanden im ersten Versuch, je 40 Läufe:
+## Erfolgskriterium (vorab)
 
-- L mindestens **30 Prozentpunkte** über O **und** einseitiger exakter McNemar-Test
-  über die gepaarten Läufe L gegen O mit p < 0,05 (die Daten sind gepaart; ein
-  Fisher-Test über die zusammengefassten Zahlen wird nur explorativ berichtet),
+Zielprüfung bestanden im ersten Versuch, 40 Paare:
+
+- L mindestens **X Prozentpunkte** über O (X siehe Entscheidung E1) **und** einseitiger
+  exakter McNemar-Test über die Paare L gegen O mit p < 0,05,
 - L mindestens **20 Prozentpunkte** über P,
 - in mindestens **3 von 4** Aufgaben L > O.
 
 ## Schadensgrenzen
 
 - Anteil bestandener übriger Prüfungen unter L höchstens **10 Prozentpunkte** unter O.
-- Gegenfall: Fehlanwendung (Abstürze oder falsche Ausgaben durch Umwandlung) unter L
-  höchstens **1 von 10** häufiger als unter O.
+- Gegenfall: Fehlschläge der Zielprüfung unter L höchstens **1 von 10** häufiger als
+  unter O. Die Ursache jedes Fehlschlags wird im Rohcode geprüft (Umwandlung oder anderes).
 
-Wird eine Schadensgrenze verletzt, gilt der Pilot als nicht bestanden, auch wenn das
-Erfolgskriterium erfüllt ist. Umgekehrt ist das Einhalten der Gegenfallgrenze bei 10
-Läufen nur beschreibend und **kein Nachweis**, dass die Erfahrung dort unschädlich ist.
+Wird eine Schadensgrenze verletzt, gilt der Pilot als nicht bestanden. Das Einhalten der
+Gegenfallgrenze bei 10 Läufen ist nur beschreibend und **kein Nachweis** der
+Unschädlichkeit.
 
-## Trennschärfe
+## Trennschärfe (gepaart, simuliert)
 
-Simuliert mit exaktem einseitigem Fisher-Test, α = 0,05 (`examples/lernkurve/trennschaerfe.py`):
+`trennschaerfe_gepaart.py`: 40 Paare, gemeinsame Schwierigkeit je Paar über eine
+Gauß-Copula mit Korrelation ρ, 20 000 Simulationen. Werte: nur McNemar / McNemar **und**
+beobachteter Abstand ≥ 30 pp.
 
-| Läufe je Bedingung | Basis 50 %, +30 pp | Basis 50 %, +40 pp | Basis 40 %, +30 pp |
-|---:|---:|---:|---:|
-| 20 | 0,53 | 0,84 | 0,46 |
-| 30 | 0,71 | 0,95 | 0,67 |
-| 40 | 0,84 | 0,99 | 0,80 |
+| Basis O | wahres L | ρ = 0 | ρ = 0,3 | ρ = 0,6 |
+|---:|---:|---:|---:|---:|
+| 50 % | 80 % | 0,84 / 0,55 | 0,90 / 0,56 | 0,95 / 0,55 |
+| 50 % | 90 % | 0,99 / 0,89 | 1,00 / 0,90 | 1,00 / 0,92 |
+| 40 % | 70 % | 0,81 / 0,56 | 0,88 / 0,56 | 0,94 / 0,56 |
+| 30 % | 60 % | 0,81 / 0,55 | 0,88 / 0,55 | 0,94 / 0,56 |
+| 50 % | 50 % | 0,03 / 0,00 | 0,03 / 0,00 | 0,03 / 0,00 |
 
-Deshalb 40 Läufe je Bedingung. Mit 20 Läufen würde ein echter Effekt von 30 pp etwa
-jedes zweite Mal übersehen. Beispiele bei 20 gegen 20: 12 gegen 6 ergibt p = 0,055,
-14 gegen 6 ergibt p = 0,013. Die Tabelle gilt für unabhängige Gruppen; für den
-gepaarten McNemar-Test wird die Trennschärfe vor dem Einfrieren getrennt simuliert.
-
-Aufwand: Vorlauf 20, Schritt 1 3 × 40, Gegenfall 3 × 10, zusammen 170 Läufe mit je
-einem Versuch.
+Liegt die Abstandsschwelle genau beim wahren Effekt (30 pp), besteht das Kriterium nur
+etwa jedes zweite Mal. Mit Schwelle 20 pp (Probe mit 10 000 Simulationen): 50 % → 80 %
+ergibt 0,84 bei ρ = 0 und 0,88 bei ρ = 0,3; ohne Effekt bleibt die Fehlerrate bei 0,03.
+Die Simulation nimmt unabhängige Paare an; tatsächlich sind sie über vier Aufgaben
+geclustert, deshalb ist sie eher zu optimistisch, und die Regel „3 von 4 Aufgaben“ bleibt
+nötig. P und die Aufgabenregel senken die Trennschärfe weiter.
 
 ## Grenzen
 
 - Ein Fehlertyp zeigt höchstens, ob Transfer in einem sauberen Fall funktioniert, nicht,
-  dass er allgemein funktioniert.
+  dass er allgemein funktioniert. Kein Lernnachweis über diese Aufgaben hinaus.
 - Die Aufgaben stammen von uns; ein Bestehen belegt keine Wirkung auf fremde Projekte.
-- Fällt Schritt 1 durch, ist das ein Ergebnis: Dann hilft schon eine korrekte Erfahrung
-  im Prompt nicht, und die Frage nach selbst erworbenen Erfahrungen stellt sich so nicht.
+- Die Erfahrung ist von Hand geschrieben und korrekt; ob 12B eine gleich gute selbst
+  erwirbt, prüft erst der spätere Plan.
+- Fällt der Hauptlauf durch, ist das ein Ergebnis: Dann hilft schon eine korrekte
+  Erfahrung im Prompt nicht.
 
-## Offene Punkte zur Abstimmung
+## Offene Entscheidungen vor dem Einfrieren
 
-- Wortlaut der Erfahrung und des Placebos.
-- Wer baut Aufgaben und Host (Vorschlag: Codex prüft, Claude baut, oder umgekehrt).
-- Trennschärfe des gepaarten McNemar-Tests simulieren (braucht eine Annahme zur
-  Korrelation zwischen O und L auf demselben Paar).
-- Schritt 2 und 3 werden ein eigener Plan, nachdem Schritt 1 ausgewertet ist (mit
-  Codex vereinbart).
+- **E1 Abstandsschwelle:** 30 pp (Original; ≈ 0,55 Trennschärfe bei wahrem Effekt
+  30 pp, ≈ 0,9 bei 40 pp) oder 20 pp (≈ 0,85 bei 30 pp, Fehlerrate unverändert)?
+  Vorschlag Claude: 20 pp als Mindestabstand, 30 pp als vorab genannter erwarteter
+  Effekt, beide im Bericht.
+- **E2 Prüfung durch Codex:** Aufgabenwortlaut (verrät die allgemeine Anforderung die
+  Falle zu stark?), Zielprüfung inklusive Format, Erfahrungs- und Placebotext, Host.
+- **E3 Freeze:** Commit nach Einarbeitung der Prüfung; der Hash steht im Bericht.
 
-Review: Codex (Teamkanal, Nachricht #20) – Vorlauf getrennt, Randomisierung, gepaarter
-Test, Gegenfall nur beschreibend, kein Nachbessern auf denselben Seeds; eingearbeitet.
+Review: Codex (Teamkanal #20, #165) – Vorlauf getrennt, Randomisierung, gepaarter Test,
+Gegenfall nur beschreibend, kein Nachbessern auf denselben Seeds; eingearbeitet.
