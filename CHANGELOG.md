@@ -33,8 +33,10 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
 - Release packages contain the changelog, guides, prompts and examples the READMEs link
   to. Each platform build extracts its own archive and smoke-tests links, help,
   init, persistence across processes, doctor, backup and restore. (#24)
-- *Pending, not on `main` yet:* `vmind audit-secrets DB`, a read-only search for a few
-  known secret formats that reports places, never values (#29).
+- `vmind audit-secrets DB`: explicit read-only search for known secret formats across
+  supported schema versions. Reports numeric locations and format types, never values;
+  rejects incomplete required schemas. Heuristics may miss secrets or flag examples;
+  an empty result is no secrecy guarantee. No deletion or write blocking. (#29)
 
 ### Changed
 
