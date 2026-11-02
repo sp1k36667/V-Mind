@@ -11,6 +11,44 @@ Im Entwicklungsstand nach 0.2.0: `vmind doctor DB` prüft die Datenbank rein les
 Wiederherstellung: [Betrieb](operations.md). Offene Abnahmekriterien:
 [Produktreife](product-readiness.md).
 
+### Geheimnis-Audit (Entwicklungsstand)
+
+`vmind audit-secrets DB` durchsucht eine vorhandene Datenbank rein lesend in einem
+Snapshot nach bekannten Geheimnisformaten. Es legt nichts an, stellt kein Schema um
+(ältere Schemas werden mit ihren Tabellen geprüft) und gilt für alle Bereiche;
+`--scope` wird nicht beachtet. Durchsucht werden alle Zeilen dieser Felder:
+
+| Tabelle | Felder |
+| --- | --- |
+| `memories` | scope, problem, solution, source, validated_by, evidence |
+| `memory_events` | actor, reason (Kopien von Quelle und Nachweis) |
+| `invalidations` | actor, reason |
+| `project_journal` | scope, task_key, body, source |
+| `conversations` | id, scope, title |
+| `chat_messages` | content, bei JSON zusätzlich jede dekodierte Zeichenkette |
+| `memory_checks` | argv (auch dekodiert), workdir, set_by |
+| `check_runs` | output |
+| `observations` | scope, session_id, tool_use_id, paths (auch dekodiert) |
+
+Erkannte Formate (Heuristik, Wortgrenze davor): privater Schlüsselblock, GitHub-Token
+(`ghp_` usw., `github_pat_`), `sk-`-Schlüssel, Stripe-Live-Schlüssel, AWS-Zugangsschlüssel
+(`AKIA`/`ASIA`), Slack-Token, Google-API-Schlüssel. **Unsicher**, weil Beispiele genauso
+aussehen: JWT und `schema://NUTZER:PASSWORT@` (Platzhalter wie `***`, `<…>`, `{…}`,
+`$VAR` zählen nicht). Allgemeine Wörter wie „token“ oder „password“, Hashes, UUIDs und
+Base64 werden bewusst nicht gemeldet.
+
+Ausgabe je Fund: Tabelle, Zeilennummer, Feld, Fundart, ob unsicher, sowie der betroffene
+Wissenseintrag (`memory_id`) oder die rowid des Gesprächs. Nie Feldwerte, Textausschnitte
+oder Text-IDs; bei `conversations` steht deshalb die rowid. Funde sind kein Fehler
+(Exit 0); einen Fehler gibt es nur, wenn nicht durchsucht werden konnte (Datei fehlt,
+keine V-Mind-Datenbank, unbekanntes neueres Schema).
+
+Grenzen: Kein Fund heißt nicht geheimnisfrei. Prüfausgaben sind nur gekürzt gespeichert
+(letzte 4000 Zeichen); dort angeschnittene Geheimnisse werden nicht erkannt. Andere
+Kodierungen als JSON (Base64, URL-Kodierung) werden nicht dekodiert. Nicht durchsucht:
+Suchindizes (`memories_fts*`, `memories_trigram*`), freie Seiten und `-journal`/`-wal`
+der Datei, Sicherungen und andere Kopien. Das Audit löscht nichts.
+
 ## Startprompt für die nutzende KI
 
 Die vollständige gemeinsame Startanweisung liegt in `prompts/start.de.md`.

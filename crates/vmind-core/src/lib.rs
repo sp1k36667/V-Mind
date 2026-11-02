@@ -1,3 +1,5 @@
+mod audit;
+pub use audit::{AuditFinding, AuditReport, ScannedTable, audit_secrets};
 mod check_evidence;
 mod checks;
 pub use check_evidence::{CheckEvidence, CheckState, CheckVerdict};
@@ -6,10 +8,12 @@ pub use maintenance::{BackupReport, DoctorReport, backup_database, inspect_datab
 mod observations;
 mod paths;
 mod project;
+mod secrets;
 pub use checks::{Applied, Check, CheckResult, CheckRun, Outcome};
 pub use observations::{Observation, SessionSummary};
 pub use paths::literal_file_path;
 pub use project::{ChatMessage, Conversation, JournalEntry, Resume};
+pub use secrets::SecretKind;
 
 const SCHEMA_VERSION: i64 = 6;
 

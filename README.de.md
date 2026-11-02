@@ -127,7 +127,7 @@ kompaktes `resume`, eingebautes SQLite. Siehe [Changelog](CHANGELOG.md).
 | Verständliche Fehler | Ungültige Zustände erhalten erklärende Meldungen |
 | Sichtbarer Prüfzustand | Wissensabruf zeigt letzte Prüfung der aktiven Definition samt Zeit; Fehler verdecken keinen früheren Fehlbefund |
 
-**Automatische Tests:** 99 Tests laufen bei jeder Änderung in GitHub Actions unter Linux,
+**Automatische Tests:** 110 Tests laufen bei jeder Änderung in GitHub Actions unter Linux,
 zusammen mit Clippy (jede Warnung ist ein Fehler) und einer Formatprüfung; die Builds für
 macOS und Windows werden ebenfalls geprüft; dort laufen zusätzlich die Dateipfad-/Sicherungstests. Abgedeckt sind unter anderem:
 
@@ -488,8 +488,12 @@ lokaler Server; jede andere eingestellte Adresse erhält diese Daten). MCP-Clien
 was sie aus V-Mind lesen, an ihr Modell weiter, das in der Cloud laufen kann. Ab dem
 Entwicklungsstand nach 0.2.0 wird eine neue Datenbankdatei unter Linux und macOS nur für
 den Besitzer lesbar angelegt (0600); vorhandene Dateien behalten ihre Rechte, unter
-Windows gelten die Rechte des Ordners. Keine Passwörter oder Schlüssel speichern. Einen
-Befehl zum Löschen von Inhalten gibt es derzeit nicht; ist ein Geheimnis in der Datei
+Windows gelten die Rechte des Ordners. Keine Passwörter oder Schlüssel speichern. Im
+Entwicklungsstand durchsucht `vmind audit-secrets DB` alle Textfelder rein lesend nach
+einigen bekannten Geheimnisformaten (private Schlüssel, GitHub-, AWS-, Slack-, Google- und
+`sk-`-Schlüssel; JWT und Passwörter in URLs als unsicher) und meldet nur Tabelle, Zeile,
+Feld und Art, nie den Wert. Es erkennt nur diese Formate: kein Fund heißt nicht
+geheimnisfrei. Einen Befehl zum Löschen von Inhalten gibt es derzeit nicht; ist ein Geheimnis in der Datei
 gelandet, ein früheres Backup zurückspielen oder es mit SQLite-Werkzeugen entfernen und
 das Geheimnis als offengelegt behandeln.
 

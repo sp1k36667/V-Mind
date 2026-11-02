@@ -544,6 +544,55 @@ fn report_prints_markdown_and_leaves_the_database_unchanged() {
     assert_eq!(std::fs::read(&path).unwrap(), before);
 }
 
+#[test]
+fn audit_secrets_reports_kind_and_place_but_never_the_value() {
+    let temp = Temp::new();
+    let path = temp.0.join("audit.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    // Zur Laufzeit zusammengesetzt; kein echtes Geheimnis.
+    let token = format!("gh{}_{}", "p", "a1B2".repeat(9));
+    let id = cli(&[
+        "--scope",
+        "p",
+        "add",
+        db,
+        "error_solution",
+        "Push schlägt fehl",
+        &format!("Mit {token} anmelden"),
+        "Test",
+    ])["id"]
+        .as_i64()
+        .unwrap();
+    let before = std::fs::read(&path).unwrap();
+
+    let report = cli(&["audit-secrets", db]);
+    let human = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(["audit-secrets", db])
+        .output()
+        .unwrap();
+
+    assert!(human.status.success(), "Funde sind kein Fehler");
+    let text = String::from_utf8(human.stdout).unwrap();
+    assert!(text.contains(&format!("memories #{id} Feld solution: GitHub-Token")));
+    assert!(text.contains("kein Fund heißt nicht geheimnisfrei"));
+    assert_eq!(report["findings"][0]["kind"], "github_token");
+    assert_eq!(report["findings"][0]["memory_id"], id);
+    for output in [report.to_string(), text] {
+        assert!(!output.contains(&token[..12]), "Fundtext ausgegeben");
+    }
+    assert!(human.stderr.is_empty());
+    assert_eq!(std::fs::read(&path).unwrap(), before);
+
+    let missing = temp.0.join("fehlt.db");
+    let out = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(["audit-secrets", missing.to_str().unwrap()])
+        .output()
+        .unwrap();
+    assert!(!out.status.success());
+    assert!(!missing.exists(), "fehlende Datenbank angelegt");
+}
+
 fn observe(db: &str, input: &str) -> std::process::Output {
     use std::io::Write;
     let mut child = Command::new(env!("CARGO_BIN_EXE_vmind"))
