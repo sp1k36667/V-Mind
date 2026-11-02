@@ -38,12 +38,6 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
   rejects incomplete required schemas. Heuristics may miss secrets or flag examples;
   an empty result is no secrecy guarantee. No deletion or write blocking. (#29)
 
-- `vmind audit-secrets DB`: read-only search of every text field, including copies in the
-  history, check commands and outputs, messages and observations, for a few known secret
-  formats; JWTs and passwords in URLs are marked uncertain. Reports table, row, field and
-  kind only, never the value. Recognises only these formats and does not search indexes,
-  free pages or backups; no finding does not mean free of secrets. Deletes nothing.
-
 ### Changed
 
 - `resume` no longer lists superseded goals, next steps and task states among the recent
