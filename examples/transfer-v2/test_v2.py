@@ -212,6 +212,9 @@ class GegenfallUndGesamt(unittest.TestCase):
              "commit": "a", "attrappe": False}
         alle = {"vorlauf": v, "haupt": h, "gegenfall": g}
         self.assertTrue(auswerten.gesamt(alle)["bestanden"])
+        andere_auswahl = {**EINGESCHLOSSEN, "A": aufgaben.KANDIDATEN["A"][1:5]}
+        abweichend = auswerten.gesamt({**alle, "haupt": {**h, "eingeschlossen": andere_auswahl}})
+        self.assertFalse(abweichend["bestanden"])
         self.assertFalse(auswerten.gesamt({"vorlauf": v, "haupt": h})["bestanden"])
         self.assertFalse(auswerten.gesamt({**alle, "gegenfall": {**g, "commit": "b"}})["bestanden"])
         self.assertFalse(auswerten.gesamt({**alle, "haupt": {**h, "attrappe": True}})["bestanden"])

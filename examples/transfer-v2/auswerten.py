@@ -148,7 +148,7 @@ def haupt(ergebnisse, einstellungen):
     diagnose = {b_: Counter(e["diagnose"].get("test_diag_false_abgelehnt") for e in ergebnisse
                             if e["bedingung"] == b_ and gruppe_von.get(e["aufgabe"]) == "B")
                 for b_ in ("O", "A", "B")}
-    return {"gueltig": not probleme, "probleme": probleme, "passend": zp, "unpassend": zu, "O": zo,
+    return {"gueltig": not probleme, "probleme": probleme, "eingeschlossen": eingeschlossen, "passend": zp, "unpassend": zu, "O": zo,
             "je_aufgabe": dict(je_aufgabe),
             "kriterien": {"abstand_pp": round(float(abstand), 1), "mcnemar_b_c": [b, c],
                           "mcnemar_p": round(p_wert, 4), "richtung_je_gruppe": richtung,
@@ -202,6 +202,8 @@ def gesamt(berichte):
         gruende.append("Attrappe, keine Messdaten")
     if not v["weiter"]:
         gruende.append("Vorlauf erlaubt keine Fortsetzung")
+    if h["eingeschlossen"] != v["eingeschlossen"]:
+        gruende.append("Aufgabenauswahl des Hauptlaufs weicht vom Vorlauf ab")
     if not h["gueltig"]:
         gruende.append("Hauptlauf ungültig")
     elif not h["erfolgskriterium"]:
