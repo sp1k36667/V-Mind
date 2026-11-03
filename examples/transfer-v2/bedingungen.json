@@ -1,0 +1,37 @@
+{
+  "modell": "hf.co/google/gemma-4-12B-it-qat-q4_0-gguf:Q4_0",
+  "modell_digest": "18a4d9511d9965d973356e62310a2793771c22456be408cc06a05f04a6376acd",
+  "optionen": {"temperature": 0.7, "num_ctx": 8192, "num_predict": 2400},
+  "think": false,
+  "reihenfolge_seed": 20261104,
+  "erfahrungen": {
+    "O": [],
+    "A": [
+      {
+        "problem": "Nach json.load sind Objektschlüssel immer Strings, auch wenn sie als Zahlen gespeichert waren.",
+        "loesung": "Beim Laden numerische Schlüssel in int umwandeln, wenn das Programm mit int-IDs arbeitet."
+      }
+    ],
+    "B": [
+      {
+        "problem": "In Python sind True und False auch ganze Zahlen; isinstance(True, int) ist daher wahr.",
+        "loesung": "Wenn nur ganze Zahlen erlaubt sind, Wahrheitswerte vor der Prüfung auf int ausdrücklich ablehnen."
+      }
+    ]
+  },
+  "direkte_anweisung": {
+    "A": "Wichtig: Wandle beim Laden die Schlüssel von \"items\" mit int() in Ganzzahlen um, bevor du mit den IDs vergleichst, suchst oder rechnest.",
+    "B": "Wichtig: Lehne einen Zahlenwert mit ValueError ab, wenn type(wert) is not int gilt; so werden auch True und False abgelehnt."
+  },
+  "gates": {"vorlauf_seeds": 8, "g1_min": 6, "g2_max": 4, "g3_min_anteil": 0.8, "g4_min": 6,
+            "je_gruppe": 4, "min_je_gruppe": 3, "technisch_hoechstens": 0.1},
+  "kriterien": {"min_abstand_pp": 20, "alpha": 0.05, "max_schaden_pp": 10, "gegenfall_grenze": 3},
+  "stufen": {
+    "vorlauf": {"seeds": [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008]},
+    "haupt": {"bedingungen": ["O", "A", "B"],
+              "seeds": [2101, 2102, 2103, 2104, 2105, 2106, 2107, 2108, 2109, 2110, 2111, 2112, 2113, 2114, 2115]},
+    "gegenfall": {"bedingungen": ["O", "A", "B"],
+                  "seeds": [2201, 2202, 2203, 2204, 2205, 2206, 2207, 2208, 2209, 2210,
+                            2211, 2212, 2213, 2214, 2215, 2216, 2217, 2218, 2219, 2220]}
+  }
+}

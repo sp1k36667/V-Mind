@@ -120,9 +120,21 @@ def szenario(zufall, s):
             o_t = kappen(zufall.gauss(s["o"], 0.15))
             d_t = kappen(zufall.gauss(s["d_rate"], 0.10))
             q_t = kappen(zufall.gauss(0.90, 0.05))
-            g1 = binom(zufall, VORLAUF_SEEDS, d_t) >= G1_MIN
-            g2 = binom(zufall, VORLAUF_SEEDS, o_t) <= G2_MAX
-            g3 = binom(zufall, VORLAUF_SEEDS * UEBRIGE_JE_LAUF, q_t) >= G3_MIN * VORLAUF_SEEDS * UEBRIGE_JE_LAUF
+            # Technische Ausfälle: für G1/G3 nicht bestanden, für G2 konservativ wie bestanden.
+            tech = s["technisch"]
+            d_ok = sum(zufall.random() >= tech and zufall.random() < d_t for _ in range(VORLAUF_SEEDS))
+            g2_zaehler = uebrige_ok = gueltig = 0
+            for _ in range(VORLAUF_SEEDS):
+                if zufall.random() < tech:
+                    g2_zaehler += 1
+                else:
+                    gueltig += 1
+                    g2_zaehler += zufall.random() < o_t
+                    uebrige_ok += binom(zufall, UEBRIGE_JE_LAUF, q_t)
+            g1 = d_ok >= G1_MIN
+            g2 = g2_zaehler <= G2_MAX
+            # G3 über die technisch gültigen Läufe (Anteil); ohne gültigen Lauf nicht erfüllt.
+            g3 = gueltig > 0 and uebrige_ok >= G3_MIN * gueltig * UEBRIGE_JE_LAUF
             if g1 and g2 and g3:
                 m_t = kappen(o_t + s["unspezifisch"])
                 a_t = kappen(m_t + zufall.gauss(s["effekt"], s["sd_effekt"]))
@@ -132,7 +144,7 @@ def szenario(zufall, s):
             return False, "Gruppe nicht auswertbar"
         eingeschlossen.append(aufgaben)
     for _ in range(2):
-        if binom(zufall, VORLAUF_SEEDS, s["gegenfall_o"]) < G4_MIN:
+        if binom(zufall, VORLAUF_SEEDS, s["gegenfall_o"] * (1 - s["technisch"])) < G4_MIN:
             return False, "Gegenfall nicht prüfbar"
     b = c = passend = unpassend = laeufe = 0
     uebrige_o = uebrige_p = uebrige_n = 0
@@ -140,7 +152,9 @@ def szenario(zufall, s):
     for aufgaben in eingeschlossen:
         summen = []
         for o_t, m_t, a_t, q_t in aufgaben:
-            g_m, g_a = NORM.inv_cdf(m_t), NORM.inv_cdf(a_t)
+            # Technische Ausfälle im Hauptlauf zählen als nicht bestanden.
+            g_m = NORM.inv_cdf(kappen(m_t * (1 - s["technisch"])))
+            g_a = NORM.inv_cdf(kappen(a_t * (1 - s["technisch"])))
             sa = sm = 0
             for _ in range(s["seeds"]):
                 z1 = zufall.gauss(0, 1)
@@ -177,13 +191,15 @@ def szenario(zufall, s):
 
 GRUND = {"aufgaben": 6, "max_aufgaben": 4, "min_aufgaben": 3, "o": 0.30, "d_rate": 0.85, "unspezifisch": 0.10, "effekt": 0.0, "sd_effekt": 0.15,
          "rho": 0.3, "seeds": 15, "gegenfall_o": 0.90, "gegenfall_seeds": 20,
-         "gegenfall_grenze": 3, "schaden_uebrige": 0.0, "schaden_gegenfall": 0.0}
+         "gegenfall_grenze": 3, "schaden_uebrige": 0.0, "schaden_gegenfall": 0.0,
+         "technisch": 0.03}
 
 SZENARIEN = [
     ("Null: kein Effekt, kein unspezifischer Effekt", {"unspezifisch": 0.0, "sd_effekt": 0.0}),
     ("Null: nur unspezifischer Effekt +10 pp", {}),
     ("Null: Effekt je Aufgabe N(0, 15 pp)", {}),
     ("Effekt 30 pp, kein Schaden", {"effekt": 0.30}),
+    ("Effekt 30 pp, keine technischen Ausfälle", {"effekt": 0.30, "technisch": 0.0}),
     ("Effekt 40 pp, kein Schaden", {"effekt": 0.40}),
     ("Effekt 30 pp, Grundrate O 50 %", {"effekt": 0.30, "o": 0.50}),
     ("Effekt 30 pp, Positivkontrolle nur 75 %", {"effekt": 0.30, "d_rate": 0.75}),
@@ -191,6 +207,8 @@ SZENARIEN = [
     ("Effekt 30 pp, Schaden Gegenfall 30 pp", {"effekt": 0.30, "schaden_gegenfall": 0.30}),
     ("Effekt 30 pp, Schaden Gegenfall 20 pp", {"effekt": 0.30, "schaden_gegenfall": 0.20}),
     ("Effekt 30 pp, nur 4 Kandidaten je Gruppe", {"effekt": 0.30, "aufgaben": 4}),
+    ("Effekt 30 pp, 8 % technische Ausfälle", {"effekt": 0.30, "technisch": 0.08}),
+    ("Null, 8 % technische Ausfälle", {"technisch": 0.08}),
 ]
 
 
@@ -201,7 +219,8 @@ def vollstaendig(simulationen=2000):
           f"G4 >= {G4_MIN}), Hauptlauf {GRUND['seeds']} Seeds, Gegenfall "
           f"{GRUND['gegenfall_seeds']} Seeds mit Grenze +{GRUND['gegenfall_grenze']}; "
           f"{GRUND['aufgaben']} Kandidaten je Gruppe, die ersten {GRUND['max_aufgaben']} "
-          f"eingeschlossenen zählen, mindestens {GRUND['min_aufgaben']} nötig")
+          f"eingeschlossenen zählen, mindestens {GRUND['min_aufgaben']} nötig; technische "
+          f"Ausfälle {GRUND['technisch']:.0%} je Lauf (G2 konservativ)")
     print("| Szenario | Gesamterfolg | häufigster Grund sonst |")
     print("|---|---:|---|")
     for name, abweichung in SZENARIEN:

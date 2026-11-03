@@ -1,10 +1,10 @@
 # Plan: Transfer v2 mit Gemma 4 12B (gekreuzte Erfahrungen)
 
-**Status: Entwurf, überarbeitet nach Prüfung durch Codex (#191). Nicht eingefroren,
-nichts gebaut, kein Modelllauf.** Grundlage: Ergebnis und Grenzen des ersten Pilots
-([transfer-pilot.md](transfer-pilot.md)) und die Abstimmung im Teamkanal (#182–#192).
-Werte in eckigen Klammern legt erst das Baupaket fest; sie werden vor dem Freeze
-eingetragen und ändern keine Regel dieses Plans.
+**Status: Plan und Bau zur Prüfung durch Codex (#194). Nicht eingefroren, kein
+Modelllauf.** Grundlage: Ergebnis und Grenzen des ersten Pilots
+([transfer-pilot.md](transfer-pilot.md)) und die Abstimmung im Teamkanal (#182–#195).
+Aufgaben, Prüfungen, Host und Auswertung: [`examples/transfer-v2/`](../../examples/transfer-v2/);
+alle festen Werte stehen in `bedingungen.json` und `aufgaben.py`.
 
 ## Frage und Zielpopulation
 
@@ -42,15 +42,16 @@ Gruppe A speichern Einträge unter ihrer ID als Schlüssel (`{"next_id", "items"
 speichern als Liste (Falle A kommt nicht vor) und verlangen ganze Zahlen größer 0, wobei
 die Spezifikation Wahrheitswerte ausdrücklich ausschließt.
 
-Je Gruppe gibt es **6 Kandidaten in einer vor dem Freeze festgelegten Reihenfolge**
-[A: zitate, geschenkideen, vokabeln, filmliste, rezeptideen, reiseziele; B: trainingslog,
-punktestand, pflanzen, budget, lesezeit, wasserzaehler]. In den Hauptlauf kommen je Gruppe
+Je Gruppe gibt es **6 Kandidaten in dieser festgelegten Reihenfolge**: A: zitate,
+geschenkideen, vokabeln, filmliste, rezeptideen, reiseziele; B: trainingslog,
+punktestand, pflanzen, budget, lesezeit, wasserzaehler. In den Hauptlauf kommen je Gruppe
 die **ersten 4** Kandidaten dieser Reihenfolge, die die Vorlaufregeln erfüllen.
+Spezifikation und Gerüst jeder Aufgabe werden aus einer Tabelle (`aufgaben.py`) erzeugt.
 
-**Gegenfall A:** Schlüssel sind Postleitzahlen als Text (`"01067"`); eine Umwandlung in
-`int` verliert die führende Null. [postleitzahlen]
-**Gegenfall B:** Ein Feld ist ausdrücklich ein Wahrheitswert (`active: bool`); wer
-Wahrheitswerte pauschal ablehnt, lehnt dort `True` ab. [gewohnheiten]
+**Gegenfall A (postleitzahlen):** Schlüssel sind Postleitzahlen als Text (`"01067"`);
+eine Umwandlung in `int` verliert die führende Null.
+**Gegenfall B (gewohnheiten):** Ein Feld ist ausdrücklich ein Wahrheitswert
+(`active: bool`); wer Wahrheitswerte pauschal ablehnt, lehnt dort `True` ab.
 
 ## Bedingungen
 
@@ -62,37 +63,50 @@ Wahrheitswerte pauschal ablehnt, lehnt dort `True` ab. [gewohnheiten]
 | D | direkte Anweisung zur Falle der jeweiligen Aufgabe (Positivkontrolle) | nur Vorlauf |
 
 Erfahrung A: Problem „Nach json.load sind Objektschlüssel immer Strings, auch wenn sie
-als Zahlen gespeichert wurden.“ Lösung „Beim Laden numerische Schlüssel in int
-umwandeln, wenn das Programm mit int-IDs arbeitet.“ Erfahrung B: Problem „In Python sind
-True und False auch int; isinstance(True, int) ist wahr.“ Lösung „Wenn nur ganze Zahlen
-erlaubt sind, Wahrheitswerte vorher ausdrücklich ablehnen.“ Beide werden im Baupaket auf
-genau gleiche Länge gebracht, ohne die Aussage zu ändern. Sie sind einfach und konkret,
-enthalten aber keinen fertigen Code (je konkreter, desto mehr Anleitung statt
-übertragbarer Erfahrung).
+als Zahlen gespeichert waren.“ Lösung „Beim Laden numerische Schlüssel in int umwandeln,
+wenn das Programm mit int-IDs arbeitet.“ Erfahrung B: Problem „In Python sind True und
+False auch ganze Zahlen; isinstance(True, int) ist daher wahr.“ Lösung „Wenn nur ganze
+Zahlen erlaubt sind, Wahrheitswerte vor der Prüfung auf int ausdrücklich ablehnen.“ Beide
+sind genau 183 Zeichen lang (getestet), einfach und konkret, aber ohne fertigen Code (je
+konkreter, desto mehr Anleitung statt übertragbarer Erfahrung).
 
-D nennt die Lösung des Teilproblems direkt, etwa „Wandle beim Laden die Schlüssel von
-`items` mit `int()` um“ bzw. „Lehne einen Wert ab, wenn `type(wert) is not int`“. **D
-dient nur der Machbarkeitsprüfung.** Aus D wird keine Obergrenze und kein relativer Wert
+D steht als Satz „Wichtig: …“ am Ende der Aufgabe (nicht im Feld `gedaechtnis`) und nennt
+die Lösung des Teilproblems direkt: A „Wandle beim Laden die Schlüssel von "items" mit
+int() in Ganzzahlen um …“, B „Lehne einen Zahlenwert mit ValueError ab, wenn type(wert) is
+not int gilt …“. **D dient nur der Machbarkeitsprüfung.** Aus D wird keine Obergrenze und kein relativer Wert
 für den Hauptlauf abgeleitet.
 
-Die Prompts aller Bedingungen unterscheiden sich nur im Feld `gedaechtnis` (wird getestet).
+Die Prompts von O, A und B unterscheiden sich nur im Feld `gedaechtnis`; D unterscheidet
+sich nur durch den angehängten Satz (getestet).
 
 ## Messung
 
-- **Mechanismus (Zielprüfung), je Aufgabe genau eine:** A: nach dem Neuladen sind IDs
-  `int`, Ändern und Löschen per `int`-ID wirken, die nächste ID stimmt. B: `add(…, True)`
-  und `add(…, False)` lösen `ValueError` aus, `add(…, 1)` gelingt. Die Zielprüfung ruft
-  nur Gerüstmethoden auf und hängt nicht vom Rest der Aufgabe ab.
-- **Gesamtfunktion (übrige Prüfungen), getrennt gemessen:** leere Eingaben, unbekannte
-  IDs bzw. Indizes, beschädigte Datei bleibt erhalten, Texte nach Neuladen, eine
-  aufgabenspezifische Prüfung (je Lauf [5]). Ein Selbsttest mit Referenzlösungen, die
-  genau die Falle enthalten, belegt, dass sie nicht von der Falle abhängen.
-- **Gegenfall:** Zielprüfung „Schlüssel bleiben `"01067"` usw.“ bzw. „`active=True` wird
-  angenommen und gespeichert“.
+- **Mechanismus (Zielprüfung `test_ziel_mechanismus`), je Aufgabe genau eine, mit drei
+  Ausgängen:** *bestanden*, *verfehlt* (der Mechanismus wurde erreicht und ist falsch) oder
+  *nicht beobachtbar* (App nicht ladbar, Konstruktor oder `list()` scheitern, bevor der
+  Mechanismus erreicht ist; Meldung „Vorbedingung: …“). Nur *bestanden* zählt als
+  Bestehen; *nicht beobachtbar* wird je Bedingung getrennt berichtet.
+  - A, **isolierte Ladeprobe:** Die Prüfung schreibt selbst eine Datei im
+    vorgeschriebenen Format mit drei Einträgen und öffnet sie. Vorbedingung: Öffnen und
+    `list()` liefern die drei Texte. Mechanismus: IDs sind `int` 1, 2, 3; Ändern und
+    Löschen per `int`-ID wirken; die nächste ID ist 4. So hängt das Ergebnis nicht davon
+    ab, wie die App selbst speichert.
+  - B: Vorbedingung `add(…, 1)` gelingt und erscheint in `list()`. Mechanismus: `add(…,
+    True)` löst `ValueError` aus und wird nicht gespeichert. `False` scheitert schon an
+    „größer 0“ und wird deshalb nur als **getrennte Diagnose** ausgewiesen.
+  - Gegenfall A: Ladeprobe mit `"01067"` und `"10115"`; Mechanismus: Postleitzahlen
+    bleiben unverändert, `city("01067")` stimmt, ein neuer Eintrag bleibt Text.
+    Gegenfall B: `active=True` und `False` werden angenommen und gespeichert.
+- **Gesamtfunktion (übrige Prüfungen), getrennt gemessen:** A und B je 5 (leere Eingaben,
+  unbekannte ID bzw. Index, ungültige Zahlen (B), beschädigte Datei bleibt erhalten, Texte
+  bzw. Summe nach Neuladen, Format (A)), Gegenfälle je 4. Der Selbsttest belegt mit
+  Referenzlösungen, die genau die Falle enthalten, dass sie nicht von der Falle abhängen
+  (*verfehlt*, alle übrigen bestanden), dass umbenanntes `list()` und ein Syntaxfehler
+  *nicht beobachtbar* ergeben und dass Mutationen der übrigen Anforderungen erkannt werden.
 
 ## Ablauf
 
-### Vorlauf (Machbarkeit; eigene Seeds [2001–2008]; nicht Teil des Hauptergebnisses)
+### Vorlauf (Machbarkeit; eigene Seeds 2001–2008; nicht Teil des Hauptergebnisses)
 
 Je Kandidat: O und D mit je 8 Seeds. Gegenfälle: O mit 8 Seeds.
 
@@ -102,7 +116,7 @@ Entscheidung **je Kandidat**, vorab festgelegt; Nenner sind immer die 8 geplante
 |---|---|---|
 | G1 lösbar | D | Zielprüfung in mindestens 6 von 8 bestanden |
 | G2 Spielraum | O | Zielprüfung in höchstens 4 von 8 bestanden |
-| G3 Rest lösbar | O | übrige Prüfungen zusammen mindestens 80 % von 8 × [5] bestanden |
+| G3 Rest lösbar | O | übrige Prüfungen zusammen mindestens 80 % über die technisch gültigen O-Läufe |
 | G4 Gegenfall prüfbar | O, Gegenfall | Zielprüfung in mindestens 6 von 8 bestanden |
 
 Auswahlwahrscheinlichkeit eines Gates bei wahrer Rate p (Binomial, 8 Läufe):
@@ -124,18 +138,19 @@ der Fälle heraus, eine mit 70 % unter O käme zu 47 % durch); deshalb 8.
   mit neuen Kandidaten und Seeds wäre nötig).
 - Verfehlt ein Gegenfall G4, endet v2 ebenfalls **ohne Gesamtergebnis**: Ein nicht
   prüfbarer Gegenfall kann keinen Gesamterfolg ergeben.
-- **Fehlende und technisch ungültige Läufe:** Technische Ausfälle (HTTP-Fehler,
-  abgeschnittene Antwort) zählen in jedem Gate als nicht bestanden. Weil das für G2
-  nicht konservativ ist, gilt zusätzlich: Sind mehr als 10 % der geplanten Vorlaufläufe
-  technisch ausgefallen oder fehlen Läufe, ist der Vorlauf ungültig und v2 endet ohne
-  Ergebnis. Kein Lauf wird wiederholt; die Auswahl geschieht nur nach diesen Regeln, nie
-  nach Hauptlaufdaten.
+- **Fehlende und technisch ungültige Läufe** (HTTP-Fehler, abgeschnittene Antwort):
+  in **G1 und G4 nicht bestanden**; in **G2 zählt ein technischer Ausfall wie ein
+  Bestehen** (konservativ: er kann G2 nie künstlich erfüllen); **G3** wird über die
+  technisch gültigen O-Läufe berechnet (ohne gültigen Lauf nicht erfüllt). Sind mehr als
+  10 % der geplanten Vorlaufläufe technisch ausgefallen oder fehlen Läufe, ist der Vorlauf
+  ungültig und v2 endet ohne Ergebnis. Kein Lauf wird wiederholt; die Auswahl geschieht
+  nur nach diesen Regeln, nie nach Hauptlaufdaten.
 
-### Hauptlauf (eigene Seeds [2101–2115])
+### Hauptlauf (eigene Seeds 2101–2115)
 
 Je eingeschlossener Aufgabe O, A und B mit je 15 Seeds; Reihenfolge der Paare und der
 Bedingungen je Paar zufällig, durch einen eingefrorenen Startwert festgelegt.
-Gegenfälle: O, A und B mit je 20 Seeds [2201–2220].
+Gegenfälle: O, A und B mit je 20 Seeds 2201–2220.
 
 **Gültigkeit** wie im Pilot: Die Läufe entsprechen exakt dem Zeitplan, vollständig, ohne
 Dubletten und fremde Läufe, höchstens 10 % technische Ausfälle (Vereinigung aus
@@ -159,8 +174,9 @@ Gegenfälle gültig sind und **alle** folgenden Teile gelten:
 4. Je Gruppe hat höchstens eine eingeschlossene Aufgabe passend < unpassend.
 5. **Schaden übrige Prüfungen:** Anteil unter passend höchstens 10 Prozentpunkte unter O
    (gepoolt, exakt).
-6. **Schaden Gegenfälle:** In Gegenfall A Fehlschläge der Zielprüfung unter A höchstens 3
-   mehr als unter O (von je 20); in Gegenfall B unter B höchstens 3 mehr als unter O.
+6. **Schaden Gegenfälle:** In Gegenfall A Fehlschläge der Zielprüfung (verfehlt oder
+   nicht beobachtbar) unter A höchstens 3 mehr als unter O (von je 20); in Gegenfall B
+   unter B höchstens 3 mehr als unter O. Beide Ausgänge werden getrennt berichtet.
 
 Begründung der Gegenfallgrenze (simuliert, Grundrate unter O 90 %, je Gegenfall):
 
@@ -200,36 +216,45 @@ sind; ohne Vorlaufauswahl und ohne Schadensgrenzen; nur McNemar / Regeln 1–4):
 | 4 | 15 | 40 % | 15 % | 1,00 / 0,99 |
 | 3 | 15 | 30 % | 15 % | 0,98 / 0,88 |
 
-**Vollständige Regel** (Vorlauf mit G1–G4 und Auswahl, Hauptlauf, Schadensgrenzen 5 und
-6; 2000 Durchführungen je Szenario):
+**Vollständige Regel** (Vorlauf mit G1–G4 einschließlich konservativer Behandlung
+technischer Ausfälle und Auswahl, Hauptlauf, Schadensgrenzen 5 und 6; 3 % technische
+Ausfälle je Lauf angenommen, im Pilot waren es 0 von 170; 2000 Durchführungen je
+Szenario; `python3 simulation.py --vollstaendig`):
 
 | Szenario | Gesamterfolg | häufigster Grund sonst |
 |---|---:|---|
 | Null: kein Effekt, kein unspezifischer Effekt | 0,00 | Hauptkriterium verfehlt |
 | Null: nur unspezifischer Effekt +10 pp | 0,00 | Hauptkriterium verfehlt |
 | Null: gezielter Effekt je Aufgabe N(0, 15 pp) | 0,00 | Hauptkriterium verfehlt |
-| Effekt 30 pp, kein Schaden | 0,68 | Gruppe nicht auswertbar |
-| Effekt 40 pp, kein Schaden | 0,73 | Gruppe nicht auswertbar |
-| Effekt 30 pp, Grundrate O 50 % | 0,25 | Gruppe nicht auswertbar |
-| Effekt 30 pp, Positivkontrolle nur 75 % | 0,39 | Gruppe nicht auswertbar |
+| Null, 8 % technische Ausfälle | 0,00 | Hauptkriterium verfehlt |
+| Effekt 30 pp, kein Schaden | 0,55 | Gruppe nicht auswertbar |
+| Effekt 30 pp, keine technischen Ausfälle | 0,67 | Gruppe nicht auswertbar |
+| Effekt 40 pp, kein Schaden | 0,61 | Gruppe nicht auswertbar |
+| Effekt 30 pp, Grundrate O 50 % | 0,18 | Gruppe nicht auswertbar |
+| Effekt 30 pp, Positivkontrolle nur 75 % | 0,27 | Gruppe nicht auswertbar |
+| Effekt 30 pp, 8 % technische Ausfälle | 0,31 | Gruppe nicht auswertbar |
+| Effekt 30 pp, nur 4 Kandidaten je Gruppe | 0,21 | Gruppe nicht auswertbar |
 | Effekt 30 pp, Schaden übrige 15 pp | 0,01 | Schaden übrige Prüfungen |
-| Effekt 30 pp, Schaden Gegenfall 30 pp | 0,03 | Schaden Gegenfall |
-| Effekt 30 pp, Schaden Gegenfall 20 pp | 0,11 | Schaden Gegenfall |
-| Effekt 30 pp, nur 4 Kandidaten je Gruppe | 0,31 | Gruppe nicht auswertbar |
+| Effekt 30 pp, Schaden Gegenfall 30 pp | 0,01 | Schaden Gegenfall |
+| Effekt 30 pp, Schaden Gegenfall 20 pp | 0,10 | Schaden Gegenfall |
 
-Lesart:
+Lesart (alles **Ergebnisse dieser Simulation** unter ihren Annahmen, keine allgemeine
+Fehlerkontrolle und keine zugesicherte Trennschärfe):
 
-- In allen Nullszenarien, auch wenn jede Erfahrung unspezifisch hilft oder der Effekt je
-  Aufgabe streut, gibt es praktisch nie einen Gesamterfolg.
-- Bei einem echten gezielten Effekt von 30 pp gelingt der Nachweis unter diesen Annahmen
-  zu etwa zwei Dritteln. Der Hauptverlust ist die **Machbarkeit**: Zu wenige Kandidaten
-  erfüllen die Gates. Dann endet v2 ohne Ergebnis, statt ein falsches zu liefern. Mit nur
-  4 Kandidaten je Gruppe wäre das nur noch 0,31; deshalb 6.
+- In den simulierten Nullszenarien, auch wenn jede Erfahrung unspezifisch hilft, der
+  Effekt je Aufgabe streut oder 8 % der Läufe technisch ausfallen, trat in 2000
+  Durchführungen je Szenario kein Gesamterfolg auf. Für andere, nicht simulierte
+  Nullkonstellationen ist damit nichts gesagt.
+- Bei einem gezielten Effekt von 30 pp gelang der Nachweis in diesem Szenario zu 0,55
+  (ohne technische Ausfälle 0,67). Der Hauptverlust ist die **Machbarkeit**: Zu wenige
+  Kandidaten erfüllen die Gates. Dann endet v2 ohne Ergebnis, statt ein falsches zu
+  liefern. Technische Ausfälle kosten Machbarkeit, weil G2 sie konservativ zählt; mit nur
+  4 Kandidaten je Gruppe wären es 0,21.
 - Ist 12B ohne Hilfe schon besser (Grundrate 50 %) oder mit Hilfe schlechter
   (Positivkontrolle 75 %), sinkt die Chance stark, weil G2 bzw. G1 mehr Aufgaben
   ausschließt. Das ist gewollt: Solche Aufgaben messen die Frage nicht sauber.
-- Ein Effekt genau an der Mindestschwelle (20 pp) wird nur etwa jedes zweite Mal erkannt;
-  ausgelegt ist der Versuch auf Effekte ab etwa 30 pp.
+- Ein Effekt genau an der Mindestschwelle (20 pp) wird auch bedingt nur etwa jedes zweite
+  Mal erkannt; ausgelegt ist der Versuch auf Effekte ab etwa 30 pp.
 
 ## Aufwand für 12B
 
@@ -258,11 +283,13 @@ Pilot.
   nicht die Erfolgsaussicht des echten Versuchs.
 - Generierter Code läuft ohne Sandbox wie im Pilot.
 
-## Offene Punkte für das Baupaket
+## Umsetzung (Baupaket)
 
-- Kandidaten, Spezifikationen, Gerüste, Referenzlösungen und Selbsttest (Referenz mit
-  genau einer Falle besteht alle übrigen Prüfungen).
-- Erfahrungen A und B auf gleiche Länge bringen; Wortlaut von D je Gruppe.
-- Seeds, Kandidatenreihenfolge und Startwert der Reihenfolge eintragen.
-- Host aus dem Pilot übernehmen und anpassen (Gerüst im Prompt, keine CLI, Vorlauf mit
-  Gates je Kandidat und Auswahl, Hauptlauf nur mit gültigem Vorlauf desselben Commits).
+Seeds: Vorlauf 2001–2008, Hauptlauf 2101–2115, Gegenfälle 2201–2220; Startwert der
+Reihenfolge 20261104. Der Host übernimmt die Schutzregeln des Pilots (Digest, nur am
+sauberen Commit, keine Wiederholung, gespeicherte Ergebnisse gegen den Zeitplan geprüft,
+Anfrage auch bei HTTP-Fehler gespeichert, Zeit- und Ausgabelimit mit Beenden der
+Prozessgruppe). Haupt- und Gegenfall starten nur mit einem Vorlauf desselben Commits, der
+die Fortsetzung erlaubt; die eingeschlossenen Aufgaben übernimmt der Host aus dessen
+Auswertung. `--attrappe` erzeugt ohne Modell einen künstlichen gezielten Effekt, um Host
+und Auswertung durchgängig zu prüfen; Attrappenergebnisse sind nie Messdaten.
