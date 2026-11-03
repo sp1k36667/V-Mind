@@ -1,0 +1,28 @@
+{
+  "aufgabe": "termine",
+  "seed": 1002,
+  "bedingung": "L",
+  "nr": 31,
+  "technischer_fehler": null,
+  "status": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "ERROR",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+  },
+  "ziel_bestanden": false,
+  "ziel_format_fehler": false,
+  "abbruch": null,
+  "uebrige_ok": 4,
+  "uebrige_von": 7,
+  "abgeschnitten": false,
+  "code_zeilen": 100,
+  "code_sha256": "b4c17ab6e5846cb08d260823d47f488f501808049b597b78b5f64eb1794d22cc",
+  "ausgabe_tokens": 884,
+  "prompt_tokens": 652,
+  "dauer_s": 27.3
+}

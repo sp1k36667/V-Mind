@@ -1,0 +1,28 @@
+{
+  "aufgabe": "ausgaben",
+  "seed": 1008,
+  "bedingung": "L",
+  "nr": 67,
+  "technischer_fehler": null,
+  "status": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ERROR",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_summe_nach_aenderung_und_loeschen": "ERROR",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+  },
+  "ziel_bestanden": false,
+  "ziel_format_fehler": false,
+  "abbruch": null,
+  "uebrige_ok": 3,
+  "uebrige_von": 7,
+  "abgeschnitten": false,
+  "code_zeilen": 95,
+  "code_sha256": "00574b6459a14de7fc2b9c99a957828d9f214a41abf78a461d2d879f799d911e",
+  "ausgabe_tokens": 895,
+  "prompt_tokens": 638,
+  "dauer_s": 27.7
+}

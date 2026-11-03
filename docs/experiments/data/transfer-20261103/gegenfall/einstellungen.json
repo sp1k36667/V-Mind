@@ -1,0 +1,190 @@
+{
+ "stufe": "gegenfall",
+ "commit": "970d2ddc092159c5c48466aaf6de5cc9afd4b8b9",
+ "sauber": true,
+ "attrappe": false,
+ "plan_sha256": "f9eba0c870663e97d414db9b8b6b2b64e79ed8676a2bbde0d955ba14ce284b7c",
+ "system_sha256": "4d78c12da5240a92a456eba0d05b38254ddf6d04c353d952e217daf6ce040f25",
+ "laeufe": [
+  {
+   "aufgabe": "vorrat",
+   "seed": 1108,
+   "bedingung": "P",
+   "nr": 1
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1108,
+   "bedingung": "O",
+   "nr": 2
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1108,
+   "bedingung": "L",
+   "nr": 3
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1109,
+   "bedingung": "O",
+   "nr": 4
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1109,
+   "bedingung": "L",
+   "nr": 5
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1109,
+   "bedingung": "P",
+   "nr": 6
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1103,
+   "bedingung": "O",
+   "nr": 7
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1103,
+   "bedingung": "P",
+   "nr": 8
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1103,
+   "bedingung": "L",
+   "nr": 9
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1107,
+   "bedingung": "P",
+   "nr": 10
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1107,
+   "bedingung": "O",
+   "nr": 11
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1107,
+   "bedingung": "L",
+   "nr": 12
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1106,
+   "bedingung": "L",
+   "nr": 13
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1106,
+   "bedingung": "O",
+   "nr": 14
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1106,
+   "bedingung": "P",
+   "nr": 15
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1104,
+   "bedingung": "P",
+   "nr": 16
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1104,
+   "bedingung": "O",
+   "nr": 17
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1104,
+   "bedingung": "L",
+   "nr": 18
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1110,
+   "bedingung": "O",
+   "nr": 19
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1110,
+   "bedingung": "L",
+   "nr": 20
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1110,
+   "bedingung": "P",
+   "nr": 21
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1105,
+   "bedingung": "P",
+   "nr": 22
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1105,
+   "bedingung": "O",
+   "nr": 23
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1105,
+   "bedingung": "L",
+   "nr": 24
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1102,
+   "bedingung": "P",
+   "nr": 25
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1102,
+   "bedingung": "O",
+   "nr": 26
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1102,
+   "bedingung": "L",
+   "nr": 27
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1101,
+   "bedingung": "L",
+   "nr": 28
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1101,
+   "bedingung": "P",
+   "nr": 29
+  },
+  {
+   "aufgabe": "vorrat",
+   "seed": 1101,
+   "bedingung": "O",
+   "nr": 30
+  }
+ ]
+}

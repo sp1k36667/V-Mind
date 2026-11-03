@@ -1,0 +1,26 @@
+{
+  "aufgabe": "vorrat",
+  "seed": 1104,
+  "bedingung": "O",
+  "nr": 17,
+  "technischer_fehler": null,
+  "status": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ERROR",
+    "test_ungueltige_menge_valueerror": "ERROR",
+    "test_ziel_namen_nach_neuladen": "ERROR",
+    "test_zusammenfuehren_und_entfernen_bei_null": "ERROR"
+  },
+  "ziel_bestanden": false,
+  "ziel_format_fehler": false,
+  "abbruch": null,
+  "uebrige_ok": 1,
+  "uebrige_von": 5,
+  "abgeschnitten": false,
+  "code_zeilen": 91,
+  "code_sha256": "4659ef2435d082ce4afdb1276c814d1beb4d421652ba2defb874b59f5ac94c9b",
+  "ausgabe_tokens": 812,
+  "prompt_tokens": 509,
+  "dauer_s": 24.8
+}

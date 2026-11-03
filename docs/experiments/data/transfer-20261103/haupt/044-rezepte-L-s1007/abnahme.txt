@@ -1,0 +1,221 @@
+test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode) ... ERROR
+test_ids_steigen_in_einer_instanz (__main__.Abnahme.test_ids_steigen_in_einer_instanz) ... ERROR
+test_kaputtes_json_bleibt_erhalten (__main__.Abnahme.test_kaputtes_json_bleibt_erhalten) ... ERROR
+test_leere_eingabe_valueerror (__main__.Abnahme.test_leere_eingabe_valueerror) ... ERROR
+test_texte_nach_neuladen (__main__.Abnahme.test_texte_nach_neuladen) ... ERROR
+test_unbekannte_id_valueerror (__main__.Abnahme.test_unbekannte_id_valueerror) ... ERROR
+test_ungueltige_minuten_valueerror (__main__.Abnahme.test_ungueltige_minuten_valueerror) ... ERROR
+test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen) ... ERROR
+
+======================================================================
+ERROR: test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 39, in setUp
+    self.app = lade_app()
+               ~~~~~~~~^^
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 28, in lade_app
+    return importlib.import_module("app")
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "<home>/miniconda3/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1395, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1019, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1157, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1087, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "<laufordner>/haupt/044-rezepte-L-s1007/app.py", line 115
+    Wait, I need to rewrite it to be cleaner and strictly follow the prompt's CLI and logic.
+                                                                           ^
+SyntaxError: unterminated string literal (detected at line 115)
+
+======================================================================
+ERROR: test_ids_steigen_in_einer_instanz (__main__.Abnahme.test_ids_steigen_in_einer_instanz)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 39, in setUp
+    self.app = lade_app()
+               ~~~~~~~~^^
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 28, in lade_app
+    return importlib.import_module("app")
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "<home>/miniconda3/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1395, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1019, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1157, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1087, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "<laufordner>/haupt/044-rezepte-L-s1007/app.py", line 115
+    Wait, I need to rewrite it to be cleaner and strictly follow the prompt's CLI and logic.
+                                                                           ^
+SyntaxError: unterminated string literal (detected at line 115)
+
+======================================================================
+ERROR: test_kaputtes_json_bleibt_erhalten (__main__.Abnahme.test_kaputtes_json_bleibt_erhalten)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 39, in setUp
+    self.app = lade_app()
+               ~~~~~~~~^^
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 28, in lade_app
+    return importlib.import_module("app")
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "<home>/miniconda3/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1395, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1019, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1157, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1087, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "<laufordner>/haupt/044-rezepte-L-s1007/app.py", line 115
+    Wait, I need to rewrite it to be cleaner and strictly follow the prompt's CLI and logic.
+                                                                           ^
+SyntaxError: unterminated string literal (detected at line 115)
+
+======================================================================
+ERROR: test_leere_eingabe_valueerror (__main__.Abnahme.test_leere_eingabe_valueerror)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 39, in setUp
+    self.app = lade_app()
+               ~~~~~~~~^^
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 28, in lade_app
+    return importlib.import_module("app")
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "<home>/miniconda3/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1395, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1019, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1157, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1087, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "<laufordner>/haupt/044-rezepte-L-s1007/app.py", line 115
+    Wait, I need to rewrite it to be cleaner and strictly follow the prompt's CLI and logic.
+                                                                           ^
+SyntaxError: unterminated string literal (detected at line 115)
+
+======================================================================
+ERROR: test_texte_nach_neuladen (__main__.Abnahme.test_texte_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 39, in setUp
+    self.app = lade_app()
+               ~~~~~~~~^^
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 28, in lade_app
+    return importlib.import_module("app")
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "<home>/miniconda3/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1395, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1019, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1157, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1087, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "<laufordner>/haupt/044-rezepte-L-s1007/app.py", line 115
+    Wait, I need to rewrite it to be cleaner and strictly follow the prompt's CLI and logic.
+                                                                           ^
+SyntaxError: unterminated string literal (detected at line 115)
+
+======================================================================
+ERROR: test_unbekannte_id_valueerror (__main__.Abnahme.test_unbekannte_id_valueerror)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 39, in setUp
+    self.app = lade_app()
+               ~~~~~~~~^^
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 28, in lade_app
+    return importlib.import_module("app")
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "<home>/miniconda3/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1395, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1019, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1157, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1087, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "<laufordner>/haupt/044-rezepte-L-s1007/app.py", line 115
+    Wait, I need to rewrite it to be cleaner and strictly follow the prompt's CLI and logic.
+                                                                           ^
+SyntaxError: unterminated string literal (detected at line 115)
+
+======================================================================
+ERROR: test_ungueltige_minuten_valueerror (__main__.Abnahme.test_ungueltige_minuten_valueerror)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 39, in setUp
+    self.app = lade_app()
+               ~~~~~~~~^^
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 28, in lade_app
+    return importlib.import_module("app")
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "<home>/miniconda3/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1395, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1019, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1157, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1087, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "<laufordner>/haupt/044-rezepte-L-s1007/app.py", line 115
+    Wait, I need to rewrite it to be cleaner and strictly follow the prompt's CLI and logic.
+                                                                           ^
+SyntaxError: unterminated string literal (detected at line 115)
+
+======================================================================
+ERROR: test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 39, in setUp
+    self.app = lade_app()
+               ~~~~~~~~^^
+  File "<laufordner>/haupt/044-rezepte-L-s1007/verification/gemeinsam.py", line 28, in lade_app
+    return importlib.import_module("app")
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "<home>/miniconda3/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1395, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1019, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1157, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1087, in source_to_code
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "<laufordner>/haupt/044-rezepte-L-s1007/app.py", line 115
+    Wait, I need to rewrite it to be cleaner and strictly follow the prompt's CLI and logic.
+                                                                           ^
+SyntaxError: unterminated string literal (detected at line 115)
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.017s
+
+FAILED (errors=8)

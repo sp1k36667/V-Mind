@@ -1,0 +1,58 @@
+test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode) ... FAIL
+test_ids_steigen_in_einer_instanz (__main__.Abnahme.test_ids_steigen_in_einer_instanz) ... ERROR
+test_kaputtes_json_bleibt_erhalten (__main__.Abnahme.test_kaputtes_json_bleibt_erhalten) ... ok
+test_leere_eingabe_valueerror (__main__.Abnahme.test_leere_eingabe_valueerror) ... ok
+test_summe_nach_aenderung_und_loeschen (__main__.Abnahme.test_summe_nach_aenderung_und_loeschen) ... ERROR
+test_texte_nach_neuladen (__main__.Abnahme.test_texte_nach_neuladen) ... ok
+test_unbekannte_id_valueerror (__main__.Abnahme.test_unbekannte_id_valueerror) ... ok
+test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen) ... ERROR
+
+======================================================================
+ERROR: test_ids_steigen_in_einer_instanz (__main__.Abnahme.test_ids_steigen_in_einer_instanz)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/048-ausgaben-L-s1001/verification/gemeinsam.py", line 90, in test_ids_steigen_in_einer_instanz
+    store.remove(zweiter)
+    ~~~~~~~~~~~~^^^^^^^^^
+  File "<laufordner>/haupt/048-ausgaben-L-s1001/app.py", line 54, in remove
+    raise ValueError("ID not found")
+ValueError: ID not found
+
+======================================================================
+ERROR: test_summe_nach_aenderung_und_loeschen (__main__.Abnahme.test_summe_nach_aenderung_und_loeschen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/048-ausgaben-L-s1001/verification/abnahme.py", line 40, in test_summe_nach_aenderung_und_loeschen
+    store.set_cents(erst, 200)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "<laufordner>/haupt/048-ausgaben-L-s1001/app.py", line 47, in set_cents
+    raise ValueError("ID not found")
+ValueError: ID not found
+
+======================================================================
+ERROR: test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/048-ausgaben-L-s1001/verification/gemeinsam.py", line 69, in test_ziel_ids_nach_neuladen
+    self.ADAPTER.aendern(neu_geladen, ids[9])
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "<laufordner>/haupt/048-ausgaben-L-s1001/verification/abnahme.py", line 25, in aendern
+    store.set_cents(eintrag, 4242)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<laufordner>/haupt/048-ausgaben-L-s1001/app.py", line 47, in set_cents
+    raise ValueError("ID not found")
+ValueError: ID not found
+
+======================================================================
+FAIL: test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/048-ausgaben-L-s1001/verification/gemeinsam.py", line 115, in test_cli_fehler_exitcode
+    self.assertEqual(hinzu.returncode, 0, hinzu.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : 
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.026s
+
+FAILED (failures=1, errors=3)

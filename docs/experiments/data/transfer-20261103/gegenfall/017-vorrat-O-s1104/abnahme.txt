@@ -1,0 +1,101 @@
+test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode) ... FAIL
+test_kaputtes_json_bleibt_erhalten (__main__.Abnahme.test_kaputtes_json_bleibt_erhalten) ... ok
+test_leere_eingabe_valueerror (__main__.Abnahme.test_leere_eingabe_valueerror) ... ERROR
+test_ungueltige_menge_valueerror (__main__.Abnahme.test_ungueltige_menge_valueerror) ... ERROR
+test_ziel_namen_nach_neuladen (__main__.Abnahme.test_ziel_namen_nach_neuladen) ... ERROR
+test_zusammenfuehren_und_entfernen_bei_null (__main__.Abnahme.test_zusammenfuehren_und_entfernen_bei_null) ... ERROR
+
+======================================================================
+ERROR: test_leere_eingabe_valueerror (__main__.Abnahme.test_leere_eingabe_valueerror)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/verification/abnahme.py", line 60, in test_leere_eingabe_valueerror
+    store = self.oeffnen()
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/verification/abnahme.py", line 25, in oeffnen
+    return self.app.Pantry(str(self.pfad))
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/app.py", line 9, in __init__
+    self._load()
+    ~~~~~~~~~~^^
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/app.py", line 13, in _load
+    with open(self.path, 'r') as f:
+         ~~~~^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '<tmp>/daten.json'
+
+======================================================================
+ERROR: test_ungueltige_menge_valueerror (__main__.Abnahme.test_ungueltige_menge_valueerror)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/verification/abnahme.py", line 66, in test_ungueltige_menge_valueerror
+    store = self.oeffnen()
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/verification/abnahme.py", line 25, in oeffnen
+    return self.app.Pantry(str(self.pfad))
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/app.py", line 9, in __init__
+    self._load()
+    ~~~~~~~~~~^^
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/app.py", line 13, in _load
+    with open(self.path, 'r') as f:
+         ~~~~^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '<tmp>/daten.json'
+
+======================================================================
+ERROR: test_ziel_namen_nach_neuladen (__main__.Abnahme.test_ziel_namen_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/verification/abnahme.py", line 37, in test_ziel_namen_nach_neuladen
+    store = self.oeffnen()
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/verification/abnahme.py", line 25, in oeffnen
+    return self.app.Pantry(str(self.pfad))
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/app.py", line 9, in __init__
+    self._load()
+    ~~~~~~~~~~^^
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/app.py", line 13, in _load
+    with open(self.path, 'r') as f:
+         ~~~~^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '<tmp>/daten.json'
+
+======================================================================
+ERROR: test_zusammenfuehren_und_entfernen_bei_null (__main__.Abnahme.test_zusammenfuehren_und_entfernen_bei_null)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/verification/abnahme.py", line 53, in test_zusammenfuehren_und_entfernen_bei_null
+    store = self.oeffnen()
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/verification/abnahme.py", line 25, in oeffnen
+    return self.app.Pantry(str(self.pfad))
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/app.py", line 9, in __init__
+    self._load()
+    ~~~~~~~~~~^^
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/app.py", line 13, in _load
+    with open(self.path, 'r') as f:
+         ~~~~^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '<tmp>/daten.json'
+
+======================================================================
+FAIL: test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/verification/abnahme.py", line 84, in test_cli_fehler_exitcode
+    self.assertEqual(hinzu.returncode, 0, hinzu.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : Traceback (most recent call last):
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/app.py", line 91, in <module>
+    main()
+    ~~~~^^
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/app.py", line 72, in main
+    pantry = Pantry(args.file)
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/app.py", line 9, in __init__
+    self._load()
+    ~~~~~~~~~~^^
+  File "<laufordner>/gegenfall/017-vorrat-O-s1104/app.py", line 13, in _load
+    with open(self.path, 'r') as f:
+         ~~~~^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '<tmp>/daten.json'
+
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.034s
+
+FAILED (failures=1, errors=4)

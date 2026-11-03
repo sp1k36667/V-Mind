@@ -157,7 +157,7 @@ im Repository):
 | 3 | Gleiche Frage wie 2 | Gemma 4 12B | durchgeführt, explorativ | Ebenfalls keine Lernkurve, aber 12B behob Fehler selbst, und seine ungeprüften Lehren waren selten falsch. [Bericht](docs/experiments/lernkurve.md#explorativer-lauf-mit-gemma-4-12b) |
 | 4 | Kann eine frische Sitzung ein Projekt aus `resume` fortsetzen? | Gemma 4 12B | durchgeführt, vorab geplant | Kriterien verfehlt: 117/165 gegen 133/165 für dieselben Daten als flache Liste; Ursache gefunden und behoben. [Bericht](docs/experiments/continuity-pilot.md) |
 | 5 | Hilft die Korrektur, und spielt das Format eine Rolle? | Gemma 4 12B | durchgeführt, 80 vorab geplante Aufrufe | Alte nächste Schritte: JSON 1→0, Text 2→0 (von je 15); Gesamtgenauigkeit steigt nicht. [Bericht](docs/experiments/continuity-2x2.md) |
-| 6 | Hilft eine richtige, geprüfte Lehre bei *neuen* Aufgaben? | Gemma 4 12B | Entwurf | – [Entwurf](docs/experiments/transfer-pilot-plan.md) |
+| 6 | Hilft eine richtige, geprüfte Lehre bei *neuen* Aufgaben? | Gemma 4 12B | durchgeführt, 170 vorab geplante Aufrufe | Nicht bestanden: Zielprüfung 2/40 ohne Lehre, 13/40 mit Lehre, 10/40 mit Placebo (+27,5 pp, gefordert 30; nur +7,5 pp über Placebo). Nachträglich: Der gezielte Fehler verschwand mit der Lehre (13→0), ein davon unabhängiger Benennungsfehler überwog. [Bericht](docs/experiments/transfer-pilot.md) |
 | 7 | Findet `recall` das Richtige und hält es Bereichs- und Statusgrenzen ein? | kein Modell | durchgeführt, vorab geplant, synthetischer Korpus | Grenzen ohne Ausnahme gehalten; wortgleiche Fragen 10/10 auf Platz 1; Wortform-Fragen 3/5; nachträgliche Einzelwortprobe 0/5; im Mittel 2,6 unpassende Zusatztreffer je Frage mit erwartetem Eintrag. [Bericht](docs/experiments/abruf-korpus.md) |
 
 Neue Versuche laufen **nur noch mit Gemma 4 12B**. In den Versuchen 2 und 3 hat 12B seine
@@ -430,9 +430,13 @@ einige Aufgaben, wurde durch geprüfte Lehren aber ebenfalls nicht besser.
 Gezeigt haben die Läufe: Ungeprüftes Gedächtnis sammelt bei einem schwachen Modell
 falsche Lehren (in einer E2B-Stichprobe etwa jede fünfte eindeutig falsch), und die
 Bestätigung über „die Prüfung, die vorher fehlschlug, besteht jetzt“ ist zu grob, weil
-ein Fix oft viele Prüfungen gleichzeitig umschaltet. Ein kleinerer Folgeversuch, der den
-Transfer einer einzelnen geprüften Lehre misst, ist entworfen, aber nicht gelaufen.
-[Bericht](docs/experiments/lernkurve.md), [Entwurf Folgeversuch](docs/experiments/transfer-pilot-plan.md).
+ein Fix oft viele Prüfungen gleichzeitig umschaltet. Ein vorab geplanter Folgeversuch mit
+12B hat danach den Transfer einer einzelnen, von Hand geschriebenen richtigen Lehre auf
+neue Aufgaben gemessen: Er hat seine Kriterien nicht bestanden. Ein großer Teil des
+Anstiegs zeigte sich auch mit einem themenfremden Placebo; nachträglich verschwand der
+gezielte Fehler mit der Lehre, wurde aber in vielen Läufen von einem davon unabhängigen
+Benennungsfehler verdeckt. Vielversprechend, nicht belegt.
+[Bericht](docs/experiments/lernkurve.md), [Transfer-Pilot](docs/experiments/transfer-pilot.md).
 
 ## Dritter Versuch: Kann eine frische Sitzung ein Projekt fortsetzen?
 
