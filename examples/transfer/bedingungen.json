@@ -1,0 +1,94 @@
+{
+  "modell": "hf.co/google/gemma-4-12B-it-qat-q4_0-gguf:Q4_0",
+  "modell_digest": "18a4d9511d9965d973356e62310a2793771c22456be408cc06a05f04a6376acd",
+  "modell_quelle": "Ollama /api/tags am 2. November 2026; gleicher Digest wie in docs/experiments/data/continuity-*/metadata.json",
+  "optionen": {
+    "temperature": 0.7,
+    "num_ctx": 8192,
+    "num_predict": 2400
+  },
+  "think": false,
+  "reihenfolge_seed": 20261102,
+  "erfahrungen": {
+    "O": [],
+    "L": [
+      {
+        "problem": "JSON-Objektschlüssel sind nach dem Laden immer Strings; Einträge, die unter numerischen IDs gespeichert wurden, haben dann Text-Schlüssel.",
+        "loesung": "Eine Möglichkeit für intern int-indizierte Dictionaries: numerische Schlüssel nach json.loads in int umwandeln. Konsistente String-Schlüssel sind eine Alternative."
+      }
+    ],
+    "P": [
+      {
+        "problem": "HTTP-Statuscodes werden in Klassen eingeteilt: 4xx bezeichnet Clientfehler, 5xx Serverfehler; ein Statuscode allein erklärt nicht jede Fehlerursache.",
+        "loesung": "Den Statuscode und die Antwort gemeinsam lesen und die API-Dokumentation heranziehen. Ein 5xx-Status garantiert nicht, dass Wiederholen erfolgreich ist."
+      }
+    ]
+  },
+  "stufen": {
+    "vorlauf": {
+      "aufgaben": [
+        "ausgaben",
+        "leihliste",
+        "rezepte",
+        "termine"
+      ],
+      "bedingungen": [
+        "O"
+      ],
+      "seeds": [
+        901,
+        902,
+        903,
+        904,
+        905
+      ]
+    },
+    "haupt": {
+      "aufgaben": [
+        "ausgaben",
+        "leihliste",
+        "rezepte",
+        "termine"
+      ],
+      "bedingungen": [
+        "O",
+        "L",
+        "P"
+      ],
+      "seeds": [
+        1001,
+        1002,
+        1003,
+        1004,
+        1005,
+        1006,
+        1007,
+        1008,
+        1009,
+        1010
+      ]
+    },
+    "gegenfall": {
+      "aufgaben": [
+        "vorrat"
+      ],
+      "bedingungen": [
+        "O",
+        "L",
+        "P"
+      ],
+      "seeds": [
+        1101,
+        1102,
+        1103,
+        1104,
+        1105,
+        1106,
+        1107,
+        1108,
+        1109,
+        1110
+      ]
+    }
+  }
+}
