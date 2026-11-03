@@ -147,7 +147,7 @@ repository):
 | 3 | Same question as 2 | Gemma 4 12B | done, exploratory | No learning curve either, but 12B fixed errors itself and its unchecked lessons were rarely wrong. [Report](docs/experiments/lernkurve.md#explorativer-lauf-mit-gemma-4-12b) |
 | 4 | Can a fresh session continue a project from `resume`? | Gemma 4 12B | done, pre-registered | Criteria missed: 117/165 vs. 133/165 for the same data as a flat list; cause found and fixed. [Report](docs/experiments/continuity-pilot.md) |
 | 5 | Does the fix help, and does the format matter? | Gemma 4 12B | done, 80 pre-registered calls | Obsolete next steps: JSON 1→0, text 2→0 (out of 15 each); no overall accuracy gain. [Report](docs/experiments/continuity-2x2.md) |
-| 6 | Does one correct, verified lesson help on *new* tasks? | Gemma 4 12B | draft | – [Draft](docs/experiments/transfer-pilot-plan.md) |
+| 6 | Does one correct, verified lesson help on *new* tasks? | Gemma 4 12B | done, 170 pre-registered calls | Not passed: target check 2/40 without lesson, 13/40 with it, 10/40 with a placebo (+27.5 pp, required 30; only +7.5 pp over placebo). Post hoc: the targeted error vanished with the lesson (13→0), but a naming error unrelated to the lesson dominated. [Report (German)](docs/experiments/transfer-pilot.md) |
 | 7 | Does `recall` find the right entry and keep scope and status limits? | no model | done, pre-registered, synthetic corpus | Limits held without exception; word-matching queries 10/10 at rank 1; word-form queries 3/5; post-hoc single-word probe 0/5; on average 2.6 unrelated extra hits per query with an expected entry. [Report (German)](docs/experiments/abruf-korpus.md) |
 
 New experiments use **Gemma 4 12B only**. In tests 2 and 3, 12B fixed its own errors far more
@@ -420,10 +420,13 @@ improvement from checked lessons either.
 What the runs did show: unchecked memory collects wrong lessons when the model is weak
 (about one in five sampled E2B lessons was clearly wrong), and confirming a lesson with
 "the check that failed before now passes" is too coarse, because one fix often flips many
-checks at once. A smaller follow-up that measures transfer of a single verified lesson is
-drafted but not run.
+checks at once. A pre-registered follow-up with 12B then measured transfer of a single,
+hand-written correct lesson to new tasks: it did not pass its criteria. Much of the gain
+also appeared with an unrelated placebo text; post hoc, the targeted error disappeared
+with the lesson but was hidden in many runs by an unrelated naming error. Promising, not
+shown.
 [Report (German)](docs/experiments/lernkurve.md),
-[follow-up draft (German)](docs/experiments/transfer-pilot-plan.md).
+[transfer pilot (German)](docs/experiments/transfer-pilot.md).
 
 ## Third experiment: can a fresh session continue a project?
 

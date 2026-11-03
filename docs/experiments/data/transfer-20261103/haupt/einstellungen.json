@@ -1,0 +1,730 @@
+{
+ "stufe": "haupt",
+ "commit": "970d2ddc092159c5c48466aaf6de5cc9afd4b8b9",
+ "sauber": true,
+ "attrappe": false,
+ "plan_sha256": "f9eba0c870663e97d414db9b8b6b2b64e79ed8676a2bbde0d955ba14ce284b7c",
+ "system_sha256": "4d78c12da5240a92a456eba0d05b38254ddf6d04c353d952e217daf6ce040f25",
+ "laeufe": [
+  {
+   "aufgabe": "rezepte",
+   "seed": 1009,
+   "bedingung": "L",
+   "nr": 1
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1009,
+   "bedingung": "P",
+   "nr": 2
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1009,
+   "bedingung": "O",
+   "nr": 3
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1002,
+   "bedingung": "L",
+   "nr": 4
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1002,
+   "bedingung": "O",
+   "nr": 5
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1002,
+   "bedingung": "P",
+   "nr": 6
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1003,
+   "bedingung": "O",
+   "nr": 7
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1003,
+   "bedingung": "P",
+   "nr": 8
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1003,
+   "bedingung": "L",
+   "nr": 9
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1002,
+   "bedingung": "O",
+   "nr": 10
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1002,
+   "bedingung": "P",
+   "nr": 11
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1002,
+   "bedingung": "L",
+   "nr": 12
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1003,
+   "bedingung": "P",
+   "nr": 13
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1003,
+   "bedingung": "L",
+   "nr": 14
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1003,
+   "bedingung": "O",
+   "nr": 15
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1008,
+   "bedingung": "O",
+   "nr": 16
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1008,
+   "bedingung": "P",
+   "nr": 17
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1008,
+   "bedingung": "L",
+   "nr": 18
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1003,
+   "bedingung": "P",
+   "nr": 19
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1003,
+   "bedingung": "O",
+   "nr": 20
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1003,
+   "bedingung": "L",
+   "nr": 21
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1005,
+   "bedingung": "O",
+   "nr": 22
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1005,
+   "bedingung": "P",
+   "nr": 23
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1005,
+   "bedingung": "L",
+   "nr": 24
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1002,
+   "bedingung": "P",
+   "nr": 25
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1002,
+   "bedingung": "O",
+   "nr": 26
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1002,
+   "bedingung": "L",
+   "nr": 27
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1004,
+   "bedingung": "P",
+   "nr": 28
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1004,
+   "bedingung": "L",
+   "nr": 29
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1004,
+   "bedingung": "O",
+   "nr": 30
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1002,
+   "bedingung": "L",
+   "nr": 31
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1002,
+   "bedingung": "P",
+   "nr": 32
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1002,
+   "bedingung": "O",
+   "nr": 33
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1001,
+   "bedingung": "P",
+   "nr": 34
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1001,
+   "bedingung": "L",
+   "nr": 35
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1001,
+   "bedingung": "O",
+   "nr": 36
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1001,
+   "bedingung": "O",
+   "nr": 37
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1001,
+   "bedingung": "P",
+   "nr": 38
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1001,
+   "bedingung": "L",
+   "nr": 39
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1006,
+   "bedingung": "L",
+   "nr": 40
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1006,
+   "bedingung": "O",
+   "nr": 41
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1006,
+   "bedingung": "P",
+   "nr": 42
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1007,
+   "bedingung": "P",
+   "nr": 43
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1007,
+   "bedingung": "L",
+   "nr": 44
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1007,
+   "bedingung": "O",
+   "nr": 45
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1001,
+   "bedingung": "O",
+   "nr": 46
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1001,
+   "bedingung": "P",
+   "nr": 47
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1001,
+   "bedingung": "L",
+   "nr": 48
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1007,
+   "bedingung": "O",
+   "nr": 49
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1007,
+   "bedingung": "L",
+   "nr": 50
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1007,
+   "bedingung": "P",
+   "nr": 51
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1007,
+   "bedingung": "O",
+   "nr": 52
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1007,
+   "bedingung": "L",
+   "nr": 53
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1007,
+   "bedingung": "P",
+   "nr": 54
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1008,
+   "bedingung": "O",
+   "nr": 55
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1008,
+   "bedingung": "P",
+   "nr": 56
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1008,
+   "bedingung": "L",
+   "nr": 57
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1009,
+   "bedingung": "P",
+   "nr": 58
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1009,
+   "bedingung": "L",
+   "nr": 59
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1009,
+   "bedingung": "O",
+   "nr": 60
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1004,
+   "bedingung": "O",
+   "nr": 61
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1004,
+   "bedingung": "L",
+   "nr": 62
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1004,
+   "bedingung": "P",
+   "nr": 63
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1010,
+   "bedingung": "O",
+   "nr": 64
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1010,
+   "bedingung": "L",
+   "nr": 65
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1010,
+   "bedingung": "P",
+   "nr": 66
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1008,
+   "bedingung": "L",
+   "nr": 67
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1008,
+   "bedingung": "P",
+   "nr": 68
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1008,
+   "bedingung": "O",
+   "nr": 69
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1008,
+   "bedingung": "P",
+   "nr": 70
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1008,
+   "bedingung": "L",
+   "nr": 71
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1008,
+   "bedingung": "O",
+   "nr": 72
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1005,
+   "bedingung": "P",
+   "nr": 73
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1005,
+   "bedingung": "O",
+   "nr": 74
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1005,
+   "bedingung": "L",
+   "nr": 75
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1010,
+   "bedingung": "L",
+   "nr": 76
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1010,
+   "bedingung": "P",
+   "nr": 77
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1010,
+   "bedingung": "O",
+   "nr": 78
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1006,
+   "bedingung": "P",
+   "nr": 79
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1006,
+   "bedingung": "O",
+   "nr": 80
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1006,
+   "bedingung": "L",
+   "nr": 81
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1010,
+   "bedingung": "O",
+   "nr": 82
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1010,
+   "bedingung": "P",
+   "nr": 83
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1010,
+   "bedingung": "L",
+   "nr": 84
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1001,
+   "bedingung": "O",
+   "nr": 85
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1001,
+   "bedingung": "P",
+   "nr": 86
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1001,
+   "bedingung": "L",
+   "nr": 87
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1007,
+   "bedingung": "P",
+   "nr": 88
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1007,
+   "bedingung": "O",
+   "nr": 89
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1007,
+   "bedingung": "L",
+   "nr": 90
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1006,
+   "bedingung": "P",
+   "nr": 91
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1006,
+   "bedingung": "O",
+   "nr": 92
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1006,
+   "bedingung": "L",
+   "nr": 93
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1003,
+   "bedingung": "P",
+   "nr": 94
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1003,
+   "bedingung": "O",
+   "nr": 95
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1003,
+   "bedingung": "L",
+   "nr": 96
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1005,
+   "bedingung": "P",
+   "nr": 97
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1005,
+   "bedingung": "O",
+   "nr": 98
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1005,
+   "bedingung": "L",
+   "nr": 99
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1006,
+   "bedingung": "L",
+   "nr": 100
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1006,
+   "bedingung": "O",
+   "nr": 101
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 1006,
+   "bedingung": "P",
+   "nr": 102
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1005,
+   "bedingung": "P",
+   "nr": 103
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1005,
+   "bedingung": "O",
+   "nr": 104
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1005,
+   "bedingung": "L",
+   "nr": 105
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1010,
+   "bedingung": "P",
+   "nr": 106
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1010,
+   "bedingung": "O",
+   "nr": 107
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1010,
+   "bedingung": "L",
+   "nr": 108
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1004,
+   "bedingung": "L",
+   "nr": 109
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1004,
+   "bedingung": "O",
+   "nr": 110
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 1004,
+   "bedingung": "P",
+   "nr": 111
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1004,
+   "bedingung": "P",
+   "nr": 112
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1004,
+   "bedingung": "O",
+   "nr": 113
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1004,
+   "bedingung": "L",
+   "nr": 114
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1009,
+   "bedingung": "L",
+   "nr": 115
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1009,
+   "bedingung": "P",
+   "nr": 116
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 1009,
+   "bedingung": "O",
+   "nr": 117
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1009,
+   "bedingung": "L",
+   "nr": 118
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1009,
+   "bedingung": "O",
+   "nr": 119
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 1009,
+   "bedingung": "P",
+   "nr": 120
+  }
+ ]
+}

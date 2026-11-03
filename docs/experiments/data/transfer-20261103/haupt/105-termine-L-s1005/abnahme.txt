@@ -1,0 +1,51 @@
+test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode) ... ok
+test_ids_steigen_in_einer_instanz (__main__.Abnahme.test_ids_steigen_in_einer_instanz) ... ERROR
+test_kaputtes_json_bleibt_erhalten (__main__.Abnahme.test_kaputtes_json_bleibt_erhalten) ... ok
+test_leere_eingabe_valueerror (__main__.Abnahme.test_leere_eingabe_valueerror) ... ok
+test_sortierung_und_ungueltiges_datum (__main__.Abnahme.test_sortierung_und_ungueltiges_datum) ... ERROR
+test_texte_nach_neuladen (__main__.Abnahme.test_texte_nach_neuladen) ... ERROR
+test_unbekannte_id_valueerror (__main__.Abnahme.test_unbekannte_id_valueerror) ... ok
+test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen) ... ERROR
+
+======================================================================
+ERROR: test_ids_steigen_in_einer_instanz (__main__.Abnahme.test_ids_steigen_in_einer_instanz)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/105-termine-L-s1005/verification/gemeinsam.py", line 90, in test_ids_steigen_in_einer_instanz
+    store.remove(zweiter)
+    ~~~~~~~~~~~~^^^^^^^^^
+  File "<laufordner>/haupt/105-termine-L-s1005/app.py", line 60, in remove
+    raise ValueError("ID not found")
+ValueError: ID not found
+
+======================================================================
+ERROR: test_sortierung_und_ungueltiges_datum (__main__.Abnahme.test_sortierung_und_ungueltiges_datum)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/105-termine-L-s1005/verification/abnahme.py", line 40, in test_sortierung_und_ungueltiges_datum
+    self.assertEqual([e["id"] for e in store.list()], [frueh, spaet, gleich])
+                                       ^^^^^^^^^^
+AttributeError: 'Calendar' object has no attribute 'list'
+
+======================================================================
+ERROR: test_texte_nach_neuladen (__main__.Abnahme.test_texte_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/105-termine-L-s1005/verification/gemeinsam.py", line 82, in test_texte_nach_neuladen
+    texte = " ".join(json.dumps(e, ensure_ascii=False) for e in self.oeffnen().list())
+                                                                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Calendar' object has no attribute 'list'
+
+======================================================================
+ERROR: test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/105-termine-L-s1005/verification/gemeinsam.py", line 66, in test_ziel_ids_nach_neuladen
+    geladen = [e["id"] for e in neu_geladen.list()]
+                                ^^^^^^^^^^^^^^^^
+AttributeError: 'Calendar' object has no attribute 'list'
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.068s
+
+FAILED (errors=4)

@@ -1,0 +1,130 @@
+{
+ "stufe": "vorlauf",
+ "commit": "970d2ddc092159c5c48466aaf6de5cc9afd4b8b9",
+ "sauber": true,
+ "attrappe": false,
+ "plan_sha256": "f9eba0c870663e97d414db9b8b6b2b64e79ed8676a2bbde0d955ba14ce284b7c",
+ "system_sha256": "4d78c12da5240a92a456eba0d05b38254ddf6d04c353d952e217daf6ce040f25",
+ "laeufe": [
+  {
+   "aufgabe": "ausgaben",
+   "seed": 902,
+   "bedingung": "O",
+   "nr": 1
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 902,
+   "bedingung": "O",
+   "nr": 2
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 904,
+   "bedingung": "O",
+   "nr": 3
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 903,
+   "bedingung": "O",
+   "nr": 4
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 905,
+   "bedingung": "O",
+   "nr": 5
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 903,
+   "bedingung": "O",
+   "nr": 6
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 901,
+   "bedingung": "O",
+   "nr": 7
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 905,
+   "bedingung": "O",
+   "nr": 8
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 904,
+   "bedingung": "O",
+   "nr": 9
+  },
+  {
+   "aufgabe": "ausgaben",
+   "seed": 901,
+   "bedingung": "O",
+   "nr": 10
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 903,
+   "bedingung": "O",
+   "nr": 11
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 902,
+   "bedingung": "O",
+   "nr": 12
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 905,
+   "bedingung": "O",
+   "nr": 13
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 902,
+   "bedingung": "O",
+   "nr": 14
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 905,
+   "bedingung": "O",
+   "nr": 15
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 903,
+   "bedingung": "O",
+   "nr": 16
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 904,
+   "bedingung": "O",
+   "nr": 17
+  },
+  {
+   "aufgabe": "termine",
+   "seed": 901,
+   "bedingung": "O",
+   "nr": 18
+  },
+  {
+   "aufgabe": "rezepte",
+   "seed": 904,
+   "bedingung": "O",
+   "nr": 19
+  },
+  {
+   "aufgabe": "leihliste",
+   "seed": 901,
+   "bedingung": "O",
+   "nr": 20
+  }
+ ]
+}

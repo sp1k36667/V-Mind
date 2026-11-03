@@ -1,0 +1,28 @@
+{
+  "aufgabe": "rezepte",
+  "seed": 1007,
+  "bedingung": "L",
+  "nr": 44,
+  "technischer_fehler": null,
+  "status": {
+    "test_cli_fehler_exitcode": "ERROR",
+    "test_ids_steigen_in_einer_instanz": "ERROR",
+    "test_kaputtes_json_bleibt_erhalten": "ERROR",
+    "test_leere_eingabe_valueerror": "ERROR",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ERROR",
+    "test_ungueltige_minuten_valueerror": "ERROR",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+  },
+  "ziel_bestanden": false,
+  "ziel_format_fehler": false,
+  "abbruch": null,
+  "uebrige_ok": 0,
+  "uebrige_von": 7,
+  "abgeschnitten": false,
+  "code_zeilen": 194,
+  "code_sha256": "9668b5604603b4cef538430e5bd3da918a24a1da850e1e5d3d1aa45be62311c7",
+  "ausgabe_tokens": 2048,
+  "prompt_tokens": 625,
+  "dauer_s": 59.4
+}

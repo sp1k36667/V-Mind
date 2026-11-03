@@ -1,0 +1,73 @@
+test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode) ... ok
+test_ids_steigen_in_einer_instanz (__main__.Abnahme.test_ids_steigen_in_einer_instanz) ... ok
+test_kaputtes_json_bleibt_erhalten (__main__.Abnahme.test_kaputtes_json_bleibt_erhalten) ... Error reading file: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+ERROR
+test_leere_eingabe_valueerror (__main__.Abnahme.test_leere_eingabe_valueerror) ... ok
+test_texte_nach_neuladen (__main__.Abnahme.test_texte_nach_neuladen) ... ERROR
+test_unbekannte_id_valueerror (__main__.Abnahme.test_unbekannte_id_valueerror) ... ok
+test_ungueltige_minuten_valueerror (__main__.Abnahme.test_ungueltige_minuten_valueerror) ... ERROR
+test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen) ... ERROR
+
+======================================================================
+ERROR: test_kaputtes_json_bleibt_erhalten (__main__.Abnahme.test_kaputtes_json_bleibt_erhalten)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/087-rezepte-L-s1001/app.py", line 15, in __init__
+    self.data = json.loads(content)
+                ~~~~~~~~~~^^^^^^^^^
+  File "<home>/miniconda3/lib/python3.13/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "<home>/miniconda3/lib/python3.13/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "<home>/miniconda3/lib/python3.13/json/decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<laufordner>/haupt/087-rezepte-L-s1001/verification/gemeinsam.py", line 110, in test_kaputtes_json_bleibt_erhalten
+    self.ADAPTER.neu(self.oeffnen(), 0)
+                     ~~~~~~~~~~~~^^
+  File "<laufordner>/haupt/087-rezepte-L-s1001/verification/gemeinsam.py", line 45, in oeffnen
+    return getattr(self.app, self.ADAPTER.klasse)(str(self.pfad))
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "<laufordner>/haupt/087-rezepte-L-s1001/app.py", line 20, in __init__
+    sys.exit(1)
+    ~~~~~~~~^^^
+SystemExit: 1
+
+======================================================================
+ERROR: test_texte_nach_neuladen (__main__.Abnahme.test_texte_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/087-rezepte-L-s1001/verification/gemeinsam.py", line 82, in test_texte_nach_neuladen
+    texte = " ".join(json.dumps(e, ensure_ascii=False) for e in self.oeffnen().list())
+                                                                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'RecipeBook' object has no attribute 'list'
+
+======================================================================
+ERROR: test_ungueltige_minuten_valueerror (__main__.Abnahme.test_ungueltige_minuten_valueerror)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/087-rezepte-L-s1001/verification/abnahme.py", line 43, in test_ungueltige_minuten_valueerror
+    self.assertEqual(store.list()[0]["minutes"], 5)
+                     ^^^^^^^^^^
+AttributeError: 'RecipeBook' object has no attribute 'list'
+
+======================================================================
+ERROR: test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/087-rezepte-L-s1001/verification/gemeinsam.py", line 66, in test_ziel_ids_nach_neuladen
+    geladen = [e["id"] for e in neu_geladen.list()]
+                                ^^^^^^^^^^^^^^^^
+AttributeError: 'RecipeBook' object has no attribute 'list'
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.061s
+
+FAILED (errors=4)

@@ -70,6 +70,11 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
   overall accuracy. (#21)
 - Stem-based partial search (#27) is not part of this version: it missed one of its
   pre-registered criteria and showed new weaknesses.
+- Transfer pilot with Gemma 4 12B (pre-registered, 170 calls, frozen at `970d2dd`): one
+  correct lesson in the prompt did not pass its criteria (target check 2/40 → 13/40,
+  placebo 10/40; counter-case limit formally violated). Post hoc, the targeted error
+  vanished with the lesson, but an unrelated naming error dominated. Report:
+  `docs/experiments/transfer-pilot.md` (German). (#35)
 
 ### Upgrading
 

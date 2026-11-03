@@ -1,0 +1,49 @@
+test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode) ... FAIL
+test_doppelte_rueckgabe_valueerror (__main__.Abnahme.test_doppelte_rueckgabe_valueerror) ... ERROR
+test_ids_steigen_in_einer_instanz (__main__.Abnahme.test_ids_steigen_in_einer_instanz) ... ok
+test_kaputtes_json_bleibt_erhalten (__main__.Abnahme.test_kaputtes_json_bleibt_erhalten) ... ok
+test_leere_eingabe_valueerror (__main__.Abnahme.test_leere_eingabe_valueerror) ... ok
+test_texte_nach_neuladen (__main__.Abnahme.test_texte_nach_neuladen) ... ERROR
+test_unbekannte_id_valueerror (__main__.Abnahme.test_unbekannte_id_valueerror) ... ok
+test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen) ... ERROR
+
+======================================================================
+ERROR: test_doppelte_rueckgabe_valueerror (__main__.Abnahme.test_doppelte_rueckgabe_valueerror)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/014-leihliste-L-s1003/verification/abnahme.py", line 38, in test_doppelte_rueckgabe_valueerror
+    self.assertIs(store.list()[0]["returned"], False)
+                  ^^^^^^^^^^
+AttributeError: 'LoanList' object has no attribute 'list'
+
+======================================================================
+ERROR: test_texte_nach_neuladen (__main__.Abnahme.test_texte_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/014-leihliste-L-s1003/verification/gemeinsam.py", line 82, in test_texte_nach_neuladen
+    texte = " ".join(json.dumps(e, ensure_ascii=False) for e in self.oeffnen().list())
+                                                                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'LoanList' object has no attribute 'list'
+
+======================================================================
+ERROR: test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/014-leihliste-L-s1003/verification/gemeinsam.py", line 66, in test_ziel_ids_nach_neuladen
+    geladen = [e["id"] for e in neu_geladen.list()]
+                                ^^^^^^^^^^^^^^^^
+AttributeError: 'LoanList' object has no attribute 'list'
+
+======================================================================
+FAIL: test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<laufordner>/haupt/014-leihliste-L-s1003/verification/gemeinsam.py", line 115, in test_cli_fehler_exitcode
+    self.assertEqual(hinzu.returncode, 0, hinzu.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : 
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.025s
+
+FAILED (failures=1, errors=3)

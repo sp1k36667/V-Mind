@@ -1,0 +1,93 @@
+import json
+import sys
+import argparse
+
+class LoanList:
+    def __init__(self, path):
+        self.path = path
+        try:
+            with open(self.path, 'r') as f:
+                data = json.load(f)
+                if "next_id" not in data or "items" not in data:
+                    raise ValueError("Invalid format")
+                self.data = data
+        except (FileNotFoundError, json.JSONDecodeError, ValueError):
+            self.data = {"next_id": 1, "items": {}}
+            self.save()
+        except Exception:
+            raise ValueError("Corrupted file")
+
+    def save(self):
+        with open(self.path, 'w') as f:
+            json.dump(self.data, f)
+
+    def lend(self, item, person):
+        if not item.strip() or not person.strip():
+            raise ValueError("Empty item or person")
+        idx = self.data["next_id"]
+        self.data["items"][idx] = {
+            "item": item,
+            "person": person,
+            "returned": False
+        }
+        self.data["next_id"] += 1
+        self.save()
+        return idx
+
+    def list_items(self):
+        sorted_ids = sorted(self.data["items"].keys())
+        result = []
+        for i in sorted_ids:
+            entry = self.data["items"][i]
+            result.append({
+                "id": i,
+                "item": entry["item"],
+                "person": entry["person"],
+                "returned": entry["returned"]
+            })
+        return result
+
+    def give_back(self, idx):
+        if not isinstance(idx, int) or idx not in self.data["items"]:
+            raise ValueError("Invalid ID")
+        entry = self.data["items"][idx]
+        if entry["returned"]:
+            raise ValueError("Already returned")
+        entry["returned"] = True
+        self.save()
+
+    def remove(self, idx):
+        if not isinstance(idx, int) or idx not in self.data["items"]:
+            raise ValueError("Invalid ID")
+        del self.data["items"][idx]
+        self.save()
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--file", required=True)
+    parser.add_argument("command", choices=["lend", "list", "back", "remove"])
+    parser.add_argument("args", nargs="*")
+    args = parser.parse_args()
+
+    try:
+        ll = LoanList(args.file)
+        if args.command == "lend":
+            if len(args.args) < 2: raise ValueError("Missing args")
+            ll.lend(args.args[0], args.args[1])
+        elif args.command == "list":
+            for x in ll.list_items():
+                out = f"{x['id']} {x['item']} an {x['person']}"
+                if x['returned']: out += " (zurück)"
+                print(out)
+        elif args.command == "back":
+            if len(args.args) < 1: raise ValueError("Missing ID")
+            ll.give_back(int(args.args[0]))
+        elif args.command == "remove":
+            if len(args.args) < 1: raise ValueError("Missing ID")
+            ll.remove(int(args.args[0]))
+    except Exception as e:
+        sys.stderr.write(f"Error: {str(e)}\n")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

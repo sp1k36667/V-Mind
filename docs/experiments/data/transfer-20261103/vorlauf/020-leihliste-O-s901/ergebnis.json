@@ -1,0 +1,28 @@
+{
+  "aufgabe": "leihliste",
+  "seed": 901,
+  "bedingung": "O",
+  "nr": 20,
+  "technischer_fehler": null,
+  "status": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_doppelte_rueckgabe_valueerror": "ERROR",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+  },
+  "ziel_bestanden": false,
+  "ziel_format_fehler": false,
+  "abbruch": null,
+  "uebrige_ok": 4,
+  "uebrige_von": 7,
+  "abgeschnitten": false,
+  "code_zeilen": 95,
+  "code_sha256": "4243dcf511210c8ba0648866450ef746c5da9a850d7049c0fa88be20051c38cf",
+  "ausgabe_tokens": 850,
+  "prompt_tokens": 569,
+  "dauer_s": 26.1
+}

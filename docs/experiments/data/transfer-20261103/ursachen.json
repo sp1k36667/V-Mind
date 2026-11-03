@@ -1,0 +1,79 @@
+{
+  "vorlauf": {
+    "O": {
+      "klassen": {
+        "fehlende Methode list": 9,
+        "IDs nach Neuladen keine int": 5,
+        "ID nach Neuladen nicht gefunden": 4,
+        "bestanden": 1,
+        "Datei als beschädigt abgelehnt": 1
+      },
+      "list_vorhanden_bestanden": 1,
+      "list_vorhanden_laeufe": 11
+    }
+  },
+  "haupt": {
+    "L": {
+      "klassen": {
+        "fehlende Methode list": 18,
+        "bestanden": 13,
+        "ID nach Neuladen nicht gefunden": 5,
+        "Umwandlung auf falschem Typ (isdigit)": 2,
+        "Syntaxfehler": 1,
+        "andere": 1
+      },
+      "list_vorhanden_bestanden": 13,
+      "list_vorhanden_laeufe": 22
+    },
+    "O": {
+      "klassen": {
+        "fehlende Methode list": 22,
+        "IDs nach Neuladen keine int": 13,
+        "bestanden": 2,
+        "ID nach Neuladen nicht gefunden": 2,
+        "Datei als beschädigt abgelehnt": 1
+      },
+      "list_vorhanden_bestanden": 2,
+      "list_vorhanden_laeufe": 18
+    },
+    "P": {
+      "klassen": {
+        "fehlende Methode list": 16,
+        "IDs nach Neuladen keine int": 10,
+        "bestanden": 10,
+        "ID nach Neuladen nicht gefunden": 2,
+        "Datei als beschädigt abgelehnt": 1,
+        "Vergleich str/int": 1
+      },
+      "list_vorhanden_bestanden": 10,
+      "list_vorhanden_laeufe": 24
+    }
+  },
+  "gegenfall": {
+    "L": {
+      "klassen": {
+        "fehlende Methode list": 9,
+        "bestanden": 1
+      },
+      "list_vorhanden_bestanden": 1,
+      "list_vorhanden_laeufe": 1
+    },
+    "O": {
+      "klassen": {
+        "fehlende Methode list": 6,
+        "bestanden": 3,
+        "andere": 1
+      },
+      "list_vorhanden_bestanden": 3,
+      "list_vorhanden_laeufe": 4
+    },
+    "P": {
+      "klassen": {
+        "fehlende Methode list": 9,
+        "bestanden": 1
+      },
+      "list_vorhanden_bestanden": 1,
+      "list_vorhanden_laeufe": 1
+    }
+  }
+}
