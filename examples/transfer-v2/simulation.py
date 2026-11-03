@@ -84,7 +84,7 @@ def main():
     zufall = random.Random(20261103)
     m, sd_m, rho = 0.30, 0.15, 0.3
     print(f"{SIMULATIONEN} Simulationen je Zelle; unpassend M={m:.0%} (SD {sd_m:.0%} je Aufgabe), "
-          f"rho={rho}. Werte: nur McNemar / gesamte Regel")
+          f"rho={rho}. Werte: nur McNemar / Regeln 1-4 (bedingt)")
     print("| Aufgaben je Gruppe | Seeds je Aufgabe | wahrer Effekt D | SD des Effekts | Trennschärfe |")
     print("|---:|---:|---:|---:|---:|")
     zellen = [(4, n, d, sd) for n in (10, 15, 20) for d in (0.0, 0.2, 0.3, 0.4) for sd in (0.0, 0.15)]
