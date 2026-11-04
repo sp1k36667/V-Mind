@@ -1,0 +1,10 @@
+test_bis_null_entnehmen (__main__.Lager.test_bis_null_entnehmen) ... ok
+test_einlagern (__main__.Lager.test_einlagern) ... ok
+test_ungueltige_mengen_valueerror (__main__.Lager.test_ungueltige_mengen_valueerror) ... ok
+test_ungueltiger_anfangsbestand_valueerror (__main__.Lager.test_ungueltiger_anfangsbestand_valueerror) ... ok
+test_ziel_mechanismus (__main__.Lager.test_ziel_mechanismus) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.001s
+
+OK

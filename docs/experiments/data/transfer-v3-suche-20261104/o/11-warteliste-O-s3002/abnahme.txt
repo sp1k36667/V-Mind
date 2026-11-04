@@ -1,0 +1,43 @@
+test_ids_und_reihenfolge (__main__.Warteliste.test_ids_und_reihenfolge) ... FAIL
+test_nachruecken (__main__.Warteliste.test_nachruecken) ... ok
+test_unbekannte_id_valueerror (__main__.Warteliste.test_unbekannte_id_valueerror) ... FAIL
+test_ungueltige_werte_valueerror (__main__.Warteliste.test_ungueltige_werte_valueerror) ... ok
+test_wartende_stornieren (__main__.Warteliste.test_wartende_stornieren) ... ok
+test_ziel_mechanismus (__main__.Warteliste.test_ziel_mechanismus) ... ok
+
+======================================================================
+FAIL: test_ids_und_reihenfolge (__main__.Warteliste.test_ids_und_reihenfolge)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v3-screen-b37abc1/o/11-warteliste-O-s3002/verification/abnahme.py", line 164, in test_ids_und_reihenfolge
+    self.assertEqual(kurs.confirmed(), ["Eva"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [] != ['Eva']
+
+Second list contains 1 additional elements.
+First extra element 0:
+'Eva'
+
+- []
++ ['Eva']
+
+======================================================================
+FAIL: test_unbekannte_id_valueerror (__main__.Warteliste.test_unbekannte_id_valueerror)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v3-screen-b37abc1/o/11-warteliste-O-s3002/verification/abnahme.py", line 186, in test_unbekannte_id_valueerror
+    self.assertEqual(kurs.confirmed(), ["Eva"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [] != ['Eva']
+
+Second list contains 1 additional elements.
+First extra element 0:
+'Eva'
+
+- []
++ ['Eva']
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.002s
+
+FAILED (failures=2)

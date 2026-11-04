@@ -1,0 +1,25 @@
+{
+  "aufgabe": "kalender",
+  "bedingung": "O",
+  "seed": 3002,
+  "nr": 10,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_ueberschneidungen_abgelehnt": "ok",
+    "test_sortiert": "ok",
+    "test_ungueltige_zeiten_valueerror": "FAIL",
+    "test_ganzer_tag": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 3,
+  "uebrige_von": 4,
+  "diagnose": {},
+  "abgeschnitten": false,
+  "code_zeilen": 23,
+  "code_sha256": "e1ac5d6ff0f1cc0b251378e8babcefea802b41aea480db754b57be6d2b539b9f",
+  "ausgabe_tokens": 236,
+  "prompt_tokens": 438,
+  "dauer_s": 9.5
+}

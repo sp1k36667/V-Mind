@@ -1,0 +1,19 @@
+test_ganzer_tag (__main__.Kalender.test_ganzer_tag) ... ok
+test_sortiert (__main__.Kalender.test_sortiert) ... ok
+test_ueberschneidungen_abgelehnt (__main__.Kalender.test_ueberschneidungen_abgelehnt) ... ok
+test_ungueltige_zeiten_valueerror (__main__.Kalender.test_ungueltige_zeiten_valueerror) ... FAIL
+test_ziel_mechanismus (__main__.Kalender.test_ziel_mechanismus) ... ok
+
+======================================================================
+FAIL: test_ungueltige_zeiten_valueerror (__main__.Kalender.test_ungueltige_zeiten_valueerror)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v3-screen-b37abc1/o/10-kalender-O-s3002/verification/abnahme.py", line 132, in test_ungueltige_zeiten_valueerror
+    with self.assertRaises(ValueError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.002s
+
+FAILED (failures=1)

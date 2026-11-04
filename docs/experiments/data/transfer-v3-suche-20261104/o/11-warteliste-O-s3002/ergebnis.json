@@ -1,0 +1,26 @@
+{
+  "aufgabe": "warteliste",
+  "bedingung": "O",
+  "seed": 3002,
+  "nr": 11,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_ids_und_reihenfolge": "FAIL",
+    "test_wartende_stornieren": "ok",
+    "test_nachruecken": "ok",
+    "test_unbekannte_id_valueerror": "FAIL",
+    "test_ungueltige_werte_valueerror": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 3,
+  "uebrige_von": 5,
+  "diagnose": {},
+  "abgeschnitten": false,
+  "code_zeilen": 52,
+  "code_sha256": "af87ca8dd15cce12716271cb4f39d9bb022da57ed1a4abc06fff0cdf588961e2",
+  "ausgabe_tokens": 484,
+  "prompt_tokens": 521,
+  "dauer_s": 16.3
+}

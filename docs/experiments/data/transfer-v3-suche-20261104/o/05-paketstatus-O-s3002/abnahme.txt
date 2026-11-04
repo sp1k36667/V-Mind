@@ -1,0 +1,11 @@
+test_anfangsstatus (__main__.Paketstatus.test_anfangsstatus) ... ok
+test_gleiches_ereignis_zweimal (__main__.Paketstatus.test_gleiches_ereignis_zweimal) ... ok
+test_reihenfolge_vorwaerts (__main__.Paketstatus.test_reihenfolge_vorwaerts) ... ok
+test_ueberspringen (__main__.Paketstatus.test_ueberspringen) ... ok
+test_unbekanntes_ereignis_valueerror (__main__.Paketstatus.test_unbekanntes_ereignis_valueerror) ... ok
+test_ziel_mechanismus (__main__.Paketstatus.test_ziel_mechanismus) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.001s
+
+OK
