@@ -695,3 +695,38 @@ fn start_prompt_defaults_to_german_and_offers_english() {
     let (ok, _) = cli_status(&["start-prompt", "fr"]);
     assert!(!ok);
 }
+
+#[test]
+fn recall_limit_option_returns_more_than_five_and_rejects_invalid_values() {
+    let temp = Temp::new();
+    let path = temp.0.join("limit.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    for n in 0..7 {
+        let problem = format!("Gerüstname {n} umbenannt");
+        let added = cli(&[
+            "add",
+            db,
+            "error_solution",
+            &problem,
+            "Namen übernehmen",
+            "Test",
+        ]);
+        let id = added["id"].to_string();
+        cli(&["validate", db, &id, "Testprüfer", "Limit-Test"]);
+    }
+    let count = |args: &[&str]| cli(args).as_array().unwrap().len();
+    assert_eq!(count(&["recall", db, "Gerüstname umbenannt"]), 5);
+    assert_eq!(
+        count(&["recall", db, "Gerüstname umbenannt", "--limit", "7"]),
+        7
+    );
+    assert_eq!(
+        count(&["recall", db, "Gerüstname umbenannt", "--limit", "2"]),
+        2
+    );
+    for bad in ["0", "21", "fünf", "-1"] {
+        let (ok, _) = cli_status(&["recall", db, "Gerüstname", "--limit", bad]);
+        assert!(!ok, "--limit {bad} angenommen");
+    }
+}

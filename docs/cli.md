@@ -346,6 +346,14 @@ aufzurufen. Das ist die bevorzugte Anbindung für eine bereits vorhandene KI.
 cargo run -p vmind-cli --locked -- --json --scope beispiel recall vmind.db 'SQLite Migration'
 ```
 
+Ohne Angabe liefert `recall` höchstens 5 Treffer. Mit `--limit N` (1 bis 20, wie
+`limit` in JSONL und MCP) mehr oder weniger, zum Beispiel wenn eine Aufgabe zu vielen
+gespeicherten Erfahrungen passt:
+
+```sh
+cargo run -p vmind-cli --locked -- --json --scope beispiel recall vmind.db 'SQLite Migration' --limit 10
+```
+
 Für länger laufende Clients:
 
 ```sh
