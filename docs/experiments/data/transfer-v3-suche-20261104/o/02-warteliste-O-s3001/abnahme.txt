@@ -1,0 +1,11 @@
+test_ids_und_reihenfolge (__main__.Warteliste.test_ids_und_reihenfolge) ... ok
+test_nachruecken (__main__.Warteliste.test_nachruecken) ... ok
+test_unbekannte_id_valueerror (__main__.Warteliste.test_unbekannte_id_valueerror) ... ok
+test_ungueltige_werte_valueerror (__main__.Warteliste.test_ungueltige_werte_valueerror) ... ok
+test_wartende_stornieren (__main__.Warteliste.test_wartende_stornieren) ... ok
+test_ziel_mechanismus (__main__.Warteliste.test_ziel_mechanismus) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.002s
+
+OK

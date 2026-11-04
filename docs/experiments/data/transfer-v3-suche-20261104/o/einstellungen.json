@@ -1,0 +1,83 @@
+{
+ "stufe": "o",
+ "commit": "b37abc1cb866f8a8e2bfa6c16b9c9036847d7001",
+ "sauber": true,
+ "attrappe": false,
+ "plan_sha256": "f8206e91bd63aa0eac7bef444e136453e9fe0aacf09e392f3741b771204cfede",
+ "system_sha256": "c5a70bb7ceb60d0d784f7555e4a494c7895d4ab158c139376872191293123105",
+ "auswahl": null,
+ "laeufe": [
+  {
+   "aufgabe": "lager",
+   "bedingung": "O",
+   "seed": 3001,
+   "nr": 1
+  },
+  {
+   "aufgabe": "warteliste",
+   "bedingung": "O",
+   "seed": 3001,
+   "nr": 2
+  },
+  {
+   "aufgabe": "lager",
+   "bedingung": "O",
+   "seed": 3002,
+   "nr": 3
+  },
+  {
+   "aufgabe": "paketstatus",
+   "bedingung": "O",
+   "seed": 3001,
+   "nr": 4
+  },
+  {
+   "aufgabe": "paketstatus",
+   "bedingung": "O",
+   "seed": 3002,
+   "nr": 5
+  },
+  {
+   "aufgabe": "datumsimport",
+   "bedingung": "O",
+   "seed": 3002,
+   "nr": 6
+  },
+  {
+   "aufgabe": "datumsimport",
+   "bedingung": "O",
+   "seed": 3001,
+   "nr": 7
+  },
+  {
+   "aufgabe": "kalender",
+   "bedingung": "O",
+   "seed": 3001,
+   "nr": 8
+  },
+  {
+   "aufgabe": "bestellimport",
+   "bedingung": "O",
+   "seed": 3001,
+   "nr": 9
+  },
+  {
+   "aufgabe": "kalender",
+   "bedingung": "O",
+   "seed": 3002,
+   "nr": 10
+  },
+  {
+   "aufgabe": "warteliste",
+   "bedingung": "O",
+   "seed": 3002,
+   "nr": 11
+  },
+  {
+   "aufgabe": "bestellimport",
+   "bedingung": "O",
+   "seed": 3002,
+   "nr": 12
+  }
+ ]
+}

@@ -1,0 +1,86 @@
+{
+  "o": {
+    "stufe": "o",
+    "gueltig": true,
+    "probleme": [],
+    "commit": "b37abc1cb866f8a8e2bfa6c16b9c9036847d7001",
+    "attrappe": false,
+    "kandidaten": {
+      "datumsimport": {
+        "laeufe": 2,
+        "bestanden": 2,
+        "verfehlt": 0,
+        "nicht_beobachtbar": 0,
+        "technisch": 0,
+        "uebrige_ok": 8,
+        "uebrige_von": 8,
+        "uebrige_ausreichend": true,
+        "geeignet": false,
+        "gemischt": false
+      },
+      "kalender": {
+        "laeufe": 2,
+        "bestanden": 2,
+        "verfehlt": 0,
+        "nicht_beobachtbar": 0,
+        "technisch": 0,
+        "uebrige_ok": 6,
+        "uebrige_von": 8,
+        "uebrige_ausreichend": false,
+        "geeignet": false,
+        "gemischt": false
+      },
+      "warteliste": {
+        "laeufe": 2,
+        "bestanden": 2,
+        "verfehlt": 0,
+        "nicht_beobachtbar": 0,
+        "technisch": 0,
+        "uebrige_ok": 8,
+        "uebrige_von": 10,
+        "uebrige_ausreichend": true,
+        "geeignet": false,
+        "gemischt": false
+      },
+      "paketstatus": {
+        "laeufe": 2,
+        "bestanden": 2,
+        "verfehlt": 0,
+        "nicht_beobachtbar": 0,
+        "technisch": 0,
+        "uebrige_ok": 10,
+        "uebrige_von": 10,
+        "uebrige_ausreichend": true,
+        "geeignet": false,
+        "gemischt": false
+      },
+      "bestellimport": {
+        "laeufe": 2,
+        "bestanden": 2,
+        "verfehlt": 0,
+        "nicht_beobachtbar": 0,
+        "technisch": 0,
+        "uebrige_ok": 6,
+        "uebrige_von": 8,
+        "uebrige_ausreichend": false,
+        "geeignet": false,
+        "gemischt": false
+      },
+      "lager": {
+        "laeufe": 2,
+        "bestanden": 2,
+        "verfehlt": 0,
+        "nicht_beobachtbar": 0,
+        "technisch": 0,
+        "uebrige_ok": 8,
+        "uebrige_von": 8,
+        "uebrige_ausreichend": true,
+        "geeignet": false,
+        "gemischt": false
+      }
+    },
+    "rang": [],
+    "auswahl": [],
+    "hinweis": "Vorauswahl aus 2 + 1 Läufen je Aufgabe; keine Rate, keine Wirksamkeitsaussage."
+  }
+}

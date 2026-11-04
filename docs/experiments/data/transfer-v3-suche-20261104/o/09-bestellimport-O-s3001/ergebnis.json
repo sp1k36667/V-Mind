@@ -1,0 +1,25 @@
+{
+  "aufgabe": "bestellimport",
+  "bedingung": "O",
+  "seed": 3001,
+  "nr": 9,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_anfangs_null": "ok",
+    "test_duplikat_in_derselben_instanz": "ok",
+    "test_summe_dauerhaft": "ok",
+    "test_ungueltige_werte_valueerror": "FAIL"
+  },
+  "abbruch": null,
+  "uebrige_ok": 3,
+  "uebrige_von": 4,
+  "diagnose": {},
+  "abgeschnitten": false,
+  "code_zeilen": 38,
+  "code_sha256": "d8d2232c328d4853453551f8af42edad69d82c2efa213e29814e90b09c89665e",
+  "ausgabe_tokens": 357,
+  "prompt_tokens": 457,
+  "dauer_s": 12.6
+}

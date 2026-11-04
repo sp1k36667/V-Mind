@@ -1,0 +1,25 @@
+{
+  "aufgabe": "lager",
+  "bedingung": "O",
+  "seed": 3001,
+  "nr": 1,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_einlagern": "ok",
+    "test_bis_null_entnehmen": "ok",
+    "test_ungueltige_mengen_valueerror": "ok",
+    "test_ungueltiger_anfangsbestand_valueerror": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 4,
+  "uebrige_von": 4,
+  "diagnose": {},
+  "abgeschnitten": false,
+  "code_zeilen": 25,
+  "code_sha256": "3bc15d26cacdaf9a5e523c89666439a1017462297a713705cf249e88750ce096",
+  "ausgabe_tokens": 233,
+  "prompt_tokens": 385,
+  "dauer_s": 9.2
+}

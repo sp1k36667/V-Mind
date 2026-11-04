@@ -1,0 +1,12 @@
+{"stufe": "o", "aufgabe": "lager", "bedingung": "O", "seed": 3001, "nr": 1, "zeit": "2026-11-04T16:37:42+0100"}
+{"stufe": "o", "aufgabe": "warteliste", "bedingung": "O", "seed": 3001, "nr": 2, "zeit": "2026-11-04T16:37:51+0100"}
+{"stufe": "o", "aufgabe": "lager", "bedingung": "O", "seed": 3002, "nr": 3, "zeit": "2026-11-04T16:38:08+0100"}
+{"stufe": "o", "aufgabe": "paketstatus", "bedingung": "O", "seed": 3001, "nr": 4, "zeit": "2026-11-04T16:38:17+0100"}
+{"stufe": "o", "aufgabe": "paketstatus", "bedingung": "O", "seed": 3002, "nr": 5, "zeit": "2026-11-04T16:38:26+0100"}
+{"stufe": "o", "aufgabe": "datumsimport", "bedingung": "O", "seed": 3002, "nr": 6, "zeit": "2026-11-04T16:38:34+0100"}
+{"stufe": "o", "aufgabe": "datumsimport", "bedingung": "O", "seed": 3001, "nr": 7, "zeit": "2026-11-04T16:38:46+0100"}
+{"stufe": "o", "aufgabe": "kalender", "bedingung": "O", "seed": 3001, "nr": 8, "zeit": "2026-11-04T16:38:55+0100"}
+{"stufe": "o", "aufgabe": "bestellimport", "bedingung": "O", "seed": 3001, "nr": 9, "zeit": "2026-11-04T16:39:05+0100"}
+{"stufe": "o", "aufgabe": "kalender", "bedingung": "O", "seed": 3002, "nr": 10, "zeit": "2026-11-04T16:39:17+0100"}
+{"stufe": "o", "aufgabe": "warteliste", "bedingung": "O", "seed": 3002, "nr": 11, "zeit": "2026-11-04T16:39:27+0100"}
+{"stufe": "o", "aufgabe": "bestellimport", "bedingung": "O", "seed": 3002, "nr": 12, "zeit": "2026-11-04T16:39:43+0100"}

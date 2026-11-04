@@ -1,0 +1,11 @@
+test_diag_kompaktformat_abgelehnt (__main__.Datumsimport.test_diag_kompaktformat_abgelehnt) ... ok
+test_falsches_format_valueerror (__main__.Datumsimport.test_falsches_format_valueerror) ... ok
+test_gueltige_daten (__main__.Datumsimport.test_gueltige_daten) ... ok
+test_kein_text_valueerror (__main__.Datumsimport.test_kein_text_valueerror) ... ok
+test_ungueltiger_kalendertag_valueerror (__main__.Datumsimport.test_ungueltiger_kalendertag_valueerror) ... ok
+test_ziel_mechanismus (__main__.Datumsimport.test_ziel_mechanismus) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.003s
+
+OK

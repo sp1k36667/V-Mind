@@ -1,0 +1,26 @@
+{
+  "aufgabe": "paketstatus",
+  "bedingung": "O",
+  "seed": 3002,
+  "nr": 5,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_anfangsstatus": "ok",
+    "test_reihenfolge_vorwaerts": "ok",
+    "test_ueberspringen": "ok",
+    "test_gleiches_ereignis_zweimal": "ok",
+    "test_unbekanntes_ereignis_valueerror": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 5,
+  "uebrige_von": 5,
+  "diagnose": {},
+  "abgeschnitten": false,
+  "code_zeilen": 25,
+  "code_sha256": "1041469ba62c7d967aadfa4dadc44aeb25a32081f03e89e9d7489772ca9747cb",
+  "ausgabe_tokens": 211,
+  "prompt_tokens": 414,
+  "dauer_s": 8.9
+}
