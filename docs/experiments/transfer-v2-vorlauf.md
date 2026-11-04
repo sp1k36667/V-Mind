@@ -14,7 +14,7 @@ Plan: [transfer-v2-plan.md](transfer-v2-plan.md), eingefroren in Commit
 ## Frage des Vorlaufs
 
 Der Vorlauf wählt vor dem Hauptvergleich aus je 6 Kandidaten der Gruppen A
-(JSON-Schlüssel nach dem Laden sind Strings) und B (`True` ist eine ganze Zahl) die
+(JSON-Schlüssel nach dem Laden sind Strings) und B (`isinstance(True, int)` ist wahr) die
 Aufgaben aus, die für 12B im messbaren Bereich liegen: mit direktem Hinweis lösbar, ohne
 Hinweis aber nicht schon meistens richtig. Er prüft außerdem, ob die beiden Gegenfälle
 ohne Hinweis lösbar sind.
@@ -81,7 +81,8 @@ mit neuen Kandidaten und Seeds wäre nötig.
 ## Beschreibende Befunde (nachträglich, kein Kriterium)
 
 - **Die Aufgaben sind für 12B überwiegend zu leicht.** Ohne Hinweis bestand O die
-  Zielprüfung in 85 von 96 Kandidatenläufen (89 %). 5 Kandidaten lagen bei 8/8, 4 weitere
+  Zielprüfung in 77 von 96 Kandidatenläufen (80 %; 18 verfehlt, 1 nicht beobachtbar),
+  in den Gegenfällen 16 von 16. 5 Kandidaten lagen bei 8/8, 4 weitere
   bei 6–7/8. Der Plan nahm für O eine Grundrate um 30 % an; das Simulationsszenario mit
   Grundrate 50 % ergab schon nur 0,18 Gesamterfolg, mit dem Hauptgrund „Gruppe nicht
   auswertbar“. Genau dieser Fall ist eingetreten.
@@ -92,7 +93,7 @@ mit neuen Kandidaten und Seeds wäre nötig.
 - **Mit Hinweis ist fast alles lösbar:** D bestand 95 von 96 Läufen, einer war nicht
   beobachtbar. Die Machbarkeit (G1) war kein Engpass.
 - **Gegenüber dem Pilot ist die Schwierigkeit gekippt.** Im Pilot bestand O die
-  Zielprüfung im Vorlauf 1 von 20 (5 %), hier 85 von 96. Die Aufgaben unterscheiden
+  Zielprüfung im Vorlauf 1 von 20 (5 %), hier 77 von 96 (80 %). Die Aufgaben unterscheiden
   sich (v2 gibt ein Gerüst vor, Fallen und Spezifikationen sind anders); welcher
   Unterschied den Ausschlag gibt, zeigt dieser Lauf nicht. Plausibel, aber nicht
   geprüft: Das Gerüst nimmt dem Modell einen Teil der Fehlerquellen ab.
