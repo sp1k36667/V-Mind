@@ -1,0 +1,24 @@
+{
+  "modell": "hf.co/google/gemma-4-12B-it-qat-q4_0-gguf:Q4_0",
+  "modell_digest": "18a4d9511d9965d973356e62310a2793771c22456be408cc06a05f04a6376acd",
+  "optionen": {"temperature": 0.7, "num_ctx": 8192, "num_predict": 2400},
+  "think": false,
+  "reihenfolge_seed": 20261105,
+  "direkte_anweisung": {
+    "datumsimport": "Wichtig: datetime.strptime nimmt auch Monat und Tag ohne führende Null an. Prüfe den Text vorher mit re.fullmatch(r\"[0-9]{4}-[0-9]{2}-[0-9]{2}\", text) und lehne ihn sonst mit ValueError ab.",
+    "kalender": "Wichtig: Zwei Zeiträume überschneiden sich genau dann, wenn start < anderes_ende und anderes_start < ende gilt; gleiche Grenzen sind keine Überschneidung.",
+    "warteliste": "Wichtig: Merke dir für jede ID, ob sie bereits storniert ist; eine zweite Stornierung derselben ID löst ValueError aus und verändert nichts.",
+    "paketstatus": "Wichtig: Übernimm ein Ereignis nur, wenn seine Position in der Reihenfolge größer ist als die des aktuellen Status; sonst bleibt der Status.",
+    "bestellimport": "Wichtig: Speichere die bereits verarbeiteten event_id zusammen mit der Summe in der Datei und lade beide im Konstruktor, damit Duplikate auch nach einem Neustart erkannt werden.",
+    "lager": "Wichtig: Prüfe zuerst, ob der Bestand für die Entnahme reicht, und verringere ihn erst danach."
+  },
+  "regel": {
+    "max_aufrufe": 15,
+    "d_hoechstens": 3,
+    "uebrige_min_anteil": 0.8
+  },
+  "stufen": {
+    "o": {"seeds": [3001, 3002]},
+    "d": {"seed": 3101}
+  }
+}
