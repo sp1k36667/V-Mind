@@ -1,0 +1,90 @@
+[
+ {
+  "id": 1,
+  "scope": "r1",
+  "rolle": "lehrer",
+  "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+  "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen.",
+  "wann_umgeschrieben": true
+ },
+ {
+  "id": 2,
+  "scope": "r1",
+  "rolle": "lehrer",
+  "wann": "AssertionError: IDs nach Neuladen keine int. Einträge werden unter numerischen IDs gespeichert; nach json.load sind JSON-Objektschlüssel immer Strings. Nach dem erneuten Öffnen liefert list() IDs als Text, Suche und Vergleich mit int-IDs scheitern.",
+  "richtig": "Beim Laden der Datei die Schlüssel des Eintrags-Objekts in ganze Zahlen umwandeln, bevor mit ihnen gesucht oder verglichen wird, zum Beispiel mit einem Dictionary-Ausdruck, der int(schluessel) auf den Wert abbildet. Beim Speichern darf json.dump die Schlüssel wieder als Text schreiben.",
+  "wann_umgeschrieben": false
+ },
+ {
+  "id": 3,
+  "scope": "global",
+  "rolle": "fachfremd",
+  "wann": "Operatoren aus zwei Zeichen (** und //) werden beim Zerlegen nicht als ein Baustein erkannt, oder die Prüfung darauf enthält einen Syntaxfehler.",
+  "richtig": "Beim Zerlegen zuerst die zweistelligen Operatoren prüfen: if text.startswith('**', i) oder text.startswith('//', i), dann einen Baustein anhängen und i um 2 erhöhen; erst danach einzelne Zeichen aus '+-*/%(),'. Einfacher: ein regulärer Ausdruck mit Alternativen in dieser Reihenfolge, z. B. r'\\*\\*|//|[-+*/%(),]'.",
+  "wann_umgeschrieben": true
+ },
+ {
+  "id": 4,
+  "scope": "global",
+  "rolle": "fachfremd",
+  "wann": "Endlosrekursion (RecursionError) beim Vorzeichen: Die Funktion erkennt das Minuszeichen, verbraucht es aber nicht, bevor sie sich selbst aufruft.",
+  "richtig": "In jeder Parserfunktion den erkannten Operator zuerst verbrauchen (consume/nimm, Position erhöhen) und erst dann den Rest lesen: if peek() == '-': consume(); return -vorzeichen().",
+  "wann_umgeschrieben": true
+ },
+ {
+  "id": 5,
+  "scope": "global",
+  "rolle": "fachfremd",
+  "wann": "Potenz ** an der falschen Stelle geparst: ** wird wie ein Vorzeichen vor dem Operanden behandelt statt als Operator zwischen Basis und Exponent; dann bleibt bei 2 ** 3 der Rest ** 3 übrig (Fehler wie überzählige Operanden).",
+  "richtig": "Eigene Stufe potenz() zwischen vorzeichen() und atom(): basis = atom(); wenn danach '**' kommt: '**' verbrauchen, exponent = vorzeichen(), Ergebnis basis ** exponent. vorzeichen() ruft für den Rest potenz() auf, nicht atom().",
+  "wann_umgeschrieben": false
+ },
+ {
+  "id": 6,
+  "scope": "global",
+  "rolle": "fachfremd",
+  "wann": "Eine Variable oder Zahl wird in atom() zurückgegeben, ohne den Baustein zu verbrauchen; danach scheitert jede Rechnung mit Variablen (überzählige Operanden, fehlende Klammer).",
+  "richtig": "In atom() jeden erkannten Baustein verbrauchen, bevor sein Wert zurückgegeben wird: Zahl, Variable, Funktionsname, Klammer. Faustregel: Jeder Zweig in atom() beginnt mit token = consume() oder ruft consume() vor dem return auf.",
+  "wann_umgeschrieben": true
+ },
+ {
+  "id": 7,
+  "scope": "global",
+  "rolle": "fachfremd",
+  "wann": "Funktionsaufruf überspringt das erste Argument: nach dem Funktionsnamen und der öffnenden Klammer wird noch einmal nimm()/consume() aufgerufen; bei abs(5) geht die 5 verloren, bei max(1, 2) die 1.",
+  "richtig": "Funktionsaufruf genau so lesen: Name verbrauchen, '(' verbrauchen und prüfen, dann sofort mit dem ersten Argument (parse_expression) weitermachen, ohne weiteren consume()-Aufruf; am Ende ')' verbrauchen und prüfen.",
+  "wann_umgeschrieben": false
+ },
+ {
+  "id": 8,
+  "scope": "global",
+  "rolle": "fachfremd",
+  "wann": "abs() mit mehreren Argumenten nicht abgelehnt: abs(1, 2) liefert still abs(1), obwohl abs genau ein Argument verlangt.",
+  "richtig": "Argumentzahl je Funktion prüfen: abs genau 1, min und max mindestens 1; sonst ValueError('Falsche Argumentzahl').",
+  "wann_umgeschrieben": false
+ },
+ {
+  "id": 9,
+  "scope": "global",
+  "rolle": "fachfremd",
+  "wann": "Rangfolge von Vorzeichen und Potenz falsch verdrahtet: -2 ** 2 ergibt 4 statt -4 (Python und die Aufgabe verlangen -4).",
+  "richtig": "Genau dieses Gerüst verwenden:\ndef vorzeichen():\n    if peek() == '-': consume(); return -vorzeichen()\n    if peek() == '+': consume(); return vorzeichen()\n    return potenz()\ndef potenz():\n    basis = atom()\n    if peek() == '**':\n        consume()\n        return basis ** vorzeichen()\n    return basis\nterm() ruft vorzeichen() auf, nicht potenz(). So gilt -2 ** 2 = -4, 2 ** 3 ** 2 = 512, 2 ** -1 = 0.5.",
+  "wann_umgeschrieben": true
+ },
+ {
+  "id": 10,
+  "scope": "global",
+  "rolle": "fachfremd",
+  "wann": "Einbahnstraße stürzt mit 'not enough values to unpack' ab, weil die Liste der Fahrtrichtungen bei one_way=True ein leeres Element enthält.",
+  "richtig": "Richtungen schrittweise bauen: richtungen = [(a, b, m)]; if not one_way: richtungen.append((b, a, m)); dann for von, nach, m in richtungen. Kein bedingtes Element in einem Listenliteral.",
+  "wann_umgeschrieben": true
+ },
+ {
+  "id": 11,
+  "scope": "global",
+  "rolle": "fachfremd",
+  "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+  "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel.",
+  "wann_umgeschrieben": true
+ }
+]

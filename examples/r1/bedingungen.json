@@ -1,0 +1,26 @@
+{
+  "modell": "hf.co/google/gemma-4-12B-it-qat-q4_0-gguf:Q4_0",
+  "modell_digest": "18a4d9511d9965d973356e62310a2793771c22456be408cc06a05f04a6376acd",
+  "optionen": {"temperature": 0.7, "num_ctx": 8192, "num_predict": 2400},
+  "think": false,
+  "quelle": "docs/experiments/data/transfer-20261103",
+  "bewertungsaufgaben": ["rezepte", "termine", "vorrat"],
+  "lernaufgaben": ["ausgaben", "leihliste"],
+  "familien": [
+    ["list_name", "has no attribute 'list'"],
+    ["ids_str", "keine int|IDs nach"],
+    ["kaputte_datei", "Corrupted|Damaged|JSONDecodeError|beschädigt"],
+    ["kein_valueerror", "ValueError not raised"]
+  ],
+  "familie_sonst": "sonstige",
+  "auswahl": {"seed": 20261105, "familie": "list_name", "streichen": 2, "faelle": 36},
+  "reihenfolge_seed": 20261106,
+  "fall_seed_basis": 7000,
+  "arme": ["O", "P", "L"],
+  "abruf": {"scope": "r1", "limit": 10, "max_hinweise": 3, "anfrage_max": 400},
+  "prompt": {"wann_max": 300, "richtig_max": 600, "pruefausgabe_max": 1500},
+  "lehrer_familien": {"1": "list_name", "2": "ids_str"},
+  "max_aufrufe": 108,
+  "kriterien": {"l_minus_o_pp": 15, "alpha": 0.05, "l_minus_p_pp": 10, "regression_pp": 10,
+                "technisch_hoechstens": 10}
+}
