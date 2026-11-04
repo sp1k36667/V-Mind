@@ -1,0 +1,26 @@
+{
+  "aufgabe": "reiseziele",
+  "bedingung": "O",
+  "seed": 2007,
+  "nr": 111,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_leere_texte_valueerror": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_kaputte_datei_bleibt_erhalten": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_format_gespeichert": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 5,
+  "uebrige_von": 5,
+  "diagnose": {},
+  "abgeschnitten": false,
+  "code_zeilen": 66,
+  "code_sha256": "c2d6f22028f8abc514d8f37f8c1471a828d8f0a38a8de53dba8534058f4e0802",
+  "ausgabe_tokens": 587,
+  "prompt_tokens": 618,
+  "dauer_s": 19.2
+}

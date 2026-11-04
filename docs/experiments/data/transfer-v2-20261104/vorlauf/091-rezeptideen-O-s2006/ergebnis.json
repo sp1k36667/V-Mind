@@ -1,0 +1,26 @@
+{
+  "aufgabe": "rezeptideen",
+  "bedingung": "O",
+  "seed": 2006,
+  "nr": 91,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_leere_texte_valueerror": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_kaputte_datei_bleibt_erhalten": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_format_gespeichert": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 5,
+  "uebrige_von": 5,
+  "diagnose": {},
+  "abgeschnitten": false,
+  "code_zeilen": 75,
+  "code_sha256": "dfd21dc1dab869f907097c787d1d544a7d00da13e50dc0a2ffb34347ef094a2c",
+  "ausgabe_tokens": 639,
+  "prompt_tokens": 621,
+  "dauer_s": 20.5
+}

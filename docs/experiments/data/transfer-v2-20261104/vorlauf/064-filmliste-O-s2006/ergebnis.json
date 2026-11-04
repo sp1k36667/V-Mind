@@ -1,0 +1,26 @@
+{
+  "aufgabe": "filmliste",
+  "bedingung": "O",
+  "seed": 2006,
+  "nr": 64,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_leere_texte_valueerror": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_kaputte_datei_bleibt_erhalten": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_format_gespeichert": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 5,
+  "uebrige_von": 5,
+  "diagnose": {},
+  "abgeschnitten": false,
+  "code_zeilen": 63,
+  "code_sha256": "58750c68a4a58ad9f5e16f17054e3146accdf8abd8ce52e9ae0160edacf5187a",
+  "ausgabe_tokens": 632,
+  "prompt_tokens": 619,
+  "dauer_s": 20.5
+}

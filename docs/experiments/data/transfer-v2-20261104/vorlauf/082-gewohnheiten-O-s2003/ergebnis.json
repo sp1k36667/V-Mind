@@ -1,0 +1,25 @@
+{
+  "aufgabe": "gewohnheiten",
+  "bedingung": "O",
+  "seed": 2003,
+  "nr": 82,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_leerer_name_valueerror": "ok",
+    "test_kein_wahrheitswert_valueerror": "ok",
+    "test_unbekannter_index_valueerror": "ok",
+    "test_kaputte_datei_bleibt_erhalten": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 4,
+  "uebrige_von": 4,
+  "diagnose": {},
+  "abgeschnitten": false,
+  "code_zeilen": 52,
+  "code_sha256": "996508b0bbbd9127133dd63bd7d79d5c4583ee01b4002eaebd574eb2d6ba01f4",
+  "ausgabe_tokens": 472,
+  "prompt_tokens": 595,
+  "dauer_s": 16.1
+}

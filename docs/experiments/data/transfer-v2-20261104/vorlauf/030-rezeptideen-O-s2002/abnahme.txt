@@ -1,0 +1,45 @@
+test_format_gespeichert (__main__.GruppeA.test_format_gespeichert) ... ok
+test_kaputte_datei_bleibt_erhalten (__main__.GruppeA.test_kaputte_datei_bleibt_erhalten) ... ok
+test_leere_texte_valueerror (__main__.GruppeA.test_leere_texte_valueerror) ... ok
+test_texte_nach_neuladen (__main__.GruppeA.test_texte_nach_neuladen) ... ERROR
+test_unbekannte_id_valueerror (__main__.GruppeA.test_unbekannte_id_valueerror) ... ok
+test_ziel_mechanismus (__main__.GruppeA.test_ziel_mechanismus) ... FAIL
+
+======================================================================
+ERROR: test_texte_nach_neuladen (__main__.GruppeA.test_texte_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/030-rezeptideen-O-s2002/verification/abnahme.py", line 110, in test_texte_nach_neuladen
+    texte = json.dumps(self.oeffnen().list(), ensure_ascii=False)
+                       ~~~~~~~~~~~~~~~~~~~^^
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/030-rezeptideen-O-s2002/app.py", line 41, in list
+    raise ValueError("Internal error")
+ValueError: Internal error
+
+======================================================================
+FAIL: test_ziel_mechanismus (__main__.GruppeA.test_ziel_mechanismus)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/030-rezeptideen-O-s2002/verification/abnahme.py", line 49, in vorbedingung
+    return aufruf()
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/030-rezeptideen-O-s2002/verification/abnahme.py", line 74, in <lambda>
+    eintraege = self.vorbedingung(lambda: store.list(), "list()")
+                                          ~~~~~~~~~~^^
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/030-rezeptideen-O-s2002/app.py", line 41, in list
+    raise ValueError("Internal error")
+ValueError: Internal error
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/030-rezeptideen-O-s2002/verification/abnahme.py", line 74, in test_ziel_mechanismus
+    eintraege = self.vorbedingung(lambda: store.list(), "list()")
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/030-rezeptideen-O-s2002/verification/abnahme.py", line 51, in vorbedingung
+    self.fail(f"Vorbedingung: {beschreibung}: {type(fehler).__name__}: {fehler}")
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Vorbedingung: list(): ValueError: Internal error
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.004s
+
+FAILED (failures=1, errors=1)

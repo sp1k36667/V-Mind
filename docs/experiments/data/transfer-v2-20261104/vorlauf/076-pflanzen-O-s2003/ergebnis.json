@@ -1,0 +1,29 @@
+{
+  "aufgabe": "pflanzen",
+  "bedingung": "O",
+  "seed": 2003,
+  "nr": 76,
+  "technischer_fehler": null,
+  "zielstatus": "verfehlt",
+  "status": {
+    "test_ziel_mechanismus": "FAIL",
+    "test_diag_false_abgelehnt": "ok",
+    "test_leerer_text_valueerror": "ok",
+    "test_ungueltige_zahlen_valueerror": "ok",
+    "test_unbekannter_index_valueerror": "ok",
+    "test_kaputte_datei_bleibt_erhalten": "ok",
+    "test_summe_nach_neuladen": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 5,
+  "uebrige_von": 5,
+  "diagnose": {
+    "test_diag_false_abgelehnt": "ok"
+  },
+  "abgeschnitten": false,
+  "code_zeilen": 47,
+  "code_sha256": "2afe6154dd58dda567c3fcfaad77865aa77ac0648fca75aa57181da35100b1d5",
+  "ausgabe_tokens": 428,
+  "prompt_tokens": 605,
+  "dauer_s": 15.1
+}

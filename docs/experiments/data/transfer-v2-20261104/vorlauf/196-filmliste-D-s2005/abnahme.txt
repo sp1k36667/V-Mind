@@ -1,0 +1,77 @@
+test_format_gespeichert (__main__.GruppeA.test_format_gespeichert) ... ok
+test_kaputte_datei_bleibt_erhalten (__main__.GruppeA.test_kaputte_datei_bleibt_erhalten) ... ok
+test_leere_texte_valueerror (__main__.GruppeA.test_leere_texte_valueerror) ... ok
+test_texte_nach_neuladen (__main__.GruppeA.test_texte_nach_neuladen) ... ERROR
+test_unbekannte_id_valueerror (__main__.GruppeA.test_unbekannte_id_valueerror) ... ok
+test_ziel_mechanismus (__main__.GruppeA.test_ziel_mechanismus) ... FAIL
+
+======================================================================
+ERROR: test_texte_nach_neuladen (__main__.GruppeA.test_texte_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/196-filmliste-D-s2005/app.py", line 24, in __init__
+    raise ValueError("ID reuse detected")
+ValueError: ID reuse detected
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/196-filmliste-D-s2005/app.py", line 27, in __init__
+    raise ValueError("Invalid ID in file")
+ValueError: Invalid ID in file
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/196-filmliste-D-s2005/verification/abnahme.py", line 110, in test_texte_nach_neuladen
+    texte = json.dumps(self.oeffnen().list(), ensure_ascii=False)
+                       ~~~~~~~~~~~~^^
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/196-filmliste-D-s2005/verification/abnahme.py", line 44, in oeffnen
+    return getattr(self.app, KLASSE)(str(self.pfad))
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/196-filmliste-D-s2005/app.py", line 32, in __init__
+    raise ValueError("Damaged or invalid JSON file")
+ValueError: Damaged or invalid JSON file
+
+======================================================================
+FAIL: test_ziel_mechanismus (__main__.GruppeA.test_ziel_mechanismus)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/196-filmliste-D-s2005/app.py", line 24, in __init__
+    raise ValueError("ID reuse detected")
+ValueError: ID reuse detected
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/196-filmliste-D-s2005/app.py", line 27, in __init__
+    raise ValueError("Invalid ID in file")
+ValueError: Invalid ID in file
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/196-filmliste-D-s2005/verification/abnahme.py", line 49, in vorbedingung
+    return aufruf()
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/196-filmliste-D-s2005/verification/abnahme.py", line 44, in oeffnen
+    return getattr(self.app, KLASSE)(str(self.pfad))
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/196-filmliste-D-s2005/app.py", line 32, in __init__
+    raise ValueError("Damaged or invalid JSON file")
+ValueError: Damaged or invalid JSON file
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/196-filmliste-D-s2005/verification/abnahme.py", line 73, in test_ziel_mechanismus
+    store = self.vorbedingung(self.oeffnen, "Öffnen einer gültigen Datei")
+            ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/196-filmliste-D-s2005/verification/abnahme.py", line 51, in vorbedingung
+    self.fail(f"Vorbedingung: {beschreibung}: {type(fehler).__name__}: {fehler}")
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Vorbedingung: Öffnen einer gültigen Datei: ValueError: Damaged or invalid JSON file
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.009s
+
+FAILED (failures=1, errors=1)

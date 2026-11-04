@@ -1,0 +1,29 @@
+{
+  "aufgabe": "wasserzaehler",
+  "bedingung": "D",
+  "seed": 2005,
+  "nr": 25,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_diag_false_abgelehnt": "ok",
+    "test_leerer_text_valueerror": "ok",
+    "test_ungueltige_zahlen_valueerror": "ok",
+    "test_unbekannter_index_valueerror": "ok",
+    "test_kaputte_datei_bleibt_erhalten": "ok",
+    "test_summe_nach_neuladen": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 5,
+  "uebrige_von": 5,
+  "diagnose": {
+    "test_diag_false_abgelehnt": "ok"
+  },
+  "abgeschnitten": false,
+  "code_zeilen": 47,
+  "code_sha256": "0c3021fd0a73dae85f188f50912bdd70bac316b493efe148649b7482d5b4b659",
+  "ausgabe_tokens": 423,
+  "prompt_tokens": 632,
+  "dauer_s": 14.8
+}

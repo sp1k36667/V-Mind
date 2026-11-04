@@ -1,0 +1,26 @@
+{
+  "aufgabe": "vokabeln",
+  "bedingung": "O",
+  "seed": 2002,
+  "nr": 105,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_leere_texte_valueerror": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_kaputte_datei_bleibt_erhalten": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_format_gespeichert": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 5,
+  "uebrige_von": 5,
+  "diagnose": {},
+  "abgeschnitten": false,
+  "code_zeilen": 69,
+  "code_sha256": "5c5ecb4d0d6bc6f24c72f6609ea0611e96afb6a3977e95157fd31cf9cff649cb",
+  "ausgabe_tokens": 606,
+  "prompt_tokens": 620,
+  "dauer_s": 19.7
+}

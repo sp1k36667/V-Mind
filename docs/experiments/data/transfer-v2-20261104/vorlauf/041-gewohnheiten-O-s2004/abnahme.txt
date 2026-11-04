@@ -1,0 +1,10 @@
+test_kaputte_datei_bleibt_erhalten (__main__.GegenfallB.test_kaputte_datei_bleibt_erhalten) ... ok
+test_kein_wahrheitswert_valueerror (__main__.GegenfallB.test_kein_wahrheitswert_valueerror) ... ok
+test_leerer_name_valueerror (__main__.GegenfallB.test_leerer_name_valueerror) ... ok
+test_unbekannter_index_valueerror (__main__.GegenfallB.test_unbekannter_index_valueerror) ... ok
+test_ziel_mechanismus (__main__.GegenfallB.test_ziel_mechanismus) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.003s
+
+OK

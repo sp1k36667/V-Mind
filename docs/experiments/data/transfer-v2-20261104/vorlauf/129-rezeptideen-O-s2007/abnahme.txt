@@ -1,0 +1,32 @@
+test_format_gespeichert (__main__.GruppeA.test_format_gespeichert) ... ok
+test_kaputte_datei_bleibt_erhalten (__main__.GruppeA.test_kaputte_datei_bleibt_erhalten) ... ok
+test_leere_texte_valueerror (__main__.GruppeA.test_leere_texte_valueerror) ... ok
+test_texte_nach_neuladen (__main__.GruppeA.test_texte_nach_neuladen) ... ok
+test_unbekannte_id_valueerror (__main__.GruppeA.test_unbekannte_id_valueerror) ... ok
+test_ziel_mechanismus (__main__.GruppeA.test_ziel_mechanismus) ... ERROR
+
+======================================================================
+ERROR: test_ziel_mechanismus (__main__.GruppeA.test_ziel_mechanismus)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/129-rezeptideen-O-s2007/app.py", line 55, in set_cuisine
+    raise ValueError("ID not found")
+ValueError: ID not found
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/129-rezeptideen-O-s2007/verification/abnahme.py", line 82, in test_ziel_mechanismus
+    self.setzen(store, 2, "Neu")
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/129-rezeptideen-O-s2007/verification/abnahme.py", line 67, in setzen
+    getattr(store, f"set_{F2}")(id, wert)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/129-rezeptideen-O-s2007/app.py", line 59, in set_cuisine
+    raise ValueError("Invalid ID")
+ValueError: Invalid ID
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.004s
+
+FAILED (errors=1)

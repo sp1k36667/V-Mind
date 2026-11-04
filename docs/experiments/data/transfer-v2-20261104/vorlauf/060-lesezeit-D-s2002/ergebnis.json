@@ -1,0 +1,29 @@
+{
+  "aufgabe": "lesezeit",
+  "bedingung": "D",
+  "seed": 2002,
+  "nr": 60,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_diag_false_abgelehnt": "ok",
+    "test_leerer_text_valueerror": "ok",
+    "test_ungueltige_zahlen_valueerror": "ok",
+    "test_unbekannter_index_valueerror": "ok",
+    "test_kaputte_datei_bleibt_erhalten": "ok",
+    "test_summe_nach_neuladen": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 5,
+  "uebrige_von": 5,
+  "diagnose": {
+    "test_diag_false_abgelehnt": "ok"
+  },
+  "abgeschnitten": false,
+  "code_zeilen": 44,
+  "code_sha256": "0676f383c39b2267d09f23c81997f65d4921bb20f248b7b3e0cbde4a869d45dd",
+  "ausgabe_tokens": 425,
+  "prompt_tokens": 630,
+  "dauer_s": 15.0
+}

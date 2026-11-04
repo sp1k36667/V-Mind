@@ -1,0 +1,25 @@
+{
+  "aufgabe": "postleitzahlen",
+  "bedingung": "O",
+  "seed": 2002,
+  "nr": 120,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_leere_texte_valueerror": "ok",
+    "test_unbekannte_plz_valueerror": "ok",
+    "test_kaputte_datei_bleibt_erhalten": "ok",
+    "test_texte_nach_neuladen": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 4,
+  "uebrige_von": 4,
+  "diagnose": {},
+  "abgeschnitten": false,
+  "code_zeilen": 58,
+  "code_sha256": "9c6d5531d4caf26af545fd0f2978de472fab1676b84df50695ee9c0b90753987",
+  "ausgabe_tokens": 524,
+  "prompt_tokens": 606,
+  "dauer_s": 17.4
+}
