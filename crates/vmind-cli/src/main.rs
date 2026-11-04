@@ -408,9 +408,13 @@ fn run() -> Result<()> {
             emit(&records, summary(&records), json_mode)?;
         }
         [cmd, db, query, flag, limit] if cmd == "recall" && flag == "--limit" => {
+            // Vor dem Öffnen prüfen: open_existing kann ältere Schemas umstellen, ein
+            // ungültiger Aufruf darf die Datenbank nicht verändern.
             let limit = limit
                 .parse()
-                .map_err(|_| io::Error::other("Limit muss 1 bis 20 sein"))?;
+                .ok()
+                .filter(|n| (1..=20).contains(n))
+                .ok_or_else(|| io::Error::other("Limit muss 1 bis 20 sein"))?;
             let records = MemoryStore::open_existing(db)?.recall(query, &scope, limit)?;
             emit(&records, summary(&records), json_mode)?;
         }

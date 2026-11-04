@@ -730,3 +730,20 @@ fn recall_limit_option_returns_more_than_five_and_rejects_invalid_values() {
         assert!(!ok, "--limit {bad} angenommen");
     }
 }
+
+#[test]
+fn invalid_recall_limit_is_rejected_before_the_database_is_opened() {
+    let temp = Temp::new();
+    let path = temp.0.join("keine-datenbank.db");
+    std::fs::write(&path, b"kein SQLite").unwrap();
+    for bad in ["0", "21", "fünf"] {
+        let out = Command::new(env!("CARGO_BIN_EXE_vmind"))
+            .args(["recall", path.to_str().unwrap(), "x", "--limit", bad])
+            .output()
+            .unwrap();
+        assert!(!out.status.success(), "--limit {bad} angenommen");
+        let message = String::from_utf8_lossy(&out.stderr);
+        assert!(message.contains("Limit muss 1 bis 20 sein"), "{message}");
+    }
+    assert_eq!(std::fs::read(&path).unwrap(), b"kein SQLite");
+}
