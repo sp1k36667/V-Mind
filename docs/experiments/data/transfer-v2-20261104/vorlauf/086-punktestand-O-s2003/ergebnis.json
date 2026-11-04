@@ -1,0 +1,29 @@
+{
+  "aufgabe": "punktestand",
+  "bedingung": "O",
+  "seed": 2003,
+  "nr": 86,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_diag_false_abgelehnt": "ok",
+    "test_leerer_text_valueerror": "ok",
+    "test_ungueltige_zahlen_valueerror": "ok",
+    "test_unbekannter_index_valueerror": "ok",
+    "test_kaputte_datei_bleibt_erhalten": "ok",
+    "test_summe_nach_neuladen": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 5,
+  "uebrige_von": 5,
+  "diagnose": {
+    "test_diag_false_abgelehnt": "ok"
+  },
+  "abgeschnitten": false,
+  "code_zeilen": 45,
+  "code_sha256": "1293515ee0d488681bf258630210d61c622db64667befb8d44cd461d8d71662f",
+  "ausgabe_tokens": 404,
+  "prompt_tokens": 596,
+  "dauer_s": 14.4
+}

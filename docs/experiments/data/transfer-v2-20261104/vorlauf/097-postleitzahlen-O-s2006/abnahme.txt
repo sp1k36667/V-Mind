@@ -1,0 +1,10 @@
+test_kaputte_datei_bleibt_erhalten (__main__.GegenfallA.test_kaputte_datei_bleibt_erhalten) ... ok
+test_leere_texte_valueerror (__main__.GegenfallA.test_leere_texte_valueerror) ... ok
+test_texte_nach_neuladen (__main__.GegenfallA.test_texte_nach_neuladen) ... ok
+test_unbekannte_plz_valueerror (__main__.GegenfallA.test_unbekannte_plz_valueerror) ... ok
+test_ziel_mechanismus (__main__.GegenfallA.test_ziel_mechanismus) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.002s
+
+OK

@@ -1,0 +1,26 @@
+{
+  "aufgabe": "zitate",
+  "bedingung": "D",
+  "seed": 2003,
+  "nr": 171,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_leere_texte_valueerror": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_kaputte_datei_bleibt_erhalten": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_format_gespeichert": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 5,
+  "uebrige_von": 5,
+  "diagnose": {},
+  "abgeschnitten": false,
+  "code_zeilen": 77,
+  "code_sha256": "fb911a9aab8b7d01ade82d417908cf369b124397320633b98d41ecfd1e342ac7",
+  "ausgabe_tokens": 691,
+  "prompt_tokens": 655,
+  "dauer_s": 22.4
+}

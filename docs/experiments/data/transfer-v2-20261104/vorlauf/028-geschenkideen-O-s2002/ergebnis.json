@@ -1,0 +1,26 @@
+{
+  "aufgabe": "geschenkideen",
+  "bedingung": "O",
+  "seed": 2002,
+  "nr": 28,
+  "technischer_fehler": null,
+  "zielstatus": "verfehlt",
+  "status": {
+    "test_ziel_mechanismus": "FAIL",
+    "test_leere_texte_valueerror": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_kaputte_datei_bleibt_erhalten": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_format_gespeichert": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 5,
+  "uebrige_von": 5,
+  "diagnose": {},
+  "abgeschnitten": false,
+  "code_zeilen": 65,
+  "code_sha256": "e9e89716fe6e94a72f56f459a48eeb1f1e230f396c683e4f5d23329e38972a2a",
+  "ausgabe_tokens": 578,
+  "prompt_tokens": 619,
+  "dauer_s": 19.0
+}

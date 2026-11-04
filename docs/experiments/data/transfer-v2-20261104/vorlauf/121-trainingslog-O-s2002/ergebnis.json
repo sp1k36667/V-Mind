@@ -1,0 +1,29 @@
+{
+  "aufgabe": "trainingslog",
+  "bedingung": "O",
+  "seed": 2002,
+  "nr": 121,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_diag_false_abgelehnt": "ok",
+    "test_leerer_text_valueerror": "ok",
+    "test_ungueltige_zahlen_valueerror": "ok",
+    "test_unbekannter_index_valueerror": "ok",
+    "test_kaputte_datei_bleibt_erhalten": "ok",
+    "test_summe_nach_neuladen": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 5,
+  "uebrige_von": 5,
+  "diagnose": {
+    "test_diag_false_abgelehnt": "ok"
+  },
+  "abgeschnitten": false,
+  "code_zeilen": 46,
+  "code_sha256": "5ea05911237990a4724648b3fc3afac0bb3d7a3a0034769e34f369789d7e72a1",
+  "ausgabe_tokens": 425,
+  "prompt_tokens": 600,
+  "dauer_s": 14.8
+}

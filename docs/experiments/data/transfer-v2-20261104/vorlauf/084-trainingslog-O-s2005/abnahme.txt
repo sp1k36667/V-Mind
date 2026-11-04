@@ -1,0 +1,21 @@
+test_diag_false_abgelehnt (__main__.GruppeB.test_diag_false_abgelehnt) ... ok
+test_kaputte_datei_bleibt_erhalten (__main__.GruppeB.test_kaputte_datei_bleibt_erhalten) ... ok
+test_leerer_text_valueerror (__main__.GruppeB.test_leerer_text_valueerror) ... ok
+test_summe_nach_neuladen (__main__.GruppeB.test_summe_nach_neuladen) ... ok
+test_unbekannter_index_valueerror (__main__.GruppeB.test_unbekannter_index_valueerror) ... ok
+test_ungueltige_zahlen_valueerror (__main__.GruppeB.test_ungueltige_zahlen_valueerror) ... ok
+test_ziel_mechanismus (__main__.GruppeB.test_ziel_mechanismus) ... FAIL
+
+======================================================================
+FAIL: test_ziel_mechanismus (__main__.GruppeB.test_ziel_mechanismus)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/084-trainingslog-O-s2005/verification/abnahme.py", line 134, in test_ziel_mechanismus
+    with self.assertRaises(ValueError, msg="True als Zahl angenommen"):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised : True als Zahl angenommen
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.003s
+
+FAILED (failures=1)

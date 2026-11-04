@@ -1,0 +1,357 @@
+{
+  "vorlauf": {
+    "gueltig": true,
+    "probleme": [],
+    "kandidaten": {
+      "zitate": {
+        "gruppe": "A",
+        "O": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "D": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "G1": true,
+        "G2": false,
+        "G3": true,
+        "erfuellt": false
+      },
+      "geschenkideen": {
+        "gruppe": "A",
+        "O": {
+          "laeufe": 8,
+          "bestanden": 4,
+          "verfehlt": 4,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "D": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "G1": true,
+        "G2": true,
+        "G3": true,
+        "erfuellt": true
+      },
+      "vokabeln": {
+        "gruppe": "A",
+        "O": {
+          "laeufe": 8,
+          "bestanden": 6,
+          "verfehlt": 2,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "D": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "G1": true,
+        "G2": false,
+        "G3": true,
+        "erfuellt": false
+      },
+      "filmliste": {
+        "gruppe": "A",
+        "O": {
+          "laeufe": 8,
+          "bestanden": 7,
+          "verfehlt": 1,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "D": {
+          "laeufe": 8,
+          "bestanden": 7,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 1,
+          "technisch": 0,
+          "uebrige_ok": 39,
+          "uebrige_von": 40
+        },
+        "G1": true,
+        "G2": false,
+        "G3": true,
+        "erfuellt": false
+      },
+      "rezeptideen": {
+        "gruppe": "A",
+        "O": {
+          "laeufe": 8,
+          "bestanden": 4,
+          "verfehlt": 3,
+          "nicht_beobachtbar": 1,
+          "technisch": 0,
+          "uebrige_ok": 39,
+          "uebrige_von": 40
+        },
+        "D": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "G1": true,
+        "G2": true,
+        "G3": true,
+        "erfuellt": true
+      },
+      "reiseziele": {
+        "gruppe": "A",
+        "O": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "D": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "G1": true,
+        "G2": false,
+        "G3": true,
+        "erfuellt": false
+      },
+      "trainingslog": {
+        "gruppe": "B",
+        "O": {
+          "laeufe": 8,
+          "bestanden": 7,
+          "verfehlt": 1,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "D": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "G1": true,
+        "G2": false,
+        "G3": true,
+        "erfuellt": false
+      },
+      "punktestand": {
+        "gruppe": "B",
+        "O": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "D": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "G1": true,
+        "G2": false,
+        "G3": true,
+        "erfuellt": false
+      },
+      "pflanzen": {
+        "gruppe": "B",
+        "O": {
+          "laeufe": 8,
+          "bestanden": 3,
+          "verfehlt": 5,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 39,
+          "uebrige_von": 40
+        },
+        "D": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "G1": true,
+        "G2": true,
+        "G3": true,
+        "erfuellt": true
+      },
+      "budget": {
+        "gruppe": "B",
+        "O": {
+          "laeufe": 8,
+          "bestanden": 6,
+          "verfehlt": 2,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "D": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "G1": true,
+        "G2": false,
+        "G3": true,
+        "erfuellt": false
+      },
+      "lesezeit": {
+        "gruppe": "B",
+        "O": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "D": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "G1": true,
+        "G2": false,
+        "G3": true,
+        "erfuellt": false
+      },
+      "wasserzaehler": {
+        "gruppe": "B",
+        "O": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "D": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 40,
+          "uebrige_von": 40
+        },
+        "G1": true,
+        "G2": false,
+        "G3": true,
+        "erfuellt": false
+      }
+    },
+    "eingeschlossen": {
+      "A": [
+        "geschenkideen",
+        "rezeptideen"
+      ],
+      "B": [
+        "pflanzen"
+      ]
+    },
+    "gegenfaelle": {
+      "postleitzahlen": {
+        "O": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 32,
+          "uebrige_von": 32
+        },
+        "G4": true
+      },
+      "gewohnheiten": {
+        "O": {
+          "laeufe": 8,
+          "bestanden": 8,
+          "verfehlt": 0,
+          "nicht_beobachtbar": 0,
+          "technisch": 0,
+          "uebrige_ok": 32,
+          "uebrige_von": 32
+        },
+        "G4": true
+      }
+    },
+    "weiter": false,
+    "gruende": [
+      "Gruppe A nicht auswertbar (2 Aufgaben)",
+      "Gruppe B nicht auswertbar (1 Aufgaben)"
+    ],
+    "stufe": "vorlauf",
+    "commit": "5895f0ca57d076dc59c0f4b1386fe6c229187b72",
+    "attrappe": false
+  },
+  "gesamt": {
+    "bestanden": false,
+    "gruende": [
+      "nicht alle Stufen ausgewertet"
+    ]
+  }
+}

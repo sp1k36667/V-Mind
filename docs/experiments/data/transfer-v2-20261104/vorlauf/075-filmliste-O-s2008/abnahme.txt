@@ -1,0 +1,11 @@
+test_format_gespeichert (__main__.GruppeA.test_format_gespeichert) ... ok
+test_kaputte_datei_bleibt_erhalten (__main__.GruppeA.test_kaputte_datei_bleibt_erhalten) ... ok
+test_leere_texte_valueerror (__main__.GruppeA.test_leere_texte_valueerror) ... ok
+test_texte_nach_neuladen (__main__.GruppeA.test_texte_nach_neuladen) ... ok
+test_unbekannte_id_valueerror (__main__.GruppeA.test_unbekannte_id_valueerror) ... ok
+test_ziel_mechanismus (__main__.GruppeA.test_ziel_mechanismus) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.003s
+
+OK

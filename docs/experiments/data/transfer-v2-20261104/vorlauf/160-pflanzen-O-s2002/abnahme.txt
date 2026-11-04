@@ -1,0 +1,54 @@
+test_diag_false_abgelehnt (__main__.GruppeB.test_diag_false_abgelehnt) ... ok
+test_kaputte_datei_bleibt_erhalten (__main__.GruppeB.test_kaputte_datei_bleibt_erhalten) ... ok
+test_leerer_text_valueerror (__main__.GruppeB.test_leerer_text_valueerror) ... ok
+test_summe_nach_neuladen (__main__.GruppeB.test_summe_nach_neuladen) ... ERROR
+test_unbekannter_index_valueerror (__main__.GruppeB.test_unbekannter_index_valueerror) ... ok
+test_ungueltige_zahlen_valueerror (__main__.GruppeB.test_ungueltige_zahlen_valueerror) ... ok
+test_ziel_mechanismus (__main__.GruppeB.test_ziel_mechanismus) ... FAIL
+
+======================================================================
+ERROR: test_summe_nach_neuladen (__main__.GruppeB.test_summe_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/160-pflanzen-O-s2002/app.py", line 16, in __init__
+    loaded = json.load(f)
+  File "/home/sp1k3/miniconda3/lib/python3.13/json/__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "/home/sp1k3/miniconda3/lib/python3.13/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/sp1k3/miniconda3/lib/python3.13/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sp1k3/miniconda3/lib/python3.13/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/160-pflanzen-O-s2002/verification/abnahme.py", line 169, in test_summe_nach_neuladen
+    neu = self.oeffnen()
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/160-pflanzen-O-s2002/verification/abnahme.py", line 44, in oeffnen
+    return getattr(self.app, KLASSE)(str(self.pfad))
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/160-pflanzen-O-s2002/app.py", line 21, in __init__
+    raise ValueError("Damaged JSON file")
+ValueError: Damaged JSON file
+
+======================================================================
+FAIL: test_ziel_mechanismus (__main__.GruppeB.test_ziel_mechanismus)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/160-pflanzen-O-s2002/verification/abnahme.py", line 134, in test_ziel_mechanismus
+    with self.assertRaises(ValueError, msg="True als Zahl angenommen"):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised : True als Zahl angenommen
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.008s
+
+FAILED (failures=1, errors=1)

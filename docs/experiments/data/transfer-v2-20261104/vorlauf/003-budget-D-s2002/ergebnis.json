@@ -1,0 +1,29 @@
+{
+  "aufgabe": "budget",
+  "bedingung": "D",
+  "seed": 2002,
+  "nr": 3,
+  "technischer_fehler": null,
+  "zielstatus": "bestanden",
+  "status": {
+    "test_ziel_mechanismus": "ok",
+    "test_diag_false_abgelehnt": "ok",
+    "test_leerer_text_valueerror": "ok",
+    "test_ungueltige_zahlen_valueerror": "ok",
+    "test_unbekannter_index_valueerror": "ok",
+    "test_kaputte_datei_bleibt_erhalten": "ok",
+    "test_summe_nach_neuladen": "ok"
+  },
+  "abbruch": null,
+  "uebrige_ok": 5,
+  "uebrige_von": 5,
+  "diagnose": {
+    "test_diag_false_abgelehnt": "ok"
+  },
+  "abgeschnitten": false,
+  "code_zeilen": 49,
+  "code_sha256": "566245325ef27b8aef64711bdca598e0c585ff0dffbc7fe904f0c3c3122a2650",
+  "ausgabe_tokens": 457,
+  "prompt_tokens": 630,
+  "dauer_s": 15.9
+}

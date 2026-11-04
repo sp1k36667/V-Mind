@@ -1,0 +1,20 @@
+test_format_gespeichert (__main__.GruppeA.test_format_gespeichert) ... ok
+test_kaputte_datei_bleibt_erhalten (__main__.GruppeA.test_kaputte_datei_bleibt_erhalten) ... ok
+test_leere_texte_valueerror (__main__.GruppeA.test_leere_texte_valueerror) ... ok
+test_texte_nach_neuladen (__main__.GruppeA.test_texte_nach_neuladen) ... ok
+test_unbekannte_id_valueerror (__main__.GruppeA.test_unbekannte_id_valueerror) ... ok
+test_ziel_mechanismus (__main__.GruppeA.test_ziel_mechanismus) ... FAIL
+
+======================================================================
+FAIL: test_ziel_mechanismus (__main__.GruppeA.test_ziel_mechanismus)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/transfer-v2-restart-20261104/vorlauf/179-geschenkideen-O-s2008/verification/abnahme.py", line 80, in test_ziel_mechanismus
+    self.assertTrue(all(type(i) is int for i in ids), f"IDs nach dem Laden keine int: {ids!r}")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : IDs nach dem Laden keine int: ['1', '2', '3']
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.003s
+
+FAILED (failures=1)
