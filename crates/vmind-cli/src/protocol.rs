@@ -36,6 +36,17 @@ enum Operation {
         #[serde(default = "global")]
         scope: String,
     },
+    Repairs {
+        #[serde(default = "global")]
+        scope: String,
+    },
+    ProposeRepair {
+        failed_run: i64,
+        problem: String,
+        solution: String,
+        #[serde(default = "global")]
+        scope: String,
+    },
     Stats {
         #[serde(default = "global")]
         scope: String,
@@ -114,6 +125,16 @@ pub fn dispatch(store: &MemoryStore, mut value: Value) -> Value {
                 json!({"memory_id":memory_id,"status":"pending"})
             }
             Operation::Pending { scope } => json!({"memories":store.pending(&scope)?}),
+            Operation::Repairs { scope } => json!({"repairs":store.repairs(&scope)?}),
+            Operation::ProposeRepair {
+                failed_run,
+                problem,
+                solution,
+                scope,
+            } => {
+                let memory_id = store.propose_repair(&scope, failed_run, &problem, &solution)?;
+                json!({"memory_id":memory_id,"status":"pending"})
+            }
             Operation::Stats { scope } => serde_json::to_value(store.stats(&scope)?)?,
             Operation::Resume {
                 scope,
@@ -149,7 +170,7 @@ pub fn dispatch(store: &MemoryStore, mut value: Value) -> Value {
                 limit,
             } => json!({"messages":store.messages(&conversation_id,after,limit)?}),
             Operation::Describe => json!({"protocol":"vmind-jsonl", "version":1,
-                "operations":["describe", "recall", "get", "propose", "pending", "stats", "resume", "journal", "log", "session_new", "sessions", "message", "messages"],
+                "operations":["describe", "recall", "get", "propose", "pending", "repairs", "propose_repair", "stats", "resume", "journal", "log", "session_new", "sessions", "message", "messages"],
                 "default_scope":"global", "recall_includes_global":true,
                 "proposals_require_external_validation":true,
                 "validation":"CLI validate or CLI check/revalidate; no validation or check execution in this protocol"}),
@@ -233,6 +254,48 @@ mod tests {
             dispatch(&s, json!({"op":"validate","memory_id":id}))["ok"],
             false
         );
+    }
+    #[test]
+    fn repairs_are_listed_and_proposed_without_caller_source() {
+        use vmind_core::{CheckResult, Outcome};
+        let s = MemoryStore::in_memory().unwrap();
+        let memory = s
+            .remember_scoped("demo", "error_solution", "P", "L", "T")
+            .unwrap();
+        s.set_check(memory, &["true".into()], "/", "tester")
+            .unwrap();
+        let check = s.active_check(memory).unwrap().unwrap();
+        let run = |outcome| {
+            let result = CheckResult {
+                outcome,
+                exit_code: None,
+                duration_ms: 1,
+                output: String::new(),
+            };
+            s.apply_check(&check, &result, false).unwrap().run_id
+        };
+        let failed = run(Outcome::Failed);
+        run(Outcome::Passed);
+        let listed = dispatch(&s, json!({"op":"repairs","scope":"demo"}));
+        assert_eq!(listed["data"]["repairs"][0]["failed_run"], failed);
+        let smuggled = dispatch(
+            &s,
+            json!({"op":"propose_repair","scope":"demo","failed_run":failed,
+            "problem":"P","solution":"L","source":"erfunden"}),
+        );
+        assert_eq!(smuggled["ok"], false);
+        let proposed = dispatch(
+            &s,
+            json!({"op":"propose_repair","scope":"demo","failed_run":failed,
+            "problem":"P","solution":"L"}),
+        );
+        assert_eq!(proposed["data"]["status"], "pending");
+        let other = dispatch(
+            &s,
+            json!({"op":"propose_repair","scope":"anderes","failed_run":failed,
+            "problem":"P","solution":"L"}),
+        );
+        assert_eq!(other["ok"], false);
     }
     #[test]
     fn malformed_input_does_not_break_next_request() {

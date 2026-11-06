@@ -48,6 +48,26 @@ Wartende Einträge bzw. Statistiken:
 {"id":6,"op":"stats","scope":"projekt-a"}
 ```
 
+Reparaturen: `repairs` listet unter `data.repairs` höchstens 100 Übergänge, bei denen der
+aktive Prüfbefehl eines sichtbaren, nicht zurückgezogenen Eintrags (Bereich plus `global`)
+fehlschlug und im unmittelbar folgenden Lauf bestand; ein `error` dazwischen unterbricht
+den Übergang. Felder: `memory_id`, `check_id`, `failed_run`, `passed_run`, `failed_exit`,
+`passed_exit`, `failed_at`, `passed_at`, `scope`; keine Ausgaben und keine Befehle.
+`propose_repair` legt dazu einen `pending`-Eintrag (`error_solution`) im Bereich des
+geprüften Eintrags an. `problem` und `solution` formuliert der Aufrufer; eine `source`
+ist nicht erlaubt, V-Mind setzt sie aus den IDs („Reparatur: Prüfbefehl #… an Eintrag #…,
+Lauf #… fehlgeschlagen → Lauf #… bestanden“). Ein zweiter Vorschlag zum selben Laufpaar
+wird abgelehnt, auch bei gleichzeitigen Aufrufen. Die Quelle dient der Deduplizierung und
+ist kein manipulationssicherer Nachweis.
+
+```json
+{"id":7,"op":"repairs","scope":"projekt-a"}
+```
+
+```json
+{"id":8,"op":"propose_repair","scope":"projekt-a","failed_run":12,"problem":"Speichern bricht bei vollem Datenträger ab","solution":"In Temp-Datei schreiben und danach umbenennen"}
+```
+
 Es gibt absichtlich keine `validate`-Operation: Ein Werkzeug kann vorschlagen;
 die externe Prüfung und Freigabe erfolgen über `vmind validate`. Dies ist eine
 Workflow-Grenze, keine Sicherheitsbarriere gegen Programme mit Dateizugriff.
@@ -163,7 +183,7 @@ pro Zeile, dieselbe 1-MiB-Grenze. Unterstützt werden `initialize`, `ping`,
 erhalten keine Antwort. Ausgehandelte Versionen: 2024-11-05, 2025-03-26, 2025-06-18
 und 2025-11-25; bei unbekannter Version antwortet der Server mit der neuesten.
 
-Werkzeuge: `recall`, `get`, `propose`, `pending`, `stats`, `resume`, `journal`, `log`,
+Werkzeuge: `recall`, `get`, `propose`, `pending`, `repairs`, `propose_repair`, `stats`, `resume`, `journal`, `log`,
 `session_new`, `sessions`, `message`, `messages`. Ihre Argumente entsprechen den
 gleichnamigen JSONL-Operationen ohne `op` und `id`. Jeder Aufruf läuft durch
 denselben Dispatcher; Feldprüfung, Grenzen und Fehlertexte sind identisch.

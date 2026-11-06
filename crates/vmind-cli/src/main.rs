@@ -30,6 +30,8 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
   check-set DB ID AKTEUR ORDNER BEFEHL [ARG...]   (Prüfbefehl ohne Shell setzen)
   check DB ID [--invalidate]     (Prüfbefehl ausführen; bestanden validiert)
   revalidate DB [--invalidate]   (alle Prüfbefehle im Bereich plus global)
+  repairs DB                    (nur lesen: Prüfbefehl erst fehlgeschlagen, direkt danach bestanden)
+  propose-repair DB LAUF PROBLEM LÖSUNG   (ungeprüfter Vorschlag; Quelle erzeugt V-Mind)
   search DB WÖRTLICHER_SUCHTEXT   (globale Einträge)
   recall DB SUCHTEXT [--limit N] (Volltext, Projekt plus global; N 1 bis 20, sonst 5)
   ask DB FRAGE                  (automatischer Wissensabruf)
@@ -394,6 +396,31 @@ fn run() -> Result<()> {
         [cmd, db] if cmd == "revalidate" => check_cmd::revalidate(db, &scope, false, json_mode)?,
         [cmd, db, flag] if cmd == "revalidate" && flag == "--invalidate" => {
             check_cmd::revalidate(db, &scope, true, json_mode)?
+        }
+        [cmd, db] if cmd == "repairs" => {
+            let repairs = MemoryStore::open_existing(db)?.repairs(&scope)?;
+            let human = if repairs.is_empty() {
+                "Keine Reparaturen gefunden.".to_string()
+            } else {
+                repairs
+                    .iter()
+                    .map(|r| format!("Lauf {} ({}): {}", r.failed_run, r.scope, r.source()))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            };
+            emit(&repairs, human, json_mode)?;
+        }
+        [cmd, db, run, problem, solution] if cmd == "propose-repair" => {
+            let run: i64 = run
+                .parse()
+                .map_err(|_| "LAUF muss eine Lauf-ID (Zahl) sein")?;
+            let id =
+                MemoryStore::open_existing(db)?.propose_repair(&scope, run, problem, solution)?;
+            emit(
+                json!({"id":id,"status":"pending"}),
+                format!("Reparaturvorschlag {id} gespeichert (pending)."),
+                json_mode,
+            )?;
         }
         [cmd, db] if cmd == "pending" => {
             let records = MemoryStore::open_existing(db)?.pending(&scope)?;

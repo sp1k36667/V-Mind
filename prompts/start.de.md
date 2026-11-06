@@ -127,6 +127,10 @@ es unterstützt. Eine optionale `id` ordnet die Antwort der Anfrage zu.
 - `get`: `memory_id`; vollständiger Wissenseintrag samt Historie.
 - `propose`: `scope`, `kind`, `problem`, `solution`, `source`.
 - `pending`: `scope`; maximal 100 aktive ungeprüfte Wissenseinträge.
+- `repairs`: `scope`; Prüfbefehle, die fehlschlugen und im direkt folgenden Lauf
+  bestanden (maximal 100); nur IDs, Exitcodes und Zeiten.
+- `propose_repair`: `scope`, `failed_run`, `problem`, `solution`; ein ungeprüfter
+  Vorschlag je Reparatur. Problem und Lösung selbst formulieren, die Quelle setzt V-Mind.
 - `stats`: `scope`; Wissensstatistik und Schemaversion.
 - `session_new`: `scope`, `title`; liefert `conversation_id`.
 - `sessions`: `scope`; maximal 100 Gespräche.
@@ -152,6 +156,7 @@ Pro Terminalschritt einen Befehl ausführen. Aktuelle Hilfe: `vmind --help`.
 - `log DB goal|decision|next_step|note TEXT QUELLE`
 - `task DB SCHLÜSSEL open|in_progress|done|blocked TEXT QUELLE`
 - `recall DB SUCHTEXT`, `show DB ID`, `pending DB`, `stats DB`
+- `repairs DB`, `propose-repair DB LAUF PROBLEM LÖSUNG`
 - `search DB SUCHTEXT`; ältere wörtliche, groß-/kleinschreibungssensitive Suche nur in `global`.
 - `add DB error_solution|long_term PROBLEM LÖSUNG QUELLE`
 - `validate DB ID PRÜFER NACHWEIS`, `invalidate DB ID AKTEUR GRUND`

@@ -123,6 +123,10 @@ optional `id` matches the response to the request.
 - `get`: `memory_id`; full knowledge entry with its history.
 - `propose`: `scope`, `kind`, `problem`, `solution`, `source`.
 - `pending`: `scope`; at most 100 active unverified knowledge entries.
+- `repairs`: `scope`; check commands that failed and passed in the directly following
+  run (at most 100); only IDs, exit codes and times.
+- `propose_repair`: `scope`, `failed_run`, `problem`, `solution`; one unverified
+  proposal per repair. Write problem and solution yourself; V-Mind sets the source.
 - `stats`: `scope`; knowledge statistics and schema version.
 - `session_new`: `scope`, `title`; returns `conversation_id`.
 - `sessions`: `scope`; at most 100 conversations.
@@ -148,6 +152,7 @@ Run one command per terminal step. Current help: `vmind --help`.
 - `log DB goal|decision|next_step|note TEXT SOURCE`
 - `task DB KEY open|in_progress|done|blocked TEXT SOURCE`
 - `recall DB QUERY`, `show DB ID`, `pending DB`, `stats DB`
+- `repairs DB`, `propose-repair DB RUN PROBLEM SOLUTION`
 - `search DB QUERY`; older literal, case-sensitive search, only in `global`.
 - `add DB error_solution|long_term PROBLEM SOLUTION SOURCE`
 - `validate DB ID REVIEWER EVIDENCE`, `invalidate DB ID ACTOR REASON`
