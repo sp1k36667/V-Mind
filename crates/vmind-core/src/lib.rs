@@ -499,9 +499,17 @@ impl MemoryStore {
                 }
             }
             // Dritte Stufe: Wortformen füllen nur noch freie Plätze; bisherige Treffer und ihre
-            // Reihenfolge bleiben unverändert vorn.
+            // Reihenfolge bleiben unverändert vorn. Gesucht werden nur Wörter, die noch kein
+            // bisheriger Treffer abdeckt; abgedeckte Wörter brächten nur Beifang.
             if found.len() < limit {
-                let forms = word_form_expression(&terms);
+                let ids: Vec<i64> = found.iter().map(|r| r.id).collect();
+                let mut open = Vec::new();
+                for term in &terms {
+                    if !store.covered(term, &ids)? {
+                        open.push(term.clone());
+                    }
+                }
+                let forms = word_form_expression(&open);
                 for extra in store.ranked("memories_fts", &forms, scope, limit)? {
                     if found.len() == limit {
                         break;
@@ -513,6 +521,32 @@ impl MemoryStore {
             }
             store.enrich_records(found)
         })
+    }
+    /// Trifft einer der Einträge `ids` den Begriff als Wort (Volltextindex) oder als Teilwort
+    /// (Trigramm-Index)? Gleiche Tokenisierung wie die Suche, also auch ohne Akzente.
+    fn covered(&self, term: &str, ids: &[i64]) -> Result<bool> {
+        if ids.is_empty() {
+            return Ok(false);
+        }
+        let ids = serde_json::to_string(ids).map_err(|e| invalid(&e.to_string()))?;
+        let quoted = format!("\"{term}\"");
+        for index in ["memories_fts", "memories_trigram"] {
+            if index == "memories_trigram" && term.chars().count() < MIN_PARTIAL_TERM_CHARS {
+                continue;
+            }
+            let hit: bool = self.conn.query_row(
+                &format!(
+                    "SELECT EXISTS(SELECT 1 FROM {index} WHERE {index} MATCH ?1
+                     AND rowid IN (SELECT value FROM json_each(?2)))"
+                ),
+                params![quoted, ids],
+                |r| r.get(0),
+            )?;
+            if hit {
+                return Ok(true);
+            }
+        }
+        Ok(false)
     }
     /// Validierte aktive Treffer eines FTS-Index im Bereich plus global, nach BM25.
     fn ranked(

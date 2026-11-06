@@ -1,11 +1,11 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.3 (on `main`)
+## Unreleased: candidate 0.3.0-rc.4 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.3` (`vmind --version`, MCP
+Not released yet. The source now reports version `0.3.0-rc.4` (`vmind --version`, MCP
 server info); there is no tag, no published download and no installation of it. The
-earlier candidates `0.3.0-rc.1` and `0.3.0-rc.2` did not yet contain all changes below
-(rc.1 lacked #40, #42, #43; rc.2 lacked #44).
+earlier candidates `0.3.0-rc.1` to `0.3.0-rc.3` did not yet contain all changes below
+(rc.1 lacked #40, #42, #43; rc.2 lacked #44; rc.3 lacked the word-form refinement).
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
@@ -51,7 +51,8 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
   their order are unchanged; scope, status and withdrawal filters apply as before; accents
   match in both directions. Retrieval corpora: longer word forms 0/10 → 9/10 and separated
   word pairs 1/7 → 6/7 at rank 1, no previous hit lost in 82 queries, 6 extra unrelated
-  hits. (#43)
+  hits. (#43) Word stems are only searched for query words that no earlier hit already
+  covers, which removes 3 of these 6 unrelated hits and keeps every gain.
 - `vmind journal-mode DB wal|delete`: explicit switch of SQLite's journal mode with a
   verified backup first; never automatic, new databases keep the default `delete`. Fails
   with a clear message and keeps the mode if another process uses the file. `vmind doctor`
