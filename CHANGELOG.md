@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.1 (on `main`)
+## Unreleased: candidate 0.3.0-rc.2 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.1` (`vmind --version`, MCP
-server info); there is no tag, no published download and no installation of it.
+Not released yet. The source now reports version `0.3.0-rc.2` (`vmind --version`, MCP
+server info); there is no tag, no published download and no installation of it. The
+earlier candidate `0.3.0-rc.1` did not yet contain #40, #42 and #43.
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
