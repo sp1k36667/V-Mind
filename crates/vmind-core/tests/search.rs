@@ -107,14 +107,15 @@ fn word_forms_only_fill_free_places_after_existing_hits() {
     let s = MemoryStore::in_memory().unwrap();
     let wortgleich = validated(&s, "global", "Zertifikate erneuern vor Ablauf");
     let wortform = validated(&s, "global", "Zertifikat abgelaufen");
-    let gefunden = ids(&s, "Zertifikate", "global", 5);
+    // "abgelaufenen" deckt kein bisheriger Treffer ab; nur dafür sucht die Wortformstufe.
+    let gefunden = ids(&s, "Zertifikate abgelaufenen", "global", 5);
     assert_eq!(
         gefunden,
         [wortgleich, wortform],
         "bisheriger Treffer zuerst"
     );
     assert_eq!(
-        ids(&s, "Zertifikate", "global", 1),
+        ids(&s, "Zertifikate abgelaufenen", "global", 1),
         [wortgleich],
         "Limit nur mit bisherigem Treffer"
     );
@@ -160,4 +161,23 @@ fn word_forms_never_duplicate_or_exceed_the_limit() {
     einmal.sort_unstable();
     einmal.dedup();
     assert_eq!(einmal.len(), 4);
+}
+
+#[test]
+fn word_forms_still_find_the_relevant_entry_beside_an_irrelevant_existing_hit() {
+    let s = MemoryStore::in_memory().unwrap();
+    let irrelevant = validated(&s, "global", "Mietvertrag verlängern vor Ablauf");
+    let relevant = validated(&s, "global", "Zertifikat abgelaufen, TLS bricht ab");
+    assert_eq!(
+        ids(&s, "Zertifikate verlängern", "global", 5),
+        [irrelevant, relevant]
+    );
+}
+
+#[test]
+fn word_forms_add_nothing_for_words_existing_hits_already_cover() {
+    let s = MemoryStore::in_memory().unwrap();
+    let rechner = validated(&s, "global", "Rechner stürzt beim Start ab");
+    validated(&s, "global", "Rechnung zeigt falschen Betrag");
+    assert_eq!(ids(&s, "Rechner", "global", 5), [rechner]);
 }
