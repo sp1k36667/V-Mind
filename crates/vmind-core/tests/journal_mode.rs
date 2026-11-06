@@ -165,3 +165,17 @@ fn wal_sidecars_are_private_like_the_database() {
         assert_eq!(mode & 0o077, 0, "{suffix} für andere lesbar: {mode:o}");
     }
 }
+
+#[cfg(unix)]
+#[test]
+fn other_sqlite_errors_report_their_cause_instead_of_another_process() {
+    use std::os::unix::fs::PermissionsExt;
+    let t = Temp::new();
+    with_entry(&t.db());
+    fs::set_permissions(t.db(), fs::Permissions::from_mode(0o400)).unwrap();
+    let error = set_journal_mode(t.db(), "wal").unwrap_err().to_string();
+    fs::set_permissions(t.db(), fs::Permissions::from_mode(0o600)).unwrap();
+    assert!(!error.contains("anderen Prozess"), "{error}");
+    assert!(error.contains("Sicherung:"), "{error}");
+    assert_eq!(inspect_database(t.db()).unwrap().journal_mode, "delete");
+}

@@ -23,10 +23,18 @@ vmind journal-mode vmind.db wal
 Vorher entsteht eine geprüfte Sicherung neben der Datenbank (oder in `VMIND_BACKUP_DIR`).
 Mit `wal` legt SQLite neben der Datei die Zusatzdateien `vmind.db-wal` und `vmind.db-shm` an;
 sie gehören zur Datenbank, haben dieselben Rechte und dürfen nicht einzeln kopiert oder
-gelöscht werden. Zum Sichern immer `vmind backup` verwenden. Benutzt ein anderer Prozess die
-Datei (MCP-Server, `vmind serve`), schlägt der Wechsel mit Meldung fehl und der Modus bleibt.
+gelöscht werden. Zum Sichern immer `vmind backup` verwenden. Liest oder schreibt ein anderer
+Prozess gerade (offene Transaktion, etwa MCP-Server oder `vmind serve` mitten in einer
+Anfrage), schlägt der Wechsel mit dieser Meldung fehl und der Modus bleibt; offene, aber
+untätige Verbindungen blockieren nicht in jedem Fall. Andere Fehler (zum Beispiel
+schreibgeschützte Datei oder voller Datenträger) werden mit ihrer Ursache gemeldet. In beiden
+Fällen bleibt die vorher angelegte Sicherung erhalten.
 Zurück mit `vmind journal-mode vmind.db delete`; danach verschwinden die Zusatzdateien, sobald
 die letzte Verbindung geschlossen ist.
+
+Lesender Zugriff (`doctor`, `backup`, `report`) auf eine WAL-Datenbank ohne vorhandene
+Zusatzdateien kann die `-shm`-Datei neu anlegen und dafür Schreibrecht im Ordner der
+Datenbank brauchen, auch wenn die Datenbank selbst nur gelesen wird.
 
 Gemessen mit zwei gleichzeitig schreibenden Prozessen (je 12.000 Schreibvorgänge, isolierte
 Testdatenbank auf ext4-SSD): mit `wal` etwa 8–9 s statt 32–34 s, ohne Sperrfehler. `wal`

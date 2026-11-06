@@ -232,31 +232,47 @@ pub fn set_journal_mode(path: impl AsRef<Path>, mode: &str) -> Result<JournalMod
         });
     }
     let backup = backup_beside(path, &format!("before-journal-{mode}"))?;
-    let conn = Connection::open_with_flags(
-        crate::literal_file_path(path)?,
-        OpenFlags::SQLITE_OPEN_READ_WRITE,
-    )?;
-    conn.busy_timeout(Duration::from_secs(5))?;
-    let current = conn
-        .query_row(&format!("PRAGMA journal_mode={mode}"), [], |r| {
+    let result = (|| {
+        let conn = Connection::open_with_flags(
+            crate::literal_file_path(path)?,
+            OpenFlags::SQLITE_OPEN_READ_WRITE,
+        )?;
+        conn.busy_timeout(Duration::from_secs(5))?;
+        conn.query_row(&format!("PRAGMA journal_mode={mode}"), [], |r| {
             r.get::<_, String>(0)
         })
-        .ok();
-    drop(conn);
-    match current {
-        Some(current) if current == mode => Ok(JournalModeReport {
+    })();
+    match result {
+        Ok(current) if current == mode => Ok(JournalModeReport {
             previous: report.journal_mode,
             current,
             changed: true,
             backup: Some(backup),
         }),
-        _ => Err(invalid(&format!(
+        // SQLite meldet bei einem nicht möglichen Wechsel teils keinen Fehler, sondern den
+        // weiter geltenden Modus.
+        Ok(current) => Err(invalid(&format!(
+            "Journalmodus nicht umgestellt: SQLite meldet weiterhin {current}. Sicherung: {backup}"
+        ))),
+        Err(error) if is_busy_or_locked(&error) => Err(invalid(&format!(
             "Journalmodus nicht umgestellt: Die Datenbank wird von einem anderen Prozess benutzt \
             (zum Beispiel MCP-Server oder vmind serve). Diese beenden und erneut versuchen. \
             Modus bleibt {}. Sicherung: {backup}",
             report.journal_mode
         ))),
+        Err(error) => Err(invalid(&format!(
+            "Journalmodus nicht umgestellt: {error}. Modus bleibt {}. Sicherung: {backup}",
+            report.journal_mode
+        ))),
     }
+}
+
+fn is_busy_or_locked(error: &rusqlite::Error) -> bool {
+    matches!(
+        error,
+        rusqlite::Error::SqliteFailure(e, _)
+            if matches!(e.code, rusqlite::ErrorCode::DatabaseBusy | rusqlite::ErrorCode::DatabaseLocked)
+    )
 }
 
 /// Geprüfte Sicherung neben der Datenbank oder in `VMIND_BACKUP_DIR`, Name mit Anlass,
