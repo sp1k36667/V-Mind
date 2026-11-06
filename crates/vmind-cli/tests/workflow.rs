@@ -695,3 +695,55 @@ fn start_prompt_defaults_to_german_and_offers_english() {
     let (ok, _) = cli_status(&["start-prompt", "fr"]);
     assert!(!ok);
 }
+
+#[test]
+fn recall_limit_option_returns_more_than_five_and_rejects_invalid_values() {
+    let temp = Temp::new();
+    let path = temp.0.join("limit.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    for n in 0..7 {
+        let problem = format!("Gerüstname {n} umbenannt");
+        let added = cli(&[
+            "add",
+            db,
+            "error_solution",
+            &problem,
+            "Namen übernehmen",
+            "Test",
+        ]);
+        let id = added["id"].to_string();
+        cli(&["validate", db, &id, "Testprüfer", "Limit-Test"]);
+    }
+    let count = |args: &[&str]| cli(args).as_array().unwrap().len();
+    assert_eq!(count(&["recall", db, "Gerüstname umbenannt"]), 5);
+    assert_eq!(
+        count(&["recall", db, "Gerüstname umbenannt", "--limit", "7"]),
+        7
+    );
+    assert_eq!(
+        count(&["recall", db, "Gerüstname umbenannt", "--limit", "2"]),
+        2
+    );
+    for bad in ["0", "21", "fünf", "-1"] {
+        let (ok, _) = cli_status(&["recall", db, "Gerüstname", "--limit", bad]);
+        assert!(!ok, "--limit {bad} angenommen");
+    }
+}
+
+#[test]
+fn invalid_recall_limit_is_rejected_before_the_database_is_opened() {
+    let temp = Temp::new();
+    let path = temp.0.join("keine-datenbank.db");
+    std::fs::write(&path, b"kein SQLite").unwrap();
+    for bad in ["0", "21", "fünf"] {
+        let out = Command::new(env!("CARGO_BIN_EXE_vmind"))
+            .args(["recall", path.to_str().unwrap(), "x", "--limit", bad])
+            .output()
+            .unwrap();
+        assert!(!out.status.success(), "--limit {bad} angenommen");
+        let message = String::from_utf8_lossy(&out.stderr);
+        assert!(message.contains("Limit muss 1 bis 20 sein"), "{message}");
+    }
+    assert_eq!(std::fs::read(&path).unwrap(), b"kein SQLite");
+}

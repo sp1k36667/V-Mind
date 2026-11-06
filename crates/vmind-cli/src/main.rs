@@ -30,7 +30,7 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
   check DB ID [--invalidate]     (Prüfbefehl ausführen; bestanden validiert)
   revalidate DB [--invalidate]   (alle Prüfbefehle im Bereich plus global)
   search DB WÖRTLICHER_SUCHTEXT   (globale Einträge)
-  recall DB SUCHTEXT             (Volltext, Projekt plus global)
+  recall DB SUCHTEXT [--limit N] (Volltext, Projekt plus global; N 1 bis 20, sonst 5)
   ask DB FRAGE                  (automatischer Wissensabruf)
   ask DB SUCHTEXT FRAGE          (expliziter Wissensabruf)
   stats DB
@@ -405,6 +405,17 @@ fn run() -> Result<()> {
         }
         [cmd, db, query] if cmd == "recall" => {
             let records = MemoryStore::open_existing(db)?.recall(query, &scope, 5)?;
+            emit(&records, summary(&records), json_mode)?;
+        }
+        [cmd, db, query, flag, limit] if cmd == "recall" && flag == "--limit" => {
+            // Vor dem Öffnen prüfen: open_existing kann ältere Schemas umstellen, ein
+            // ungültiger Aufruf darf die Datenbank nicht verändern.
+            let limit = limit
+                .parse()
+                .ok()
+                .filter(|n| (1..=20).contains(n))
+                .ok_or_else(|| io::Error::other("Limit muss 1 bis 20 sein"))?;
+            let records = MemoryStore::open_existing(db)?.recall(query, &scope, limit)?;
             emit(&records, summary(&records), json_mode)?;
         }
         [cmd, db, question] if cmd == "ask" => {
