@@ -1,10 +1,11 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.2 (on `main`)
+## Unreleased: candidate 0.3.0-rc.3 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.2` (`vmind --version`, MCP
+Not released yet. The source now reports version `0.3.0-rc.3` (`vmind --version`, MCP
 server info); there is no tag, no published download and no installation of it. The
-earlier candidate `0.3.0-rc.1` did not yet contain #40, #42 and #43.
+earlier candidates `0.3.0-rc.1` and `0.3.0-rc.2` did not yet contain all changes below
+(rc.1 lacked #40, #42, #43; rc.2 lacked #44).
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
@@ -51,6 +52,12 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
   match in both directions. Retrieval corpora: longer word forms 0/10 → 9/10 and separated
   word pairs 1/7 → 6/7 at rank 1, no previous hit lost in 82 queries, 6 extra unrelated
   hits. (#43)
+- `vmind journal-mode DB wal|delete`: explicit switch of SQLite's journal mode with a
+  verified backup first; never automatic, new databases keep the default `delete`. Fails
+  with a clear message and keeps the mode if another process uses the file. `vmind doctor`
+  reports the journal mode. Read-only tools, backup and doctor work on WAL databases also
+  after all connections are closed; the `-wal`/`-shm` files get the database's permissions.
+  In a two-writer load test WAL took 8–9 s instead of 32–34 s. (#44)
 
 ### Changed
 

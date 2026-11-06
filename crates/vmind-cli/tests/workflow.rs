@@ -747,3 +747,24 @@ fn invalid_recall_limit_is_rejected_before_the_database_is_opened() {
     }
     assert_eq!(std::fs::read(&path).unwrap(), b"kein SQLite");
 }
+
+#[test]
+fn journal_mode_command_switches_explicitly_and_doctor_reports_it() {
+    let temp = Temp::new();
+    let path = temp.0.join("modus.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    assert_eq!(cli(&["doctor", db])["journal_mode"], "delete");
+    let wechsel = cli(&["journal-mode", db, "wal"]);
+    assert_eq!(wechsel["previous"], "delete");
+    assert_eq!(wechsel["current"], "wal");
+    assert_eq!(wechsel["changed"], true);
+    assert!(std::path::Path::new(wechsel["backup"].as_str().unwrap()).exists());
+    assert_eq!(cli(&["doctor", db])["journal_mode"], "wal");
+    let gleich = cli(&["journal-mode", db, "wal"]);
+    assert_eq!(gleich["changed"], false);
+    assert!(gleich["backup"].is_null());
+    let (ok, _) = cli_status(&["journal-mode", db, "truncate"]);
+    assert!(!ok);
+    assert_eq!(cli(&["journal-mode", db, "delete"])["current"], "delete");
+}

@@ -20,6 +20,7 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
   init DB
   doctor DB                     (nur lesen: Schema, Integrität, Fremdschlüssel)
   backup DB ZIEL                (geprüfte SQLite-Sicherung, überschreibt niemals)
+  journal-mode DB wal|delete    (Journalmodus ausdrücklich umstellen; Sicherung vorher)
   audit-secrets DB              (nur lesen: bekannte Geheimnisformate, nie Fundtext; alle Bereiche)
   add DB error_solution|long_term PROBLEM LÖSUNG QUELLE
   pending DB
@@ -259,7 +260,7 @@ fn run() -> Result<()> {
             let report = vmind_core::inspect_database(db)?;
             let healthy = report.healthy;
             let human = format!(
-                "Schema {} (unterstützt bis {}), Zustand: {}, Upgrade nötig: {}",
+                "Schema {} (unterstützt bis {}), Zustand: {}, Upgrade nötig: {}, Journalmodus: {}",
                 report.schema_version,
                 report.supported_schema_version,
                 if healthy {
@@ -267,7 +268,8 @@ fn run() -> Result<()> {
                 } else {
                     "Fehler – JSON-Bericht prüfen"
                 },
-                report.migration_required
+                report.migration_required,
+                report.journal_mode
             );
             emit(report, human, json_mode)?;
             if !healthy {
@@ -280,6 +282,17 @@ fn run() -> Result<()> {
             let report = report::build(&MemoryStore::open_read_only(db)?, &scope)?;
             let text = report::markdown(&report);
             emit(report, text, json_mode)?;
+        }
+        [cmd, db, mode] if cmd == "journal-mode" => {
+            let report = vmind_core::set_journal_mode(db, mode)?;
+            let human = match (&report.backup, report.changed) {
+                (Some(backup), true) => format!(
+                    "Journalmodus {} → {} (geprüfte Sicherung vorher: {backup})",
+                    report.previous, report.current
+                ),
+                _ => format!("Journalmodus bleibt {}", report.current),
+            };
+            emit(report, human, json_mode)?;
         }
         [cmd, db, destination] if cmd == "backup" => {
             let report = vmind_core::backup_database(db, destination)?;

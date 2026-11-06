@@ -22,7 +22,20 @@ pub struct DoctorReport {
     pub integrity_errors: Vec<String>,
     pub foreign_key_violations: usize,
     pub missing_objects: Vec<String>,
+    /// SQLite-Journalmodus, z. B. `delete` (Standard) oder `wal`.
+    pub journal_mode: String,
 }
+
+#[derive(Debug, Serialize)]
+pub struct JournalModeReport {
+    pub previous: String,
+    pub current: String,
+    pub changed: bool,
+    /// Geprüfte Sicherung vor dem Wechsel; ohne Änderung keine.
+    pub backup: Option<String>,
+}
+
+const JOURNAL_MODES: [&str; 2] = ["wal", "delete"];
 
 #[derive(Debug, Serialize)]
 pub struct BackupReport {
@@ -45,6 +58,7 @@ fn inspect(conn: &Connection) -> Result<DoctorReport> {
     // One snapshot for every diagnostic, including when another client writes.
     let tx = conn.unchecked_transaction()?;
     let version = tx.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))?;
+    let journal_mode = tx.query_row("PRAGMA journal_mode", [], |r| r.get::<_, String>(0))?;
     let integrity = tx
         .prepare("PRAGMA integrity_check")?
         .query_map([], |r| r.get::<_, String>(0))?
@@ -115,6 +129,7 @@ fn inspect(conn: &Connection) -> Result<DoctorReport> {
         integrity_errors,
         foreign_key_violations,
         missing_objects,
+        journal_mode,
     })
 }
 
@@ -191,6 +206,99 @@ pub fn backup_database(
         let _ = fs::remove_file(&destination);
     }
     result
+}
+
+/// Stellt den Journalmodus ausdrücklich auf `wal` oder `delete` um. Nie automatisch: Neue
+/// Datenbanken behalten den Standard. Vorher entsteht eine geprüfte Sicherung (Ordner wie vor
+/// einer Migration, `VMIND_BACKUP_DIR`). Benutzt ein anderer Prozess die Datei, schlägt der
+/// Wechsel mit klarer Meldung fehl und der Modus bleibt.
+pub fn set_journal_mode(path: impl AsRef<Path>, mode: &str) -> Result<JournalModeReport> {
+    if !JOURNAL_MODES.contains(&mode) {
+        return Err(invalid("Journalmodus muss wal oder delete sein"));
+    }
+    let path = path.as_ref();
+    let report = inspect_database(path)?;
+    if !report.healthy {
+        return Err(invalid(
+            "Datenbank ist nicht gesund oder hat kein unterstütztes Schema; zuerst doctor ausführen",
+        ));
+    }
+    if report.journal_mode == mode {
+        return Ok(JournalModeReport {
+            previous: report.journal_mode.clone(),
+            current: report.journal_mode,
+            changed: false,
+            backup: None,
+        });
+    }
+    let backup = backup_beside(path, &format!("before-journal-{mode}"))?;
+    let result = (|| {
+        let conn = Connection::open_with_flags(
+            crate::literal_file_path(path)?,
+            OpenFlags::SQLITE_OPEN_READ_WRITE,
+        )?;
+        conn.busy_timeout(Duration::from_secs(5))?;
+        conn.query_row(&format!("PRAGMA journal_mode={mode}"), [], |r| {
+            r.get::<_, String>(0)
+        })
+    })();
+    match result {
+        Ok(current) if current == mode => Ok(JournalModeReport {
+            previous: report.journal_mode,
+            current,
+            changed: true,
+            backup: Some(backup),
+        }),
+        // SQLite meldet bei einem nicht möglichen Wechsel teils keinen Fehler, sondern den
+        // weiter geltenden Modus.
+        Ok(current) => Err(invalid(&format!(
+            "Journalmodus nicht umgestellt: SQLite meldet weiterhin {current}. Sicherung: {backup}"
+        ))),
+        Err(error) if is_busy_or_locked(&error) => Err(invalid(&format!(
+            "Journalmodus nicht umgestellt: Die Datenbank wird von einem anderen Prozess benutzt \
+            (zum Beispiel MCP-Server oder vmind serve). Diese beenden und erneut versuchen. \
+            Modus bleibt {}. Sicherung: {backup}",
+            report.journal_mode
+        ))),
+        Err(error) => Err(invalid(&format!(
+            "Journalmodus nicht umgestellt: {error}. Modus bleibt {}. Sicherung: {backup}",
+            report.journal_mode
+        ))),
+    }
+}
+
+fn is_busy_or_locked(error: &rusqlite::Error) -> bool {
+    matches!(
+        error,
+        rusqlite::Error::SqliteFailure(e, _)
+            if matches!(e.code, rusqlite::ErrorCode::DatabaseBusy | rusqlite::ErrorCode::DatabaseLocked)
+    )
+}
+
+/// Geprüfte Sicherung neben der Datenbank oder in `VMIND_BACKUP_DIR`, Name mit Anlass,
+/// Zeitstempel und Prozessnummer; überschreibt nie.
+fn backup_beside(source: &Path, label: &str) -> Result<String> {
+    let stamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| invalid(&e.to_string()))?
+        .as_nanos();
+    let directory = std::env::var_os("VMIND_BACKUP_DIR");
+    let destination = if let Some(directory) = directory {
+        if directory.is_empty() {
+            return Err(invalid(
+                "VMIND_BACKUP_DIR darf nicht leer sein; Sicherung wird nicht übersprungen",
+            ));
+        }
+        let name = source
+            .file_name()
+            .ok_or_else(|| invalid("Datenbank-Dateiname fehlt"))?;
+        Path::new(&directory).join(name)
+    } else {
+        source.to_path_buf()
+    };
+    let mut name = destination.as_os_str().to_os_string();
+    name.push(format!(".{label}-{stamp}-{}.db", std::process::id()));
+    Ok(backup_database(source, Path::new(&name))?.destination)
 }
 
 pub(crate) fn backup_before_migration(source: &Path) -> Result<()> {

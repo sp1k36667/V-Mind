@@ -11,6 +11,37 @@ Im Entwicklungsstand nach 0.2.0: `vmind doctor DB` prüft die Datenbank rein les
 Wiederherstellung: [Betrieb](operations.md). Offene Abnahmekriterien:
 [Produktreife](product-readiness.md).
 
+### Journalmodus (Entwicklungsstand)
+
+Neue Datenbanken behalten den SQLite-Standard (`delete`); V-Mind stellt nie von selbst um.
+`vmind doctor DB` zeigt den aktuellen Modus. Ausdrücklich umstellen:
+
+```sh
+vmind journal-mode vmind.db wal
+```
+
+Vorher entsteht eine geprüfte Sicherung neben der Datenbank (oder in `VMIND_BACKUP_DIR`).
+Mit `wal` legt SQLite neben der Datei die Zusatzdateien `vmind.db-wal` und `vmind.db-shm` an;
+sie gehören zur Datenbank, haben dieselben Rechte und dürfen nicht einzeln kopiert oder
+gelöscht werden. Zum Sichern immer `vmind backup` verwenden. Liest oder schreibt ein anderer
+Prozess gerade (offene Transaktion, etwa MCP-Server oder `vmind serve` mitten in einer
+Anfrage), schlägt der Wechsel mit dieser Meldung fehl und der Modus bleibt; offene, aber
+untätige Verbindungen blockieren nicht in jedem Fall. Andere Fehler (zum Beispiel
+schreibgeschützte Datei oder voller Datenträger) werden mit ihrer Ursache gemeldet. In beiden
+Fällen bleibt die vorher angelegte Sicherung erhalten.
+Zurück mit `vmind journal-mode vmind.db delete`; danach verschwinden die Zusatzdateien, sobald
+die letzte Verbindung geschlossen ist.
+
+Lesender Zugriff (`doctor`, `backup`, `report`) auf eine WAL-Datenbank ohne vorhandene
+Zusatzdateien kann die `-shm`-Datei neu anlegen und dafür Schreibrecht im Ordner der
+Datenbank brauchen, auch wenn die Datenbank selbst nur gelesen wird.
+
+Gemessen mit zwei gleichzeitig schreibenden Prozessen (je 12.000 Schreibvorgänge, isolierte
+Testdatenbank auf ext4-SSD): mit `wal` etwa 8–9 s statt 32–34 s, ohne Sperrfehler. `wal`
+braucht ein lokales Dateisystem mit gemeinsamem Speicher; auf Netzlaufwerken nicht verwenden.
+Auf einem lokalen NTFS-Laufwerk (Linux-Treiber `ntfs3`) funktionierten Wechsel, `doctor`,
+Sicherung und Rückwechsel.
+
 ### Geheimnis-Audit (Entwicklungsstand)
 
 `vmind audit-secrets DB` durchsucht eine vorhandene Datenbank rein lesend in einem
