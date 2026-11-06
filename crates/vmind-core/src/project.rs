@@ -125,10 +125,19 @@ impl MemoryStore {
     pub fn create_conversation(&self, scope: &str, title: &str) -> Result<String> {
         bounded(scope, 128)?;
         bounded(title, 200)?;
+        // ID vorab erzeugen und per execute einfügen: execute läuft bis zum Ende, sodass ein
+        // Commitfehler sichtbar wird. INSERT ... RETURNING über query_row liest nur die erste
+        // Zeile und verschluckt einen späteren Commitfehler (gemeldete ID ohne gespeicherte Zeile).
+        let id: String = self
+            .conn
+            .query_row("SELECT lower(hex(randomblob(16)))", [], |r| r.get(0))?;
         retry_busy(&self.conn, || {
-            self.conn.query_row("INSERT INTO conversations(id,scope,title) VALUES(lower(hex(randomblob(16))),?1,?2) RETURNING id",
-            params![scope,title],|r|r.get(0))
-        })
+            self.conn.execute(
+                "INSERT INTO conversations(id,scope,title) VALUES(?1,?2,?3)",
+                params![id, scope, title],
+            )
+        })?;
+        Ok(id)
     }
     pub fn default_conversation(&self, scope: &str) -> Result<String> {
         bounded(scope, 128)?;

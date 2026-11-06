@@ -105,3 +105,35 @@ fn concurrent_writers_store_each_message_exactly_once() {
     erwartet.sort();
     assert_eq!(gespeichert, erwartet);
 }
+
+/// Ein anderer Prozess hält eine Lesesperre länger als busy_timeout. create_conversation darf keine
+/// ID melden, deren Zeile nicht gespeichert ist, und muss das Gespräch genau einmal anlegen.
+#[test]
+fn create_conversation_under_read_lock_is_stored_exactly_once() {
+    let temp = Temp::new();
+    let path = temp.0.join("lesesperre.db");
+    let store = MemoryStore::open(&path).unwrap();
+    let (bereit, warten) = mpsc::channel();
+    let leser = {
+        let path = path.clone();
+        std::thread::spawn(move || {
+            let conn = rusqlite::Connection::open(&path).unwrap();
+            conn.execute_batch("BEGIN").unwrap();
+            let _: i64 = conn
+                .query_row("SELECT count(*) FROM conversations", [], |r| r.get(0))
+                .unwrap();
+            bereit.send(()).unwrap();
+            std::thread::sleep(Duration::from_millis(6500));
+            conn.execute_batch("COMMIT").unwrap();
+        })
+    };
+    warten.recv().unwrap();
+    let id = store.create_conversation("p", "unter Lesesperre").unwrap();
+    leser.join().unwrap();
+    let neu = MemoryStore::open_existing(&path).unwrap();
+    assert!(
+        neu.conversation(&id).unwrap().is_some(),
+        "gemeldete ID fehlt in der DB"
+    );
+    assert_eq!(neu.conversations("p").unwrap().len(), 1);
+}
