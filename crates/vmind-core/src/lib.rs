@@ -17,7 +17,7 @@ pub use checks::{Applied, Check, CheckResult, CheckRun, Outcome};
 pub use observations::{Observation, SessionSummary};
 pub use paths::literal_file_path;
 pub use project::{ChatMessage, Conversation, JournalEntry, Resume};
-pub use repairs::Repair;
+pub use repairs::{OpenRepairs, Repair};
 pub use secrets::SecretKind;
 
 const SCHEMA_VERSION: i64 = 6;

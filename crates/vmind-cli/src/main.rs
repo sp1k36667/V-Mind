@@ -201,7 +201,28 @@ fn resume_output(db: &str, scope: &str, session: Option<&str>, json_mode: bool) 
             observed_lines(&resume.observed_sessions).join("\n")
         )
     };
+    let text = match repair_hint(&resume.open_repairs) {
+        Some(hint) => format!("{text}\n\n{hint}"),
+        None => text,
+    };
     emit(resume, text, json_mode)
+}
+
+/// Hinweis auf Reparaturen ohne Vorschlag; `None`, wenn es keine gibt.
+pub(crate) fn repair_hint(open: &vmind_core::OpenRepairs) -> Option<String> {
+    (open.total > 0).then(|| {
+        let runs = open
+            .newest_failed_runs
+            .iter()
+            .map(|r| r.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!(
+            "Reparaturen ohne Vorschlag: {} (neueste Läufe: {runs}). Problem und Lösung \
+             selbst formulieren: propose-repair DB LAUF PROBLEM LÖSUNG; Übersicht: repairs DB.",
+            open.total
+        )
+    })
 }
 
 /// Eine Zeile je Sitzung. Ein abgeschlossener Aufruf heißt nicht, dass ein Test bestand.
@@ -404,7 +425,7 @@ fn run() -> Result<()> {
             } else {
                 repairs
                     .iter()
-                    .map(|r| format!("Lauf {} ({}): {}", r.failed_run, r.scope, r.source()))
+                    .map(|r| format!("Lauf {} ({}): {}", r.failed_run, r.scope, r.source))
                     .collect::<Vec<_>>()
                     .join("\n")
             };

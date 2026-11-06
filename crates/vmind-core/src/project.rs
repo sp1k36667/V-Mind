@@ -51,6 +51,8 @@ pub struct Resume {
     /// Beobachtete Werkzeugaufrufe der letzten Sitzungen, zusammengefasst; nicht geprüft.
     pub observed_sessions: Vec<SessionSummary>,
     pub observation_count: i64,
+    /// Reparaturen ohne Vorschlag in diesem Bereich; nur IDs, keine Texte.
+    pub open_repairs: crate::OpenRepairs,
 }
 const JOURNAL: &str = "id,scope,kind,task_key,task_status,body,source,created_at";
 fn entry(r: &rusqlite::Row<'_>) -> Result<JournalEntry> {
@@ -306,6 +308,7 @@ impl MemoryStore {
             params![scope, HOST],
             |r| r.get(0),
         )?;
+        let open_repairs = self.open_repairs(scope)?;
         if let Some(tx) = tx {
             tx.commit()?;
         }
@@ -323,6 +326,7 @@ impl MemoryStore {
             message_count,
             observed_sessions,
             observation_count,
+            open_repairs,
         })
     }
 }

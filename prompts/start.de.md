@@ -131,6 +131,8 @@ es unterstützt. Eine optionale `id` ordnet die Antwort der Anfrage zu.
   bestanden (maximal 100); nur IDs, Exitcodes und Zeiten.
 - `propose_repair`: `scope`, `failed_run`, `problem`, `solution`; ein ungeprüfter
   Vorschlag je Reparatur. Problem und Lösung selbst formulieren, die Quelle setzt V-Mind.
+  `resume` nennt unter `open_repairs` Reparaturen ohne Vorschlag; nur echte Reparaturen
+  beschreiben, nichts erfinden.
 - `stats`: `scope`; Wissensstatistik und Schemaversion.
 - `session_new`: `scope`, `title`; liefert `conversation_id`.
 - `sessions`: `scope`; maximal 100 Gespräche.

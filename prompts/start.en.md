@@ -127,6 +127,8 @@ optional `id` matches the response to the request.
   run (at most 100); only IDs, exit codes and times.
 - `propose_repair`: `scope`, `failed_run`, `problem`, `solution`; one unverified
   proposal per repair. Write problem and solution yourself; V-Mind sets the source.
+  `resume` lists repairs without a proposal under `open_repairs`; describe only real
+  repairs, invent nothing.
 - `stats`: `scope`; knowledge statistics and schema version.
 - `session_new`: `scope`, `title`; returns `conversation_id`.
 - `sessions`: `scope`; at most 100 conversations.

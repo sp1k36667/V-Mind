@@ -190,6 +190,9 @@ pub fn markdown(report: &Report) -> String {
             line(&p.source)
         ));
     }
+    if let Some(hint) = crate::repair_hint(&r.open_repairs) {
+        out.extend([String::new(), format!("- {}", line(&hint))]);
+    }
     out.extend([
         String::new(),
         format!(
@@ -286,5 +289,41 @@ mod tests {
         assert!(text.contains("Keine Aufgaben gespeichert."));
         assert!(text.contains("Noch kein geprüftes Wissen."));
         assert!(text.contains("Keine offenen Vorschläge."));
+        assert!(!text.contains("Reparaturen ohne Vorschlag"));
+    }
+
+    #[test]
+    fn report_names_unproposed_repairs_by_run_id_only() {
+        use vmind_core::{CheckResult, Outcome};
+        let s = store();
+        let id = s
+            .remember_scoped("p", "error_solution", "X", "Y", "T")
+            .unwrap();
+        s.set_check(id, &["geheim-befehl".into()], "/", "T")
+            .unwrap();
+        let check = s.active_check(id).unwrap().unwrap();
+        let run = |outcome| {
+            let result = CheckResult {
+                outcome,
+                exit_code: Some(1),
+                duration_ms: 1,
+                output: "geheime Ausgabe".into(),
+            };
+            s.apply_check(&check, &result, false).unwrap().run_id
+        };
+        let failed = run(Outcome::Failed);
+        run(Outcome::Passed);
+        let text = markdown(&build(&s, "p").unwrap());
+        assert!(text.contains(&format!(
+            "Reparaturen ohne Vorschlag: 1 (neueste Läufe: {failed})"
+        )));
+        let hint = text
+            .lines()
+            .find(|l| l.contains("Reparaturen ohne Vorschlag"))
+            .unwrap();
+        assert!(
+            !hint.contains("geheim"),
+            "nur Lauf-IDs, kein Befehl, keine Ausgabe"
+        );
     }
 }

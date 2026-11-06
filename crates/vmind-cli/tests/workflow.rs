@@ -806,6 +806,27 @@ fn real_check_repair_becomes_one_pending_proposal_end_to_end() {
         "keine Befehle oder Ausgaben"
     );
     let run = repairs[0]["failed_run"].as_i64().unwrap().to_string();
+    let resumed = cli(&["--scope", "p", "resume", db]);
+    assert_eq!(resumed["open_repairs"]["total"], 1);
+    assert_eq!(
+        resumed["open_repairs"]["newest_failed_runs"][0],
+        repairs[0]["failed_run"]
+    );
+    let human = |scope: &str| {
+        let out = Command::new(env!("CARGO_BIN_EXE_vmind"))
+            .args(["--scope", scope, "resume", db])
+            .output()
+            .unwrap();
+        assert!(out.status.success());
+        String::from_utf8(out.stdout).unwrap()
+    };
+    assert!(human("p").contains(&format!(
+        "Reparaturen ohne Vorschlag: 1 (neueste Läufe: {run})"
+    )));
+    assert!(
+        !human("x").contains("Reparaturen"),
+        "fremder Bereich sieht nichts"
+    );
     let (ok, _) = cli_status(&["--scope", "x", "propose-repair", db, &run, "P", "L"]);
     assert!(!ok, "fremder Bereich");
     let proposed = cli(&[
@@ -818,6 +839,11 @@ fn real_check_repair_becomes_one_pending_proposal_end_to_end() {
         "Marker neu anlegen",
     ]);
     assert_eq!(proposed["status"], "pending");
+    assert_eq!(
+        cli(&["--scope", "p", "resume", db])["open_repairs"]["total"],
+        0
+    );
+    assert!(!human("p").contains("Reparaturen ohne Vorschlag"));
     let (ok, _) = cli_status(&["--scope", "p", "propose-repair", db, &run, "P", "L"]);
     assert!(!ok, "doppelt");
     let pending = cli(&["--scope", "p", "pending", db]);
