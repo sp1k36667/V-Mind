@@ -1,0 +1,101 @@
+[
+ {
+  "id": 1,
+  "scope": "r1",
+  "kind": "error_solution",
+  "problem": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt sie anders, weil list in Python ein eingebauter Name ist. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+  "solution": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen.",
+  "source": "R1-Lernfall haupt/015-leihliste-O-s1003 (Transfer-Pilot, Bedingung O): Methode hieß anders als list(), 3 Prüfungen mit AttributeError",
+  "evidence": "Gegenprobe Lernfall haupt/015-leihliste-O-s1003: unverändert 5/8 (test_doppelte_rueckgabe_valueerror, test_texte_nach_neuladen, test_ziel_ids_nach_neuladen ERROR); nur Methodenname und ihr Aufruf korrigiert 8/8. Ordner examples/r1/wissen/belege/015-leihliste-O-s1003-vorher und -nachher"
+ },
+ {
+  "id": 2,
+  "scope": "r1",
+  "kind": "error_solution",
+  "problem": "AssertionError: IDs nach Neuladen keine int. Einträge werden unter numerischen IDs gespeichert; nach json.load sind JSON-Objektschlüssel immer Strings. Nach dem erneuten Öffnen liefert list() IDs als Text, Suche und Vergleich mit int-IDs scheitern.",
+  "solution": "Beim Laden der Datei die Schlüssel des Eintrags-Objekts in ganze Zahlen umwandeln, bevor mit ihnen gesucht oder verglichen wird, zum Beispiel mit einem Dictionary-Ausdruck, der int(schluessel) auf den Wert abbildet. Beim Speichern darf json.dump die Schlüssel wieder als Text schreiben.",
+  "source": "R1-Lernfall haupt/005-ausgaben-O-s1002 (Transfer-Pilot, Bedingung O): Schlüssel nach dem Laden nicht umgewandelt, Zielprüfung scheiterte",
+  "evidence": "Gegenprobe Lernfall haupt/005-ausgaben-O-s1002: unverändert 6/8 mit test_ziel_ids_nach_neuladen FAIL; nur Schlüsselumwandlung beim Laden ergänzt 7/8, Zielprüfung bestanden (test_cli_fehler_exitcode hat andere Ursache und bleibt). Ordner examples/r1/wissen/belege/005-ausgaben-O-s1002-vorher und -nachher"
+ },
+ {
+  "id": 3,
+  "scope": "global",
+  "kind": "error_solution",
+  "problem": "Zerlegung von Operatoren aus zwei Zeichen falsch: ** oder // wird als zwei einzelne * bzw. / erkannt, oder die Prüfung darauf ist fehlerhaft geschrieben (Syntaxfehler wie if char == '*': and ...).",
+  "solution": "Beim Zerlegen zuerst die zweistelligen Operatoren prüfen: if text.startswith('**', i) oder text.startswith('//', i), dann einen Baustein anhängen und i um 2 erhöhen; erst danach einzelne Zeichen aus '+-*/%(),'. Einfacher: ein regulärer Ausdruck mit Alternativen in dieser Reihenfolge, z. B. r'\\*\\*|//|[-+*/%(),]'.",
+  "source": "Fachfremder Ablenker für R1, übernommen aus /home/sp1k3/vmind-lehrer-schwer-20261104/schwer.db Eintrag 3 (Bereich global)",
+  "evidence": "Übernommen mit unverändertem Text; ursprüngliche Validierung schwer.db Eintrag 3: Musterlösung nach genau diesem Aufbau besteht die versteckte Abnahme 14/14; /home/sp1k3/vmind-lehrer-schwer-20261104/muster/app.py (118 Zeilen, eine Fassung)"
+ },
+ {
+  "id": 4,
+  "scope": "global",
+  "kind": "error_solution",
+  "problem": "Endlosrekursion beim Vorzeichen (RecursionError): Die Vorzeichenfunktion schaut mit peek() auf '-' und ruft sich selbst auf, ohne das '-' zu verbrauchen; sie findet dasselbe '-' immer wieder.",
+  "solution": "In jeder Parserfunktion den erkannten Operator zuerst verbrauchen (consume/nimm, Position erhöhen) und erst dann den Rest lesen: if peek() == '-': consume(); return -vorzeichen().",
+  "source": "Fachfremder Ablenker für R1, übernommen aus /home/sp1k3/vmind-lehrer-schwer-20261104/schwer.db Eintrag 9 (Bereich global)",
+  "evidence": "Übernommen mit unverändertem Text; ursprüngliche Validierung schwer.db Eintrag 9: Musterlösung /home/sp1k3/vmind-lehrer-schwer-20261104/muster/app.py erfüllt diese Regel und besteht die versteckte Abnahme 14/14"
+ },
+ {
+  "id": 5,
+  "scope": "global",
+  "kind": "error_solution",
+  "problem": "Potenz ** an der falschen Stelle geparst: ** wird wie ein Vorzeichen vor dem Operanden behandelt statt als Operator zwischen Basis und Exponent; dann bleibt bei 2 ** 3 der Rest ** 3 übrig (Fehler wie überzählige Operanden).",
+  "solution": "Eigene Stufe potenz() zwischen vorzeichen() und atom(): basis = atom(); wenn danach '**' kommt: '**' verbrauchen, exponent = vorzeichen(), Ergebnis basis ** exponent. vorzeichen() ruft für den Rest potenz() auf, nicht atom().",
+  "source": "Fachfremder Ablenker für R1, übernommen aus /home/sp1k3/vmind-lehrer-schwer-20261104/schwer.db Eintrag 10 (Bereich global)",
+  "evidence": "Übernommen mit unverändertem Text; ursprüngliche Validierung schwer.db Eintrag 10: Musterlösung /home/sp1k3/vmind-lehrer-schwer-20261104/muster/app.py erfüllt diese Regel und besteht die versteckte Abnahme 14/14"
+ },
+ {
+  "id": 6,
+  "scope": "global",
+  "kind": "error_solution",
+  "problem": "Variable oder Zahl zurückgegeben, ohne den Baustein zu verbrauchen: In atom() steht zum Beispiel if token in variables: return variables[token] ohne consume(). Der Name bleibt liegen; danach scheitert jede Rechnung mit Variablen (x * x gibt überzählige Operanden oder fehlende Klammer).",
+  "solution": "In atom() jeden erkannten Baustein verbrauchen, bevor sein Wert zurückgegeben wird: Zahl, Variable, Funktionsname, Klammer. Faustregel: Jeder Zweig in atom() beginnt mit token = consume() oder ruft consume() vor dem return auf.",
+  "source": "Fachfremder Ablenker für R1, übernommen aus /home/sp1k3/vmind-lehrer-schwer-20261104/schwer.db Eintrag 11 (Bereich global)",
+  "evidence": "Übernommen mit unverändertem Text; ursprüngliche Validierung schwer.db Eintrag 11: Fassung /home/sp1k3/vmind-lehrer-schwer-20261104/gemini-plus-fix/app.py (Geminis Korrektur plus diese Änderungen) besteht die versteckte Abnahme 14/14; Geminis Fassung ohne sie 11/14"
+ },
+ {
+  "id": 7,
+  "scope": "global",
+  "kind": "error_solution",
+  "problem": "Funktionsaufruf überspringt das erste Argument: nach dem Funktionsnamen und der öffnenden Klammer wird noch einmal nimm()/consume() aufgerufen; bei abs(5) geht die 5 verloren, bei max(1, 2) die 1.",
+  "solution": "Funktionsaufruf genau so lesen: Name verbrauchen, '(' verbrauchen und prüfen, dann sofort mit dem ersten Argument (parse_expression) weitermachen, ohne weiteren consume()-Aufruf; am Ende ')' verbrauchen und prüfen.",
+  "source": "Fachfremder Ablenker für R1, übernommen aus /home/sp1k3/vmind-lehrer-schwer-20261104/schwer.db Eintrag 12 (Bereich global)",
+  "evidence": "Übernommen mit unverändertem Text; ursprüngliche Validierung schwer.db Eintrag 12: Fassung /home/sp1k3/vmind-lehrer-schwer-20261104/gemini-plus-fix/app.py (Geminis Korrektur plus diese Änderungen) besteht die versteckte Abnahme 14/14; Geminis Fassung ohne sie 11/14"
+ },
+ {
+  "id": 8,
+  "scope": "global",
+  "kind": "error_solution",
+  "problem": "abs() mit mehreren Argumenten nicht abgelehnt: abs(1, 2) liefert still abs(1), obwohl abs genau ein Argument verlangt.",
+  "solution": "Argumentzahl je Funktion prüfen: abs genau 1, min und max mindestens 1; sonst ValueError('Falsche Argumentzahl').",
+  "source": "Fachfremder Ablenker für R1, übernommen aus /home/sp1k3/vmind-lehrer-schwer-20261104/schwer.db Eintrag 13 (Bereich global)",
+  "evidence": "Übernommen mit unverändertem Text; ursprüngliche Validierung schwer.db Eintrag 13: Fassung /home/sp1k3/vmind-lehrer-schwer-20261104/gemini-plus-fix/app.py (Geminis Korrektur plus diese Änderungen) besteht die versteckte Abnahme 14/14; Geminis Fassung ohne sie 11/14"
+ },
+ {
+  "id": 9,
+  "scope": "global",
+  "kind": "error_solution",
+  "problem": "Ergänzung zu Eintrag 10: Rangfolge von Vorzeichen und Potenz falsch verdrahtet. Entweder steht ** in der Vorzeichenstufe, oder potenz() ruft zuerst vorzeichen() auf; dann ergibt -2 ** 2 den Wert 4 statt -4 (Python und die Aufgabe verlangen -4).",
+  "solution": "Genau dieses Gerüst verwenden:\ndef vorzeichen():\n    if peek() == '-': consume(); return -vorzeichen()\n    if peek() == '+': consume(); return vorzeichen()\n    return potenz()\ndef potenz():\n    basis = atom()\n    if peek() == '**':\n        consume()\n        return basis ** vorzeichen()\n    return basis\nterm() ruft vorzeichen() auf, nicht potenz(). So gilt -2 ** 2 = -4, 2 ** 3 ** 2 = 512, 2 ** -1 = 0.5.",
+  "source": "Fachfremder Ablenker für R1, übernommen aus /home/sp1k3/vmind-lehrer-schwer-20261104/schwer.db Eintrag 14 (Bereich global)",
+  "evidence": "Übernommen mit unverändertem Text; ursprüngliche Validierung schwer.db Eintrag 14: Fassung /home/sp1k3/vmind-lehrer-schwer-20261104/gemini-plus-fix/app.py (Geminis Korrektur plus diese Änderungen) besteht die versteckte Abnahme 14/14; Geminis Fassung ohne sie 11/14"
+ },
+ {
+  "id": 10,
+  "scope": "global",
+  "kind": "error_solution",
+  "problem": "Einbahnstraße stürzt ab (not enough values to unpack): Die Richtungen werden als Liste mit bedingtem Element gebaut, etwa [(a, b, m), (b, a, m) if not one_way else []]; bei one_way=True steht dann eine leere Liste in der Schleife.",
+  "solution": "Richtungen schrittweise bauen: richtungen = [(a, b, m)]; if not one_way: richtungen.append((b, a, m)); dann for von, nach, m in richtungen. Kein bedingtes Element in einem Listenliteral.",
+  "source": "Fachfremder Ablenker für R1, übernommen aus /home/sp1k3/vmind-lehrer-schwer-20261104/schwer.db Eintrag 16 (Bereich routenplaner)",
+  "evidence": "Übernommen mit unverändertem Text; ursprüngliche Validierung schwer.db Eintrag 16: Korrektur nur dieser Stelle in 12B-Code Seed 6002: Routen-Abnahme 10/14 -> 13/14; Ordner /home/sp1k3/vmind-lehrer-route-20261104/korrektur-s6002"
+ },
+ {
+  "id": 11,
+  "scope": "global",
+  "kind": "error_solution",
+  "problem": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt. Oft liegt der richtige Schlüssel schon im Heap, aber eigene Nachvergleiche am Ziel (etwa path < best_path) vergleichen nur die Liste und verwerfen den kürzeren Weg.",
+  "solution": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel.",
+  "source": "Fachfremder Ablenker für R1, übernommen aus /home/sp1k3/vmind-lehrer-schwer-20261104/schwer.db Eintrag 17 (Bereich routenplaner)",
+  "evidence": "Übernommen mit unverändertem Text; ursprüngliche Validierung schwer.db Eintrag 17: Zusätzliche Korrektur dieser Stelle in 12B-Code Seed 6002: Routen-Abnahme 13/14 -> 14/14; Ordner /home/sp1k3/vmind-lehrer-route-20261104/korrektur-s6002"
+ }
+]
