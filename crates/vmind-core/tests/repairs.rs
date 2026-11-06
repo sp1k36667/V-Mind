@@ -194,3 +194,47 @@ fn proposals_for_a_global_check_stay_in_each_callers_scope() {
     let g = s.propose_repair("global", failed, "Global", "L").unwrap();
     assert_eq!(s.get(g).unwrap().unwrap().scope, "global");
 }
+
+#[test]
+fn open_repairs_count_all_unproposed_and_show_three_newest_runs() {
+    use Outcome::*;
+    let s = MemoryStore::in_memory().unwrap();
+    let mut failed = Vec::new();
+    for _ in 0..101 {
+        let (_, check) = entry_with_check(&s, "global");
+        failed.push(runs(&s, &check, &[Failed, Passed])[0]);
+    }
+    let (_, fremd) = entry_with_check(&s, "anderes");
+    runs(&s, &fremd, &[Failed, Passed]);
+    assert_eq!(s.repairs("p").unwrap().len(), 100, "Liste bleibt begrenzt");
+    let open = s.open_repairs("p").unwrap();
+    assert_eq!(open.total, 101, "echte Gesamtzahl, ohne fremden Bereich");
+    let newest: Vec<i64> = failed.iter().rev().take(3).copied().collect();
+    assert_eq!(open.newest_failed_runs, newest);
+
+    s.propose_repair("p", newest[0], "P", "L").unwrap();
+    let after = s.open_repairs("p").unwrap();
+    assert_eq!(after.total, 100);
+    assert_eq!(after.newest_failed_runs, [newest[1], newest[2], failed[97]]);
+    assert_eq!(
+        s.open_repairs("q").unwrap().total,
+        101,
+        "Vorschlag in p zählt nicht für q"
+    );
+}
+
+#[test]
+fn open_repairs_skip_withdrawn_entries_and_replaced_checks() {
+    use Outcome::*;
+    let s = MemoryStore::in_memory().unwrap();
+    let (zurueck, a) = entry_with_check(&s, "p");
+    let (ersetzt, b) = entry_with_check(&s, "p");
+    runs(&s, &a, &[Failed, Passed]);
+    runs(&s, &b, &[Failed, Passed]);
+    assert_eq!(s.open_repairs("p").unwrap().total, 2);
+    s.invalidate(zurueck, "tester", "falsch").unwrap();
+    s.set_check(ersetzt, &["neu".into()], "/w", "tester")
+        .unwrap();
+    let open = s.open_repairs("p").unwrap();
+    assert_eq!((open.total, open.newest_failed_runs.len()), (0, 0));
+}

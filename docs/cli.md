@@ -160,6 +160,13 @@ Ausgaben und Befehle der Läufe werden nicht übernommen, und nichts wird validi
 Grenze: V-Mind sieht nur Prüfbefehle an eigenen Einträgen, nicht die übrigen Tests eines
 Projekts.
 
+`resume` (CLI, JSONL, MCP) und `report` nennen unter `open_repairs` die echte Zahl der
+Reparaturen ohne Vorschlag im gewählten Bereich (`total`, gleiche Sichtbarkeit wie
+`repairs`, nicht auf 100 begrenzt) und höchstens drei neueste `failed_run`-IDs
+(`newest_failed_runs`). Die Textausgabe zeigt dann eine Zeile mit dem Hinweis auf
+`propose-repair`; ohne offene Reparatur entfällt sie. Es werden keine Texte, Befehle oder
+Ausgaben gezeigt und nichts geschrieben.
+
 `pending DB` zeigt maximal 100 aktive ungeprüfte Einträge. `stats DB` zeigt den
 Status des gewählten Bereichs plus `global`. `--json` vor dem Befehl liefert
 maschinenlesbare Ausgaben. `--help` zeigt alle Befehle. `init` darf eine neue Datei

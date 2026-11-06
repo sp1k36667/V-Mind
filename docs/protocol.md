@@ -60,7 +60,9 @@ ist nicht erlaubt, V-Mind setzt sie aus den IDs („Reparatur: Prüfbefehl #… 
 Lauf #… fehlgeschlagen → Lauf #… bestanden“). Ein zweiter Vorschlag zum selben Laufpaar
 im selben Bereich wird abgelehnt, auch bei gleichzeitigen Aufrufen; andere Bereiche
 bleiben davon unberührt. Die Quelle dient der Deduplizierung und
-ist kein manipulationssicherer Nachweis.
+ist kein manipulationssicherer Nachweis. `repairs` liefert dieselbe Quelle als `source`.
+`resume` enthält `open_repairs` mit `total` (alle sichtbaren Reparaturen ohne Vorschlag im
+Bereich, unbegrenzt gezählt) und `newest_failed_runs` (höchstens drei, neueste zuerst).
 
 ```json
 {"id":7,"op":"repairs","scope":"projekt-a"}

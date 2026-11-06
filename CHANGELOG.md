@@ -1,11 +1,12 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.4 (on `main`)
+## Unreleased: candidate 0.3.0-rc.5 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.4` (`vmind --version`, MCP
+Not released yet. The source now reports version `0.3.0-rc.5` (`vmind --version`, MCP
 server info); there is no tag, no published download and no installation of it. The
-earlier candidates `0.3.0-rc.1` to `0.3.0-rc.3` did not yet contain all changes below
-(rc.1 lacked #40, #42, #43; rc.2 lacked #44; rc.3 lacked repair proposals).
+earlier candidates `0.3.0-rc.1` to `0.3.0-rc.4` did not yet contain all changes below
+(rc.1 lacked #40, #42, #43; rc.2 lacked #44; rc.3 lacked #46; rc.4 lacked open repairs in
+`resume`).
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
@@ -65,7 +66,10 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
   when called in `global`), with problem and solution from the caller and a source V-Mind
   builds from the IDs; no check output or command is copied and nothing is validated.
   Concurrent calls create no second entry. The source deduplicates but is no tamper-proof
-  evidence. V-Mind only sees checks on its own entries, not a project's other tests.
+  evidence. V-Mind only sees checks on its own entries, not a project's other tests. (#46)
+- `resume` (CLI, JSONL, MCP, local model context) and `report` show `open_repairs`: the true
+  number of visible repairs without a proposal in the scope and at most three newest failed
+  run IDs, with a hint to `propose-repair`. IDs only, read-only.
 
 ### Changed
 
