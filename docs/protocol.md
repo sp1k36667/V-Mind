@@ -53,11 +53,13 @@ aktive Prüfbefehl eines sichtbaren, nicht zurückgezogenen Eintrags (Bereich pl
 fehlschlug und im unmittelbar folgenden Lauf bestand; ein `error` dazwischen unterbricht
 den Übergang. Felder: `memory_id`, `check_id`, `failed_run`, `passed_run`, `failed_exit`,
 `passed_exit`, `failed_at`, `passed_at`, `scope`; keine Ausgaben und keine Befehle.
-`propose_repair` legt dazu einen `pending`-Eintrag (`error_solution`) im Bereich des
-geprüften Eintrags an. `problem` und `solution` formuliert der Aufrufer; eine `source`
+`propose_repair` legt dazu einen `pending`-Eintrag (`error_solution`) im Aufrufbereich
+`scope` an, auch wenn der Prüfbefehl an einem globalen Eintrag hängt; global nur bei
+Aufruf mit `scope` `global`. `problem` und `solution` formuliert der Aufrufer; eine `source`
 ist nicht erlaubt, V-Mind setzt sie aus den IDs („Reparatur: Prüfbefehl #… an Eintrag #…,
 Lauf #… fehlgeschlagen → Lauf #… bestanden“). Ein zweiter Vorschlag zum selben Laufpaar
-wird abgelehnt, auch bei gleichzeitigen Aufrufen. Die Quelle dient der Deduplizierung und
+im selben Bereich wird abgelehnt, auch bei gleichzeitigen Aufrufen; andere Bereiche
+bleiben davon unberührt. Die Quelle dient der Deduplizierung und
 ist kein manipulationssicherer Nachweis.
 
 ```json

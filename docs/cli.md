@@ -154,8 +154,8 @@ in der Quelle speichern, prüfen und freigeben.
 
 `repairs DB` listet nur lesend Prüfbefehle, die fehlschlugen und im direkt folgenden
 Lauf bestanden (Bereich plus `global`, ohne zurückgezogene Einträge und ersetzte
-Prüfbefehle). `propose-repair DB LAUF PROBLEM LÖSUNG` legt dazu genau einen ungeprüften
-Vorschlag an; LAUF ist `failed_run` aus `repairs`, die Quelle erzeugt V-Mind aus den IDs.
+Prüfbefehle). `propose-repair DB LAUF PROBLEM LÖSUNG` legt dazu je Bereich genau einen
+ungeprüften Vorschlag im gewählten `--scope` an, auch bei einem globalen Prüfbefehl; LAUF ist `failed_run` aus `repairs`, die Quelle erzeugt V-Mind aus den IDs.
 Ausgaben und Befehle der Läufe werden nicht übernommen, und nichts wird validiert.
 Grenze: V-Mind sieht nur Prüfbefehle an eigenen Einträgen, nicht die übrigen Tests eines
 Projekts.

@@ -162,3 +162,35 @@ fn concurrent_proposals_for_the_same_pair_store_one_entry() {
     drop(s);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn proposals_for_a_global_check_stay_in_each_callers_scope() {
+    use Outcome::*;
+    let s = MemoryStore::in_memory().unwrap();
+    let (_, check) = entry_with_check(&s, "global");
+    let failed = runs(&s, &check, &[Failed, Passed])[0];
+    let a = s.propose_repair("a", failed, "Text A", "Lösung A").unwrap();
+    let b = s.propose_repair("b", failed, "Text B", "Lösung B").unwrap();
+    assert_eq!(s.get(a).unwrap().unwrap().scope, "a");
+    assert_eq!(s.get(b).unwrap().unwrap().scope, "b");
+    let error = s
+        .propose_repair("a", failed, "P", "L")
+        .unwrap_err()
+        .to_string();
+    assert!(!error.contains("Text B") && !error.contains(&b.to_string()));
+    let shown = |scope| -> Vec<String> {
+        s.pending(scope)
+            .unwrap()
+            .into_iter()
+            .map(|r| r.problem)
+            .collect()
+    };
+    assert_eq!(shown("a"), ["Text A"], "Projekt b bleibt unsichtbar");
+    assert_eq!(shown("b"), ["Text B"]);
+    assert!(
+        shown("global").is_empty(),
+        "nichts global ohne Aufruf in global"
+    );
+    let g = s.propose_repair("global", failed, "Global", "L").unwrap();
+    assert_eq!(s.get(g).unwrap().unwrap().scope, "global");
+}

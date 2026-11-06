@@ -61,7 +61,8 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
 - Repair proposals: `vmind repairs DB` (also JSONL/MCP `repairs`) lists, read-only, check
   commands of visible entries that failed and passed in the directly following run.
   `vmind propose-repair DB RUN PROBLEM SOLUTION` (`propose_repair`) stores exactly one
-  `pending` entry per repair, with problem and solution from the caller and a source V-Mind
+  `pending` entry per repair in the caller's scope (also for a global check; global only
+  when called in `global`), with problem and solution from the caller and a source V-Mind
   builds from the IDs; no check output or command is copied and nothing is validated.
   Concurrent calls create no second entry. The source deduplicates but is no tamper-proof
   evidence. V-Mind only sees checks on its own entries, not a project's other tests.

@@ -17,7 +17,7 @@ pub struct Repair {
     pub passed_exit: Option<i64>,
     pub failed_at: String,
     pub passed_at: String,
-    /// Bereich des geprüften Eintrags; dort landet auch ein Vorschlag.
+    /// Bereich des geprüften Eintrags (der Aufrufbereich oder `global`).
     pub scope: String,
 }
 
@@ -71,9 +71,11 @@ impl MemoryStore {
             .collect()
     }
 
-    /// Legt zu einer sichtbaren Reparatur genau einen ungeprüften Eintrag an. Prüfung des
-    /// Laufpaars, Suche nach einem früheren Vorschlag und Anlage laufen in einer
-    /// Schreibtransaktion, damit gleichzeitige Aufrufe keinen zweiten Eintrag anlegen.
+    /// Legt zu einer sichtbaren Reparatur genau einen ungeprüften Eintrag im Aufrufbereich
+    /// an; ein Projekt macht seinen Text so nicht über einen globalen Prüfbefehl global.
+    /// Je Zielbereich gibt es einen Vorschlag pro Laufpaar. Prüfung des Laufpaars, Suche
+    /// nach einem früheren Vorschlag und Anlage laufen in einer Schreibtransaktion, damit
+    /// gleichzeitige Aufrufe keinen zweiten Eintrag anlegen.
     pub fn propose_repair(
         &self,
         scope: &str,
@@ -95,17 +97,16 @@ impl MemoryStore {
                 })?;
             let source = repair.source();
             let known: bool = self.conn.query_row(
-                "SELECT EXISTS(SELECT 1 FROM memories WHERE source=?1)",
-                [&source],
+                "SELECT EXISTS(SELECT 1 FROM memories WHERE source=?1 AND scope=?2)",
+                params![source, scope],
                 |r| r.get(0),
             )?;
             if known {
                 return Err(invalid(
-                    "Für diese Reparatur gibt es bereits einen Vorschlag",
+                    "Für diese Reparatur gibt es in diesem Bereich bereits einen Vorschlag",
                 ));
             }
-            let id =
-                self.remember_scoped(&repair.scope, "error_solution", problem, solution, &source)?;
+            let id = self.remember_scoped(scope, "error_solution", problem, solution, &source)?;
             tx.commit()?;
             Ok(id)
         })
