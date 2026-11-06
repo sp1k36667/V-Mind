@@ -11,6 +11,29 @@ Im Entwicklungsstand nach 0.2.0: `vmind doctor DB` prüft die Datenbank rein les
 Wiederherstellung: [Betrieb](operations.md). Offene Abnahmekriterien:
 [Produktreife](product-readiness.md).
 
+### Journalmodus (Entwicklungsstand)
+
+Neue Datenbanken behalten den SQLite-Standard (`delete`); V-Mind stellt nie von selbst um.
+`vmind doctor DB` zeigt den aktuellen Modus. Ausdrücklich umstellen:
+
+```sh
+vmind journal-mode vmind.db wal
+```
+
+Vorher entsteht eine geprüfte Sicherung neben der Datenbank (oder in `VMIND_BACKUP_DIR`).
+Mit `wal` legt SQLite neben der Datei die Zusatzdateien `vmind.db-wal` und `vmind.db-shm` an;
+sie gehören zur Datenbank, haben dieselben Rechte und dürfen nicht einzeln kopiert oder
+gelöscht werden. Zum Sichern immer `vmind backup` verwenden. Benutzt ein anderer Prozess die
+Datei (MCP-Server, `vmind serve`), schlägt der Wechsel mit Meldung fehl und der Modus bleibt.
+Zurück mit `vmind journal-mode vmind.db delete`; danach verschwinden die Zusatzdateien, sobald
+die letzte Verbindung geschlossen ist.
+
+Gemessen mit zwei gleichzeitig schreibenden Prozessen (je 12.000 Schreibvorgänge, isolierte
+Testdatenbank auf ext4-SSD): mit `wal` etwa 8–9 s statt 32–34 s, ohne Sperrfehler. `wal`
+braucht ein lokales Dateisystem mit gemeinsamem Speicher; auf Netzlaufwerken nicht verwenden.
+Auf einem lokalen NTFS-Laufwerk (Linux-Treiber `ntfs3`) funktionierten Wechsel, `doctor`,
+Sicherung und Rückwechsel.
+
 ### Geheimnis-Audit (Entwicklungsstand)
 
 `vmind audit-secrets DB` durchsucht eine vorhandene Datenbank rein lesend in einem

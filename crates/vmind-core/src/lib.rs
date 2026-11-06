@@ -4,7 +4,10 @@ mod check_evidence;
 mod checks;
 pub use check_evidence::{CheckEvidence, CheckState, CheckVerdict};
 mod maintenance;
-pub use maintenance::{BackupReport, DoctorReport, backup_database, inspect_database};
+pub use maintenance::{
+    BackupReport, DoctorReport, JournalModeReport, backup_database, inspect_database,
+    set_journal_mode,
+};
 mod observations;
 mod paths;
 mod project;
