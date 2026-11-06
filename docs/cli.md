@@ -167,6 +167,14 @@ Reparaturen ohne Vorschlag im gewählten Bereich (`total`, gleiche Sichtbarkeit 
 `propose-repair`; ohne offene Reparatur entfällt sie. Es werden keine Texte, Befehle oder
 Ausgaben gezeigt und nichts geschrieben.
 
+Besteht `check DB ID` oder ein Lauf in `revalidate` direkt nach einem Fehlschlag desselben
+aktiven Prüfbefehls, nennt die Ausgabe genau diese Reparatur: im Text eine Zeile
+„Reparatur erkannt … propose-repair DB LAUF PROBLEM LÖSUNG“, in JSON `repair` (bei `check`,
+sonst `null`) bzw. `repairs` (bei `revalidate`). Es gelten der gewählte `--scope`, die
+Sichtbarkeit von `repairs` und die Deduplizierung: Gibt es im Bereich schon einen
+Vorschlag, entfällt der Hinweis. Der Hinweis schreibt nichts; scheitert seine Abfrage,
+bleibt der Lauf gespeichert und das Ergebnis unverändert.
+
 `pending DB` zeigt maximal 100 aktive ungeprüfte Einträge. `stats DB` zeigt den
 Status des gewählten Bereichs plus `global`. `--json` vor dem Befehl liefert
 maschinenlesbare Ausgaben. `--help` zeigt alle Befehle. `init` darf eine neue Datei

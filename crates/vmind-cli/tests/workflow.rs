@@ -855,3 +855,69 @@ fn real_check_repair_becomes_one_pending_proposal_end_to_end() {
             .starts_with("Reparatur: Prüfbefehl #")
     );
 }
+#[test]
+fn passing_check_right_after_failure_names_the_repair_once() {
+    let temp = Temp::new();
+    let path = temp.0.join("hint.db");
+    let db = path.to_str().unwrap();
+    let workdir = temp.0.join("projekt");
+    std::fs::create_dir(&workdir).unwrap();
+    let marker = workdir.join("marker");
+    cli(&["init", db]);
+    let added = cli(&["--scope", "p", "add", db, "error_solution", "M", "L", "T"]);
+    let id = added["id"].as_i64().unwrap().to_string();
+    let dir = workdir.to_str().unwrap();
+    cli(&["check-set", db, &id, "T", dir, "sh", "-c", "test -f marker"]);
+    std::fs::write(&marker, "").unwrap();
+    assert_eq!(
+        cli(&["--scope", "p", "check", db, &id])["repair"],
+        Value::Null
+    );
+    std::fs::remove_file(&marker).unwrap();
+    assert!(!cli_status(&["--scope", "p", "check", db, &id]).0);
+    std::fs::write(&marker, "").unwrap();
+
+    let out = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(["--scope", "p", "check", db, &id])
+        .output()
+        .unwrap();
+    assert!(out.status.success(), "Hinweis ändert das Ergebnis nicht");
+    let text = String::from_utf8(out.stdout).unwrap();
+    let failed_run = cli(&["--scope", "p", "repairs", db])[0]["failed_run"].clone();
+    assert!(text.contains(&format!("propose-repair DB {failed_run} PROBLEM LÖSUNG")));
+    let hint = text
+        .lines()
+        .find(|l| l.starts_with("Reparatur erkannt"))
+        .unwrap();
+    assert!(!hint.contains("marker"), "kein Befehl im Hinweis");
+
+    let again = cli(&["--scope", "p", "check", db, &id]);
+    assert_eq!(
+        again["repair"],
+        Value::Null,
+        "nur der gerade abschließende Lauf"
+    );
+    std::fs::remove_file(&marker).unwrap();
+    assert!(!cli_status(&["--scope", "p", "revalidate", db]).0);
+    std::fs::write(&marker, "").unwrap();
+    let report = cli(&["--scope", "p", "revalidate", db]);
+    assert_eq!(report["repairs"].as_array().unwrap().len(), 1);
+    let run = report["repairs"][0]["failed_run"]
+        .as_i64()
+        .unwrap()
+        .to_string();
+    cli(&[
+        "--scope",
+        "p",
+        "propose-repair",
+        db,
+        &run,
+        "Marker weg",
+        "Neu anlegen",
+    ]);
+    std::fs::remove_file(&marker).unwrap();
+    assert!(!cli_status(&["--scope", "p", "check", db, &id]).0);
+    std::fs::write(&marker, "").unwrap();
+    let foreign = cli(&["--scope", "x", "check", db, &id]);
+    assert_eq!(foreign["repair"], Value::Null, "fremder Bereich");
+}

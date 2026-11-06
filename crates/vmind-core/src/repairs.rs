@@ -53,9 +53,17 @@ const REPAIRS_FROM: &str = "
 /// Liste; `?3` grenzt optional auf einen Lauf ein, `?2` begrenzt.
 fn repairs_sql() -> String {
     format!(
+        "{} {REPAIRS_FROM}
+        AND (?3 IS NULL OR f.id=?3) ORDER BY f.id DESC LIMIT ?2",
+        repair_columns()
+    )
+}
+
+/// Spalten in der Reihenfolge von `repair_row`.
+fn repair_columns() -> String {
+    format!(
         "SELECT c.memory_id, c.id, f.id, p.id, f.exit_code, p.exit_code, f.created_at,
-            p.created_at, m.scope, {SOURCE_SQL} {REPAIRS_FROM}
-        AND (?3 IS NULL OR f.id=?3) ORDER BY f.id DESC LIMIT ?2"
+            p.created_at, m.scope, {SOURCE_SQL}"
     )
 }
 
@@ -107,6 +115,20 @@ impl MemoryStore {
             total,
             newest_failed_runs,
         })
+    }
+
+    /// Nur lesend: die Reparatur, die genau der Lauf `passed_run` abgeschlossen hat, sofern sie
+    /// sichtbar ist und der Aufrufbereich noch keinen Vorschlag dazu hat.
+    pub fn repair_completed_by(&self, scope: &str, passed_run: i64) -> Result<Option<Repair>> {
+        nonblank(scope)?;
+        let open = unproposed();
+        self.conn
+            .query_row(
+                &format!("{} {REPAIRS_FROM} {open} AND p.id=?2", repair_columns()),
+                params![scope, passed_run],
+                repair_row,
+            )
+            .optional()
     }
 
     /// Legt zu einer sichtbaren Reparatur genau einen ungeprüften Eintrag im Aufrufbereich

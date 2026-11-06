@@ -238,3 +238,36 @@ fn open_repairs_skip_withdrawn_entries_and_replaced_checks() {
     let open = s.open_repairs("p").unwrap();
     assert_eq!((open.total, open.newest_failed_runs.len()), (0, 0));
 }
+
+#[test]
+fn repair_completed_by_names_only_the_exact_passed_run_once() {
+    use Outcome::*;
+    let s = MemoryStore::in_memory().unwrap();
+    let (_, check) = entry_with_check(&s, "p");
+    let r = runs(
+        &s,
+        &check,
+        &[
+            Passed, Passed, Failed, Passed, Error, Passed, Failed, Passed,
+        ],
+    );
+    let found = |run| {
+        s.repair_completed_by("p", run)
+            .unwrap()
+            .map(|x| x.failed_run)
+    };
+    assert_eq!(found(r[1]), None, "bestanden nach bestanden");
+    assert_eq!(found(r[3]), Some(r[2]));
+    assert_eq!(found(r[5]), None, "error unterbricht");
+    assert_eq!(found(r[7]), Some(r[6]));
+    assert_eq!(found(r[2]), None, "fehlgeschlagener Lauf");
+    assert_eq!(
+        s.repair_completed_by("anderes", r[7])
+            .unwrap()
+            .map(|x| x.failed_run),
+        None
+    );
+    s.propose_repair("p", r[6], "P", "L").unwrap();
+    assert_eq!(found(r[7]), None, "Vorschlag im Bereich vorhanden");
+    assert!(s.repair_completed_by("q", r[7]).is_ok());
+}

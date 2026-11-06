@@ -3,7 +3,7 @@
 use crate::{Result, emit, runner};
 use serde_json::json;
 use std::{env, io, path::Path, time::Duration};
-use vmind_core::{Applied, Check, CheckResult, MemoryStore, Outcome};
+use vmind_core::{Applied, Check, CheckResult, MemoryStore, Outcome, Repair};
 
 const DEFAULT_TIMEOUT_SECS: u64 = 300;
 const MAX_TIMEOUT_SECS: u64 = 3600;
@@ -61,6 +61,28 @@ fn execute(
     Ok((applied, result))
 }
 
+/// Hat der gerade gespeicherte Lauf eine Reparatur abgeschlossen? Der Hinweis ist optional:
+/// Scheitert die Abfrage, bleibt der Lauf gespeichert und gilt weiter als bestanden.
+fn completed_repair(store: &MemoryStore, scope: &str, applied: &Applied) -> Option<Repair> {
+    if applied.outcome != Outcome::Passed {
+        return None;
+    }
+    store
+        .repair_completed_by(scope, applied.run_id)
+        .unwrap_or_else(|error| {
+            eprintln!("Hinweis auf eine Reparatur nicht verfügbar: {error}");
+            None
+        })
+}
+
+fn repair_line(repair: &Repair) -> String {
+    format!(
+        "Reparatur erkannt (Lauf {} fehlgeschlagen → Lauf {} bestanden). Problem und Lösung \
+         jetzt festhalten: propose-repair DB {} PROBLEM LÖSUNG",
+        repair.failed_run, repair.passed_run, repair.failed_run
+    )
+}
+
 pub fn set(
     db: &str,
     id: &str,
@@ -89,7 +111,7 @@ pub fn set(
     )
 }
 
-pub fn check_one(db: &str, id: &str, invalidate: bool, json_mode: bool) -> Result<()> {
+pub fn check_one(db: &str, scope: &str, id: &str, invalidate: bool, json_mode: bool) -> Result<()> {
     let store = MemoryStore::open_existing(db)?;
     let memory_id: i64 = id.parse()?;
     let record = store
@@ -106,8 +128,13 @@ pub fn check_one(db: &str, id: &str, invalidate: bool, json_mode: bool) -> Resul
     if applied.outcome != Outcome::Passed {
         human = format!("{human}\n{}", tail(&result.output, SHOWN_OUTPUT_CHARS));
     }
+    let repair = completed_repair(&store, scope, &applied);
+    if let Some(repair) = &repair {
+        human = format!("{human}\n{}", repair_line(repair));
+    }
     emit(
-        json!({"applied":applied,"exit_code":result.exit_code,"duration_ms":result.duration_ms}),
+        json!({"applied":applied,"exit_code":result.exit_code,"duration_ms":result.duration_ms,
+            "repair":repair}),
         human,
         json_mode,
     )?;
@@ -123,9 +150,14 @@ pub fn revalidate(db: &str, scope: &str, invalidate: bool, json_mode: bool) -> R
     let checks = store.checks_in_scope(scope)?;
     let mut applied = Vec::with_capacity(checks.len());
     let mut lines = Vec::with_capacity(checks.len());
+    let mut repairs = Vec::new();
     for check in &checks {
         let (result, _) = execute(&store, check, invalidate, json_mode)?;
         lines.push(line(&result, check));
+        if let Some(repair) = completed_repair(&store, scope, &result) {
+            lines.push(format!("  {}", repair_line(&repair)));
+            repairs.push(repair);
+        }
         applied.push(result);
     }
     let failed = applied
@@ -138,7 +170,7 @@ pub fn revalidate(db: &str, scope: &str, invalidate: bool, json_mode: bool) -> R
     );
     lines.push(summary);
     emit(
-        json!({"scope":scope,"results":applied,"failed":failed}),
+        json!({"scope":scope,"results":applied,"failed":failed,"repairs":repairs}),
         lines.join("\n"),
         json_mode,
     )?;
@@ -166,5 +198,25 @@ pub(crate) fn evidence_note(check: &vmind_core::CheckEvidence) -> String {
             } else { "Hinweis" };
             format!("{label}: Ausführungsfehler am {at}, keine neue Gültigkeitsaussage{verdict}")
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn failing_hint_query_keeps_a_stored_passed_run_passed() {
+        let store = MemoryStore::in_memory().unwrap();
+        let applied = Applied {
+            memory_id: 1,
+            check_id: 1,
+            run_id: 1,
+            outcome: Outcome::Passed,
+            status_before: "pending".into(),
+            status_after: "validated".into(),
+        };
+        // Ein leerer Bereich lässt die Abfrage scheitern; der Hinweis entfällt nur.
+        assert!(completed_repair(&store, " ", &applied).is_none());
     }
 }
