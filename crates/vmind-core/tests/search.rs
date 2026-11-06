@@ -77,3 +77,87 @@ fn partial_index_follows_updates_after_withdrawal() {
     assert!(s.recall("Migration", "global", 5).unwrap().is_empty());
     assert_eq!(s.stats("global").unwrap().schema_version, 6);
 }
+
+fn ids(s: &MemoryStore, query: &str, scope: &str, limit: usize) -> Vec<i64> {
+    s.recall(query, scope, limit)
+        .unwrap()
+        .iter()
+        .map(|r| r.id)
+        .collect()
+}
+
+#[test]
+fn longer_word_forms_find_shorter_stored_forms() {
+    let s = MemoryStore::in_memory().unwrap();
+    let zertifikat = validated(
+        &s,
+        "global",
+        "Zertifikat abgelaufen, TLS-Verbindung bricht ab",
+    );
+    let drucker = validated(&s, "global", "Drucker druckt leere Seiten");
+    assert_eq!(
+        ids(&s, "abgelaufene Zertifikate", "global", 5),
+        [zertifikat]
+    );
+    assert_eq!(ids(&s, "Druckern", "global", 5), [drucker]);
+}
+
+#[test]
+fn word_forms_only_fill_free_places_after_existing_hits() {
+    let s = MemoryStore::in_memory().unwrap();
+    let wortgleich = validated(&s, "global", "Zertifikate erneuern vor Ablauf");
+    let wortform = validated(&s, "global", "Zertifikat abgelaufen");
+    let gefunden = ids(&s, "Zertifikate", "global", 5);
+    assert_eq!(
+        gefunden,
+        [wortgleich, wortform],
+        "bisheriger Treffer zuerst"
+    );
+    assert_eq!(
+        ids(&s, "Zertifikate", "global", 1),
+        [wortgleich],
+        "Limit nur mit bisherigem Treffer"
+    );
+}
+
+#[test]
+fn accents_match_in_both_directions_with_word_forms() {
+    let s = MemoryStore::in_memory().unwrap();
+    let mit_akzent = validated(&s, "global", "café authentication schlägt fehl");
+    let ohne_akzent = validated(&s, "global", "cafe Kasse stürzt ab");
+    assert!(ids(&s, "cafe retry", "global", 5).contains(&mit_akzent));
+    assert!(ids(&s, "café Kassen", "global", 5).contains(&ohne_akzent));
+}
+
+#[test]
+fn word_forms_keep_status_scope_and_withdrawal_filters() {
+    let s = MemoryStore::in_memory().unwrap();
+    let sichtbar = validated(&s, "projekt", "Zertifikat im Projekt");
+    validated(&s, "anderes", "Zertifikat in anderem Bereich");
+    s.remember_scoped(
+        "projekt",
+        "error_solution",
+        "Zertifikat ungeprüft",
+        "Lösung",
+        "Test",
+    )
+    .unwrap();
+    let zurueck = validated(&s, "projekt", "Zertifikat zurückgezogen");
+    s.invalidate(zurueck, "Prüfer", "falsch").unwrap();
+    assert_eq!(ids(&s, "Zertifikate", "projekt", 10), [sichtbar]);
+}
+
+#[test]
+fn word_forms_never_duplicate_or_exceed_the_limit() {
+    let s = MemoryStore::in_memory().unwrap();
+    for n in 0..6 {
+        validated(&s, "global", &format!("Zertifikat Fall {n}"));
+    }
+    let gefunden = ids(&s, "Zertifikate abgelaufene Zertifikats", "global", 4);
+    assert_eq!(gefunden.len(), 4);
+    let mut einmal = gefunden.clone();
+    einmal.dedup();
+    einmal.sort_unstable();
+    einmal.dedup();
+    assert_eq!(einmal.len(), 4);
+}
