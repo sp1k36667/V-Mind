@@ -11,11 +11,13 @@ pub use maintenance::{
 mod observations;
 mod paths;
 mod project;
+mod repairs;
 mod secrets;
 pub use checks::{Applied, Check, CheckResult, CheckRun, Outcome};
 pub use observations::{Observation, SessionSummary};
 pub use paths::literal_file_path;
 pub use project::{ChatMessage, Conversation, JournalEntry, Resume};
+pub use repairs::Repair;
 pub use secrets::SecretKind;
 
 const SCHEMA_VERSION: i64 = 6;

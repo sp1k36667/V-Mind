@@ -74,6 +74,23 @@ fn tools() -> Vec<Value> {
             &[],
         ),
         tool(
+            "repairs",
+            "Reparaturen auflisten: Ein aktiver Prüfbefehl eines sichtbaren Eintrags schlug fehl \
+             und bestand im unmittelbar folgenden Lauf (maximal 100, neueste zuerst). Nur IDs, \
+             Exitcodes und Zeiten, keine Ausgabe; es wird nichts ausgeführt.",
+            json!({"scope":scope}),
+            &[],
+        ),
+        tool(
+            "propose_repair",
+            "Aus einer Reparatur genau einen ungeprüften Vorschlag (pending) anlegen. Problem und \
+             Lösung selbst formulieren; die Quelle erzeugt V-Mind aus den Lauf-IDs. Keine \
+             Validierung; ein zweiter Vorschlag für dasselbe Laufpaar wird abgelehnt.",
+            json!({"failed_run":{"type":"integer"},"problem":{"type":"string"},
+                "solution":{"type":"string"},"scope":scope}),
+            &["failed_run", "problem", "solution"],
+        ),
+        tool(
             "stats",
             "Anzahl ungeprüfter, validierter und zurückgezogener Einträge sowie Schema.",
             json!({"scope":scope}),

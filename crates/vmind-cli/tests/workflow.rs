@@ -768,3 +768,64 @@ fn journal_mode_command_switches_explicitly_and_doctor_reports_it() {
     assert!(!ok);
     assert_eq!(cli(&["journal-mode", db, "delete"])["current"], "delete");
 }
+#[test]
+fn real_check_repair_becomes_one_pending_proposal_end_to_end() {
+    let temp = Temp::new();
+    let path = temp.0.join("repair.db");
+    let db = path.to_str().unwrap();
+    let workdir = temp.0.join("projekt");
+    std::fs::create_dir(&workdir).unwrap();
+    cli(&["init", db]);
+    let id = cli(&[
+        "--scope",
+        "p",
+        "add",
+        db,
+        "error_solution",
+        "Marker fehlt",
+        "Marker anlegen",
+        "Test",
+    ])["id"]
+        .as_i64()
+        .unwrap()
+        .to_string();
+    let dir = workdir.to_str().unwrap();
+    cli(&["check-set", db, &id, "T", dir, "sh", "-c", "test -f marker"]);
+    std::fs::write(workdir.join("marker"), "").unwrap();
+    cli(&["check", db, &id]);
+    std::fs::remove_file(workdir.join("marker")).unwrap();
+    assert!(!cli_status(&["check", db, &id]).0);
+    assert_eq!(cli(&["--scope", "p", "repairs", db]), serde_json::json!([]));
+    std::fs::write(workdir.join("marker"), "").unwrap();
+    cli(&["check", db, &id]);
+
+    let repairs = cli(&["--scope", "p", "repairs", db]);
+    assert_eq!(repairs.as_array().unwrap().len(), 1);
+    assert!(
+        !repairs.to_string().contains("marker"),
+        "keine Befehle oder Ausgaben"
+    );
+    let run = repairs[0]["failed_run"].as_i64().unwrap().to_string();
+    let (ok, _) = cli_status(&["--scope", "x", "propose-repair", db, &run, "P", "L"]);
+    assert!(!ok, "fremder Bereich");
+    let proposed = cli(&[
+        "--scope",
+        "p",
+        "propose-repair",
+        db,
+        &run,
+        "Marker gelöscht",
+        "Marker neu anlegen",
+    ]);
+    assert_eq!(proposed["status"], "pending");
+    let (ok, _) = cli_status(&["--scope", "p", "propose-repair", db, &run, "P", "L"]);
+    assert!(!ok, "doppelt");
+    let pending = cli(&["--scope", "p", "pending", db]);
+    assert_eq!(pending.as_array().unwrap().len(), 1);
+    assert!(
+        pending[0]["source"]
+            .as_str()
+            .unwrap()
+            .starts_with("Reparatur: Prüfbefehl #")
+    );
+}
