@@ -1,5 +1,5 @@
 use crate::observations::{HOST, RESUME_SESSIONS, SessionSummary, session_summaries};
-use crate::{MemoryStore, invalid, nonblank};
+use crate::{MemoryStore, invalid, nonblank, retry_busy};
 use rusqlite::{OptionalExtension, Result, params};
 use serde::Serialize;
 
@@ -104,11 +104,13 @@ impl MemoryStore {
         if let Some(key) = key {
             bounded(key, 128)?;
         }
-        self.conn.execute(
-            "INSERT INTO project_journal(scope,kind,task_key,task_status,body,source)
-            VALUES(?1,?2,?3,?4,?5,?6)",
-            params![scope, kind, key, status, body, source],
-        )?;
+        retry_busy(&self.conn, || {
+            self.conn.execute(
+                "INSERT INTO project_journal(scope,kind,task_key,task_status,body,source)
+                VALUES(?1,?2,?3,?4,?5,?6)",
+                params![scope, kind, key, status, body, source],
+            )
+        })?;
         Ok(self.conn.last_insert_rowid())
     }
     pub fn journal_page(&self, scope: &str, after: i64, limit: usize) -> Result<Vec<JournalEntry>> {
@@ -123,13 +125,26 @@ impl MemoryStore {
     pub fn create_conversation(&self, scope: &str, title: &str) -> Result<String> {
         bounded(scope, 128)?;
         bounded(title, 200)?;
-        self.conn.query_row("INSERT INTO conversations(id,scope,title) VALUES(lower(hex(randomblob(16))),?1,?2) RETURNING id",
-            params![scope,title],|r|r.get(0))
+        // ID vorab erzeugen und per execute einfügen: execute läuft bis zum Ende, sodass ein
+        // Commitfehler sichtbar wird. INSERT ... RETURNING über query_row liest nur die erste
+        // Zeile und verschluckt einen späteren Commitfehler (gemeldete ID ohne gespeicherte Zeile).
+        let id: String = self
+            .conn
+            .query_row("SELECT lower(hex(randomblob(16)))", [], |r| r.get(0))?;
+        retry_busy(&self.conn, || {
+            self.conn.execute(
+                "INSERT INTO conversations(id,scope,title) VALUES(?1,?2,?3)",
+                params![id, scope, title],
+            )
+        })?;
+        Ok(id)
     }
     pub fn default_conversation(&self, scope: &str) -> Result<String> {
         bounded(scope, 128)?;
         let id = format!("default:{scope}");
-        self.conn.execute("INSERT INTO conversations(id,scope,title) VALUES(?1,?2,'Standardgespräch') ON CONFLICT(id) DO NOTHING",params![id,scope])?;
+        retry_busy(&self.conn, || {
+            self.conn.execute("INSERT INTO conversations(id,scope,title) VALUES(?1,?2,'Standardgespräch') ON CONFLICT(id) DO NOTHING",params![id,scope])
+        })?;
         Ok(id)
     }
     pub fn conversation(&self, id: &str) -> Result<Option<Conversation>> {
@@ -171,10 +186,12 @@ impl MemoryStore {
     }
     pub fn append_message(&self, conversation: &str, role: &str, content: &str) -> Result<i64> {
         bounded(content, 32000)?;
-        self.conn.execute(
-            "INSERT INTO chat_messages(conversation_id,role,content) VALUES(?1,?2,?3)",
-            params![conversation, role, content],
-        )?;
+        retry_busy(&self.conn, || {
+            self.conn.execute(
+                "INSERT INTO chat_messages(conversation_id,role,content) VALUES(?1,?2,?3)",
+                params![conversation, role, content],
+            )
+        })?;
         Ok(self.conn.last_insert_rowid())
     }
     pub fn messages(

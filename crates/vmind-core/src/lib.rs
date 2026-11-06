@@ -95,6 +95,39 @@ fn invalid(message: &str) -> rusqlite::Error {
     rusqlite::Error::ToSqlConversionFailure(message.into())
 }
 
+/// Zusätzliche Versuche nach SQLITE_BUSY. busy_timeout wartet je Versuch bis zu 5 s; schreibt
+/// ein anderer Prozess dauerhaft, kann ein Schreiber trotzdem leer ausgehen.
+const BUSY_RETRIES: u32 = 4;
+
+fn is_busy(error: &rusqlite::Error) -> bool {
+    matches!(error, rusqlite::Error::SqliteFailure(e, _) if e.code == rusqlite::ErrorCode::DatabaseBusy)
+}
+
+/// Kurze, leicht gestreute Pause, damit sich zwei wartende Schreiber nicht im Gleichtakt treffen.
+fn busy_backoff(attempt: u32) -> std::time::Duration {
+    let streuung = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.subsec_nanos() % 50);
+    std::time::Duration::from_millis(u64::from(25 * attempt + streuung))
+}
+
+/// Wiederholt einen einzelnen Schreibbefehl begrenzt, wenn SQLite SQLITE_BUSY meldet. Nur
+/// außerhalb einer ausdrücklichen Transaktion: Dort hat ein mit SQLITE_BUSY gescheiterter Befehl
+/// laut SQLite-Dokumentation nichts geschrieben und darf wiederholt werden, es entstehen keine
+/// Duplikate. Innerhalb einer Transaktion wird der Fehler unverändert weitergegeben.
+fn retry_busy<T>(conn: &Connection, mut write: impl FnMut() -> Result<T>) -> Result<T> {
+    let mut attempt = 0;
+    loop {
+        match write() {
+            Err(error) if is_busy(&error) && attempt < BUSY_RETRIES && conn.is_autocommit() => {
+                attempt += 1;
+                std::thread::sleep(busy_backoff(attempt));
+            }
+            other => return other,
+        }
+    }
+}
+
 fn nonblank(value: &str) -> Result<()> {
     if value.trim().is_empty() {
         Err(invalid("Leere Pflichtangabe"))
@@ -302,32 +335,38 @@ impl MemoryStore {
         {
             return Err(invalid("Eintrag überschreitet die Größenlimits"));
         }
-        self.conn.execute(
+        retry_busy(&self.conn, || {
+            self.conn.execute(
             "INSERT INTO memories(scope, kind, problem, solution, source) VALUES (?1, ?2, ?3, ?4, ?5)",
-            params![scope, kind, problem, solution, source])?;
+            params![scope, kind, problem, solution, source])
+        })?;
         Ok(self.conn.last_insert_rowid())
     }
     /// Dokumentiert eine externe Prüfung, keine automatische Wahrheitsprüfung.
     pub fn validate(&self, id: i64, reviewer: &str, evidence: &str) -> Result<bool> {
         nonblank(reviewer)?;
         nonblank(evidence)?;
-        Ok(self.conn.execute(
-            "UPDATE memories SET status='validated', validated_by=?2, evidence=?3
-             WHERE id=?1 AND status='pending'
-             AND NOT EXISTS(SELECT 1 FROM invalidations WHERE memory_id=?1)",
-            params![id, reviewer, evidence],
-        )? == 1)
+        Ok(retry_busy(&self.conn, || {
+            self.conn.execute(
+                "UPDATE memories SET status='validated', validated_by=?2, evidence=?3
+                 WHERE id=?1 AND status='pending'
+                 AND NOT EXISTS(SELECT 1 FROM invalidations WHERE memory_id=?1)",
+                params![id, reviewer, evidence],
+            )
+        })? == 1)
     }
     /// Zurückgezogene Einträge bleiben einsehbar, werden aber nicht mehr abgerufen.
     pub fn invalidate(&self, id: i64, actor: &str, reason: &str) -> Result<bool> {
         nonblank(actor)?;
         nonblank(reason)?;
-        Ok(self.conn.execute(
-            "INSERT INTO invalidations(memory_id, actor, reason)
-             SELECT id, ?2, ?3 FROM memories WHERE id=?1
-             AND NOT EXISTS(SELECT 1 FROM invalidations WHERE memory_id=?1)",
-            params![id, actor, reason],
-        )? == 1)
+        Ok(retry_busy(&self.conn, || {
+            self.conn.execute(
+                "INSERT INTO invalidations(memory_id, actor, reason)
+                 SELECT id, ?2, ?3 FROM memories WHERE id=?1
+                 AND NOT EXISTS(SELECT 1 FROM invalidations WHERE memory_id=?1)",
+                params![id, actor, reason],
+            )
+        })? == 1)
     }
     pub fn get(&self, id: i64) -> Result<Option<Record>> {
         self.read_snapshot(|store| {
