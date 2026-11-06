@@ -410,9 +410,9 @@ fn run() -> Result<()> {
         [cmd, db, id, actor, dir, argv @ ..] if cmd == "check-set" && !argv.is_empty() => {
             check_cmd::set(db, id, actor, dir, argv, json_mode)?
         }
-        [cmd, db, id] if cmd == "check" => check_cmd::check_one(db, id, false, json_mode)?,
+        [cmd, db, id] if cmd == "check" => check_cmd::check_one(db, &scope, id, false, json_mode)?,
         [cmd, db, id, flag] if cmd == "check" && flag == "--invalidate" => {
-            check_cmd::check_one(db, id, true, json_mode)?
+            check_cmd::check_one(db, &scope, id, true, json_mode)?
         }
         [cmd, db] if cmd == "revalidate" => check_cmd::revalidate(db, &scope, false, json_mode)?,
         [cmd, db, flag] if cmd == "revalidate" && flag == "--invalidate" => {

@@ -163,7 +163,8 @@ Pro Terminalschritt einen Befehl ausführen. Aktuelle Hilfe: `vmind --help`.
 - `add DB error_solution|long_term PROBLEM LÖSUNG QUELLE`
 - `validate DB ID PRÜFER NACHWEIS`, `invalidate DB ID AKTEUR GRUND`
 - `check-set DB ID AKTEUR ORDNER BEFEHL [ARG...]`, `check DB ID [--invalidate]`,
-  `revalidate DB [--invalidate]`; nur über die CLI, nie über JSONL oder MCP.
+  `revalidate DB [--invalidate]`; nur über die CLI, nie über JSONL oder MCP. Meldet die
+  Ausgabe „Reparatur erkannt“, die tatsächliche Änderung mit `propose-repair` festhalten.
 - `session-new DB TITEL`, `sessions DB`, `messages DB GESPRÄCH_ID [NACH_ID]`
 - `ask DB FRAGE` oder `ask DB SUCHTEXT FRAGE`; setzt das Standardgespräch fort.
 - `chat DB GESPRÄCH_ID FRAGE`; setzt ein bestimmtes Gespräch fort.

@@ -159,7 +159,8 @@ Run one command per terminal step. Current help: `vmind --help`.
 - `add DB error_solution|long_term PROBLEM SOLUTION SOURCE`
 - `validate DB ID REVIEWER EVIDENCE`, `invalidate DB ID ACTOR REASON`
 - `check-set DB ID ACTOR FOLDER COMMAND [ARG...]`, `check DB ID [--invalidate]`,
-  `revalidate DB [--invalidate]`; only through the CLI, never through JSONL or MCP.
+  `revalidate DB [--invalidate]`; only through the CLI, never through JSONL or MCP. If the
+  output reports a detected repair, record the actual change with `propose-repair`.
 - `session-new DB TITLE`, `sessions DB`, `messages DB CONVERSATION_ID [AFTER_ID]`
 - `ask DB QUESTION` or `ask DB QUERY QUESTION`; continues the default conversation.
 - `chat DB CONVERSATION_ID QUESTION`; continues a specific conversation.
