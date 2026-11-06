@@ -170,6 +170,52 @@ fn match_expression<'a>(terms: impl Iterator<Item = &'a String>) -> String {
 /// Der Trigramm-Index braucht mindestens drei Zeichen je Begriff.
 const MIN_PARTIAL_TERM_CHARS: usize = 3;
 
+/// Höchstens eine dieser Endungen wird für die Wortformsuche abgetrennt, die längste zuerst.
+const WORD_FORM_SUFFIXES: &[&str] = &["ern", "en", "er", "es", "e", "n", "s"];
+const MIN_WORD_FORM_INPUT_CHARS: usize = 5;
+const MIN_WORD_FORM_STEM_CHARS: usize = 4;
+/// Funktionswörter, die in der Wortformsuche nur Beifang brächten. Die ersten Stufen der
+/// Suche bleiben davon unberührt.
+const WORD_FORM_STOP_WORDS: &[&str] = &[
+    "nicht", "kein", "keine", "keinen", "nach", "ohne", "über", "unter", "durch", "werden",
+    "wurde", "haben", "kann", "muss", "soll", "dass", "wenn", "aber", "warum", "dann", "alle",
+    "alles", "immer", "mehr", "with", "from", "this", "that", "when", "what",
+];
+
+/// Einfacher Stamm, immer ein Wortanfang: „Zertifikate“ → „zertifikat“, „Druckern“ → „druck“.
+fn word_form_stem(term: &str) -> &str {
+    let chars = term.chars().count();
+    if chars < MIN_WORD_FORM_INPUT_CHARS {
+        return term;
+    }
+    WORD_FORM_SUFFIXES
+        .iter()
+        .find(|s| term.ends_with(*s) && chars - s.chars().count() >= MIN_WORD_FORM_STEM_CHARS)
+        .map_or(term, |s| &term[..term.len() - s.len()])
+}
+
+/// Präfixsuche nach Wortstämmen im Volltextindex (`"stamm"*`). Der Index entfernt Akzente,
+/// daher gilt das auch für Suchtext und Einträge mit und ohne Akzent.
+fn word_form_expression(terms: &[String]) -> String {
+    let mut stems: Vec<&str> = Vec::new();
+    for term in terms {
+        if term.chars().count() < MIN_WORD_FORM_INPUT_CHARS
+            || WORD_FORM_STOP_WORDS.contains(&term.as_str())
+        {
+            continue;
+        }
+        let stem = word_form_stem(term);
+        if !stems.contains(&stem) {
+            stems.push(stem);
+        }
+    }
+    stems
+        .iter()
+        .map(|s| format!("\"{s}\"*"))
+        .collect::<Vec<_>>()
+        .join(" OR ")
+}
+
 /// Legt eine noch nicht vorhandene Datenbankdatei unter Unix nur für den Besitzer
 /// lesbar an (0600). Vorhandene Dateien, `:memory:` und SQLite-URIs bleiben unberührt.
 fn create_private(path: &Path) -> Result<()> {
@@ -441,6 +487,19 @@ impl MemoryStore {
                         .filter(|t| t.chars().count() >= MIN_PARTIAL_TERM_CHARS),
                 );
                 for extra in store.ranked("memories_trigram", &partial, scope, limit)? {
+                    if found.len() == limit {
+                        break;
+                    }
+                    if !found.iter().any(|r| r.id == extra.id) {
+                        found.push(extra);
+                    }
+                }
+            }
+            // Dritte Stufe: Wortformen füllen nur noch freie Plätze; bisherige Treffer und ihre
+            // Reihenfolge bleiben unverändert vorn.
+            if found.len() < limit {
+                let forms = word_form_expression(&terms);
+                for extra in store.ranked("memories_fts", &forms, scope, limit)? {
                     if found.len() == limit {
                         break;
                     }

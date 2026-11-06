@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.1 (on `main`)
+## Unreleased: candidate 0.3.0-rc.2 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.1` (`vmind --version`, MCP
-server info); there is no tag, no published download and no installation of it.
+Not released yet. The source now reports version `0.3.0-rc.2` (`vmind --version`, MCP
+server info); there is no tag, no published download and no installation of it. The
+earlier candidate `0.3.0-rc.1` did not yet contain #40, #42 and #43.
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
@@ -42,6 +43,14 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
   supported schema versions. Reports numeric locations and format types, never values;
   rejects incomplete required schemas. Heuristics may miss secrets or flag examples;
   an empty result is no secrecy guarantee. No deletion or write blocking. (#29)
+- `vmind recall DB TEXT --limit N` (1 to 20, as in JSONL and MCP); the default stays 5. An
+  invalid limit is rejected before the database is opened. (#40)
+- `recall` finds other word forms: after the existing full-text and partial matches, word
+  stems ("Zertifikate" → `zertifikat*`) fill only the remaining places. Existing hits and
+  their order are unchanged; scope, status and withdrawal filters apply as before; accents
+  match in both directions. Retrieval corpora: longer word forms 0/10 → 9/10 and separated
+  word pairs 1/7 → 6/7 at rank 1, no previous hit lost in 82 queries, 6 extra unrelated
+  hits. (#43)
 
 ### Changed
 
@@ -57,6 +66,12 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
 - A relative database or backup name shaped like a SQLite URI (`file:...?mode=rw`) could
   redirect a backup onto an existing database. Persistent file names are now always
   taken literally by CLI, JSONL, MCP, hook, doctor and backup. (#22)
+- Two processes writing continuously could make one writer fail with "database is
+  locked". Single writes outside an explicit transaction are now retried a few times;
+  load test 72,000 writes without error or duplicate (before: 6 errors in 24,000). (#42)
+- Creating a conversation while another process held a read lock could report a new
+  conversation id although nothing was stored. The id is now generated first and the
+  insert reports commit errors. (#42)
 
 ### Experiments
 
