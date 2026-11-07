@@ -582,12 +582,12 @@ fn run() -> Result<()> {
             emit(&records, summary(&records), json_mode)?;
         }
         [cmd, db, query] if cmd == "journal-search" => {
-            let found = MemoryStore::open_existing(db)?.journal_search(&scope, query, 5)?;
+            let found = MemoryStore::open_read_only(db)?.journal_search(&scope, query, 5)?;
             emit(&found, journal_summary(&found), json_mode)?;
         }
         [cmd, db, query, flag, limit] if cmd == "journal-search" && flag == "--limit" => {
             let limit = search_limit(limit)?;
-            let found = MemoryStore::open_existing(db)?.journal_search(&scope, query, limit)?;
+            let found = MemoryStore::open_read_only(db)?.journal_search(&scope, query, limit)?;
             emit(&found, journal_summary(&found), json_mode)?;
         }
         [cmd, db, question] if cmd == "ask" => {

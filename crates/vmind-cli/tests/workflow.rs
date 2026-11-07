@@ -1330,3 +1330,49 @@ fn invalid_journal_search_limit_is_rejected_before_the_database_is_opened() {
     assert!(!missing.exists(), "fehlende Datenbank wurde angelegt");
     assert_eq!(std::fs::read(&broken).unwrap(), b"kein SQLite");
 }
+#[test]
+fn journal_search_never_upgrades_or_backs_up_an_older_database() {
+    let temp = Temp::new();
+    let path = temp.0.join("v5.db");
+    {
+        let c = rusqlite::Connection::open(&path).unwrap();
+        for sql in [
+            include_str!("../../../migrations/0001_memory.sql"),
+            include_str!("../../../migrations/0002_retrieval.sql"),
+            include_str!("../../../migrations/0003_project_context.sql"),
+            include_str!("../../../migrations/0004_checks.sql"),
+            include_str!("../../../migrations/0005_partial_search.sql"),
+        ] {
+            c.execute_batch(sql).unwrap();
+        }
+        c.pragma_update(None, "user_version", 5).unwrap();
+        c.execute(
+            "INSERT INTO project_journal(scope,kind,body,source) VALUES('p','note','alter Eintrag','Test')",
+            [],
+        )
+        .unwrap();
+    }
+    let before = std::fs::read(&path).unwrap();
+    let db = path.to_str().unwrap();
+    for args in [
+        vec!["--scope", "p", "journal-search", db, "Eintrag"],
+        vec![
+            "--scope",
+            "p",
+            "journal-search",
+            db,
+            "Eintrag",
+            "--limit",
+            "3",
+        ],
+    ] {
+        let (ok, _) = cli_status(&args);
+        assert!(!ok, "Schema 5 wird nicht still umgestellt: {args:?}");
+    }
+    assert_eq!(std::fs::read(&path).unwrap(), before, "Datei unverändert");
+    let files: Vec<String> = std::fs::read_dir(&temp.0)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    assert_eq!(files, ["v5.db"], "keine Sicherung und keine Zusatzdateien");
+}
