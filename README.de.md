@@ -32,11 +32,14 @@ V-Mind trennt dagegen streng zwischen *vermutet* und *geprüft*:
 ```
   propose / add            validate (Mensch/CLI, mit Nachweis)       invalidate
  ───────────────▶ pending ─────────────────────────────────▶ validated ──────────▶ invalidated
-                  wird nie abgerufen                          wird abgerufen        nie mehr abgerufen,
-                                                                                    Historie bleibt
+                  nur als markierter                          wird zuerst           nie mehr abgerufen,
+                  Hinweis abgerufen                           abgerufen             Historie bleibt
 ```
 
-- **Nur validiertes Wissen** wird abgerufen, immer mit Quelle, Prüfer und Nachweis.
+- **Validiertes Wissen kommt zuerst**, immer mit Quelle, Prüfer und Nachweis. Ungeprüfte
+  Vorschläge folgen nur in freien Plätzen und sind als Hinweise markiert. So kann eine KI
+  ihre frischen Lehren sofort nutzen, ohne dass sie als geprüft gelten (`--validated-only`
+  blendet sie aus).
 - **Über MCP kann eine KI Wissen nur vorschlagen.** Die Freigabe ist absichtlich kein
   MCP-Werkzeug, sondern nur über die Kommandozeile oder einen Prüfbefehl möglich. Eine KI,
   die zusätzlich Shell-Befehle ausführen darf, kann auch diese Kommandozeile aufrufen;
@@ -252,7 +255,7 @@ erlaubt werden soll. Danach hat Claude diese Werkzeuge:
 | Werkzeug | Zweck |
 |---|---|
 | `resume` | Projektstand laden: Ziel, Aufgaben, Entscheidungen, nächster Schritt |
-| `recall` | Geprüftes Wissen per Volltextsuche finden |
+| `recall` | Wissen per Volltextsuche finden: geprüftes zuerst, ungeprüftes als markierte Hinweise |
 | `get` | Einen Eintrag mit vollständiger Historie ansehen |
 | `propose` | Neue Erfahrung als *ungeprüft* vorschlagen |
 | `log` | Aufgabe, Entscheidung, nächsten Schritt oder Notiz festhalten |

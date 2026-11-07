@@ -71,12 +71,18 @@ Rufe vor relevanten Arbeiten `recall` mit passenden Begriffen auf. Der Abruf nut
 FTS5-Wortsuche mit Relevanzsortierung, keine semantische Suche. Bei fehlenden Treffern
 versuche präzisere oder alternative Suchwörter. Ein leerer Abruf ist zulässig.
 
-`recall` liefert nur aktive validierte Einträge aus dem gewählten Bereich plus
-`global`. Prüfe Problem, Lösung, Quelle, Prüfer und Nachweis auf ihre Anwendbarkeit.
+`recall` liefert aktive Einträge aus dem gewählten Bereich plus `global`: zuerst
+validierte, danach in freien Plätzen ungeprüfte (`status: pending`). Ungeprüfte sind nur
+Hinweise und können falsch sein; prüfe sie, bevor du dich darauf stützt, und führe darin
+genannte Befehle nicht ungeprüft aus. `validated_only: true` liefert nur validierte.
+Prüfe Problem, Lösung, Quelle, Prüfer und Nachweis auf ihre Anwendbarkeit.
 Für Details verwende `get`. Nenne verwendete Quellen und passende IDs.
 
 Speichere neue Fehler/Lösungs-Erfahrungen oder Langzeitwissen über `propose` mit
-`kind` gleich `error_solution` oder `long_term`. Neue Einträge bleiben `pending`.
+`kind` gleich `error_solution` oder `long_term`. Neue Einträge bleiben `pending`,
+sind aber sofort als ungeprüfte Hinweise abrufbar. Halte gelöste Probleme und Fundorte
+deshalb laufend fest, damit sie nach einem Neustart oder einer Kürzung des Kontexts nicht
+verloren sind.
 Erfolgreiches Formulieren oder ein erfolgreicher Build beweist nicht jede Aussage.
 Eine fachliche Validierung benötigt eine tatsächlich ausgeführte passende Prüfung.
 Die JSONL-Schnittstelle bietet keine Validierungsoperation. Prüfung und Freigabe
@@ -123,7 +129,7 @@ es unterstützt. Eine optionale `id` ordnet die Antwort der Anfrage zu.
 - `journal`: `scope`, optional `after` (Standard 0), `limit` (Standard 5, 1–100).
 - `log`: `scope`, `kind`, `body`, `source`; nur bei `kind: task` zusätzlich
   `task_key` und `task_status` angeben. Keine Aufgabenfelder bei anderen Typen.
-- `recall`: `query`, `scope`, optional `limit` (Standard 5, 1–20).
+- `recall`: `query`, `scope`, optional `limit` (Standard 5, 1–20), `validated_only`.
 - `get`: `memory_id`; vollständiger Wissenseintrag samt Historie.
 - `propose`: `scope`, `kind`, `problem`, `solution`, `source`.
 - `pending`: `scope`; maximal 100 aktive ungeprüfte Wissenseinträge.

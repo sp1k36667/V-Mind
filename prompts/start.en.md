@@ -68,12 +68,17 @@ Before relevant work, call `recall` with suitable terms. Retrieval uses FTS5 wor
 with relevance ranking, not semantic search. If nothing is found, try more precise or
 alternative search terms. An empty result is acceptable.
 
-`recall` returns only active validated entries from the chosen scope plus `global`.
+`recall` returns active entries from the chosen scope plus `global`: validated ones
+first, then unverified ones (`status: pending`) in the remaining places. Unverified entries
+are only hints and may be wrong; check them before relying on them, and do not run commands
+they mention without checking. `validated_only: true` returns validated entries only.
 Check problem, solution, source, reviewer and evidence for whether they apply. Use `get`
 for details. Name the sources and matching IDs you used.
 
 Store new error/solution experiences or long-term knowledge with `propose`, with `kind`
-set to `error_solution` or `long_term`. New entries stay `pending`. Writing something
+set to `error_solution` or `long_term`. New entries stay `pending` but can be
+recalled at once as unverified hints. So record solved problems and where things are as you
+go, so they are not lost after a restart or when the context is shortened. Writing something
 successfully or a successful build does not prove every statement. Validation requires a
 suitable check that was actually run. The JSONL interface has no validation operation.
 Checking and approval are a separate step through the CLI. Do not invent reviewers or
@@ -119,7 +124,7 @@ optional `id` matches the response to the request.
 - `journal`: `scope`, optional `after` (default 0), `limit` (default 5, 1–100).
 - `log`: `scope`, `kind`, `body`, `source`; only for `kind: task` also give `task_key`
   and `task_status`. No task fields for other kinds.
-- `recall`: `query`, `scope`, optional `limit` (default 5, 1–20).
+- `recall`: `query`, `scope`, optional `limit` (default 5, 1–20), `validated_only`.
 - `get`: `memory_id`; full knowledge entry with its history.
 - `propose`: `scope`, `kind`, `problem`, `solution`, `source`.
 - `pending`: `scope`; at most 100 active unverified knowledge entries.

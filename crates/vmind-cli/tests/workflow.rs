@@ -78,11 +78,20 @@ fn tools_propose_cli_reviews_and_withdraws_without_losing_history() {
         .as_i64()
         .unwrap()
         .to_string();
+    // Ungeprüft erscheint der Vorschlag nur als Hinweis.
+    assert_eq!(replies[1]["data"]["memories"][0]["status"], "pending");
     assert!(
-        replies[1]["data"]["memories"]
-            .as_array()
-            .unwrap()
-            .is_empty()
+        cli(&[
+            "--scope",
+            "projekt",
+            "recall",
+            db,
+            "SQLite",
+            "--validated-only"
+        ])
+        .as_array()
+        .unwrap()
+        .is_empty()
     );
     let shown = cli(&["show", db, &id]);
     assert_eq!(shown["memory"]["status"], "pending");
@@ -920,4 +929,115 @@ fn passing_check_right_after_failure_names_the_repair_once() {
     std::fs::write(&marker, "").unwrap();
     let foreign = cli(&["--scope", "x", "check", db, &id]);
     assert_eq!(foreign["repair"], Value::Null, "fremder Bereich");
+}
+#[test]
+fn recall_marks_unconfirmed_hints_and_validated_only_hides_them() {
+    let temp = Temp::new();
+    let path = temp.0.join("hints.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    let ok = cli(&[
+        "--scope",
+        "p",
+        "add",
+        db,
+        "error_solution",
+        "Proxy blockiert",
+        "Bestätigt",
+        "T",
+    ]);
+    let ok_id = ok["id"].as_i64().unwrap().to_string();
+    cli(&["validate", db, &ok_id, "Prüfer", "Test"]);
+    cli(&[
+        "--scope",
+        "p",
+        "add",
+        db,
+        "error_solution",
+        "Proxy langsam",
+        "Vermutung",
+        "T",
+    ]);
+    let found = cli(&["--scope", "p", "recall", db, "Proxy"]);
+    assert_eq!(found[0]["status"], "validated");
+    assert_eq!(found[1]["status"], "pending");
+    let strict = cli(&["--scope", "p", "recall", db, "Proxy", "--validated-only"]);
+    assert_eq!(strict.as_array().unwrap().len(), 1);
+    let limited = cli(&[
+        "--scope",
+        "p",
+        "recall",
+        db,
+        "Proxy",
+        "--limit",
+        "1",
+        "--validated-only",
+    ]);
+    assert_eq!(limited.as_array().unwrap().len(), 1);
+    let out = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(["--scope", "p", "recall", db, "Proxy"])
+        .output()
+        .unwrap();
+    let text = String::from_utf8(out.stdout).unwrap();
+    let mark = text.find("UNGEPRÜFT").unwrap();
+    assert!(
+        mark > text.find("Bestätigt").unwrap(),
+        "Hinweis steht hinter dem bestätigten Eintrag"
+    );
+    assert_eq!(text.matches("UNGEPRÜFT").count(), 1);
+}
+#[test]
+fn validated_only_is_read_only_as_an_option_behind_db_and_query() {
+    let temp = Temp::new();
+    let dir = temp.0.join("--validated-only");
+    std::fs::create_dir(&dir).unwrap();
+    // Datenbank, deren Pfad wörtlich mit der Option endet.
+    let path = dir.join("--validated-only");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    cli(&[
+        "--scope",
+        "p",
+        "add",
+        db,
+        "error_solution",
+        "--validated-only Hinweis",
+        "L",
+        "T",
+    ]);
+    // Suchtext gleich der Option: bleibt Suchtext, Hinweis erscheint.
+    let as_query = cli(&["--scope", "p", "recall", db, "--validated-only"]);
+    assert_eq!(as_query[0]["status"], "pending");
+    // Als Option hinter dem Suchtext: blendet den Hinweis aus.
+    let strict = cli(&[
+        "--scope",
+        "p",
+        "recall",
+        db,
+        "--validated-only",
+        "--validated-only",
+    ]);
+    assert_eq!(strict, serde_json::json!([]));
+    // Wert nach --limit wird nicht als Schalter verbraucht.
+    let (ok, _) = cli_status(&[
+        "--scope",
+        "p",
+        "recall",
+        db,
+        "Hinweis",
+        "--limit",
+        "--validated-only",
+    ]);
+    assert!(!ok, "ungültiges Limit statt stillem Schalter");
+    let strict_limit = cli(&[
+        "--scope",
+        "p",
+        "recall",
+        db,
+        "Hinweis",
+        "--validated-only",
+        "--limit",
+        "2",
+    ]);
+    assert_eq!(strict_limit, serde_json::json!([]));
 }

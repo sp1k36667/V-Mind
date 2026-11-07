@@ -33,7 +33,9 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
   repairs DB                    (nur lesen: Prüfbefehl erst fehlgeschlagen, direkt danach bestanden)
   propose-repair DB LAUF PROBLEM LÖSUNG   (ungeprüfter Vorschlag; Quelle erzeugt V-Mind)
   search DB WÖRTLICHER_SUCHTEXT   (globale Einträge)
-  recall DB SUCHTEXT [--limit N] (Volltext, Projekt plus global; N 1 bis 20, sonst 5)
+  recall DB SUCHTEXT [--limit N] [--validated-only]
+                                (Volltext, Projekt plus global; N 1 bis 20, sonst 5;
+                                 ungeprüfte Einträge folgen markiert als Hinweise)
   ask DB FRAGE                  (automatischer Wissensabruf)
   ask DB SUCHTEXT FRAGE          (expliziter Wissensabruf)
   stats DB
@@ -72,8 +74,13 @@ fn summary(records: &[Record]) -> String {
     records
         .iter()
         .map(|r| {
+            let hint = if r.status == "pending" {
+                "UNGEPRÜFT – nur Hinweis, keine bestätigte Lösung\n"
+            } else {
+                ""
+            };
             format!(
-                "#{} [{} / {} / {}]\n{}\n→ {}\nQuelle: {}\nPrüfer: {}\nNachweis: {}\nPrüfzustand: {}",
+                "{hint}#{} [{} / {} / {}]\n{}\n→ {}\nQuelle: {}\nPrüfer: {}\nNachweis: {}\nPrüfzustand: {}",
                 r.id,
                 r.scope,
                 r.kind,
@@ -113,7 +120,7 @@ fn ask(
         None => store.default_conversation(scope)?,
     };
     let resume = store.resume(scope, Some(&session))?;
-    let memories = store.recall(query, scope, 3)?;
+    let memories = store.recall_with_hints(query, scope, 3)?;
     let endpoint = env::var("VMIND_OLLAMA_URL").unwrap_or_else(|_| "http://127.0.0.1:11434".into());
     let model = env::var("VMIND_MODEL").unwrap_or_else(|_| "vmind-gemma4:e2b".into());
     if !json_mode {
@@ -248,6 +255,25 @@ pub(crate) fn observed_lines(sessions: &[vmind_core::SessionSummary]) -> Vec<Str
         .collect()
 }
 
+/// Entfernt `--validated-only` nur aus den Optionen hinter DB und Suchtext von `recall`.
+/// Die Positionsargumente und der Wert nach `--limit` bleiben unverändert, auch wenn sie
+/// wörtlich so lauten.
+fn take_validated_only(args: &mut Vec<String>) -> bool {
+    const OPTIONS_START: usize = 3; // recall DB SUCHTEXT
+    let mut found = false;
+    let mut i = OPTIONS_START;
+    while i < args.len() {
+        if args[i] == "--limit" {
+            i += 2;
+        } else if args[i] == "--validated-only" {
+            args.remove(i);
+            found = true;
+        } else {
+            i += 1;
+        }
+    }
+    found
+}
 fn run() -> Result<()> {
     let mut args: Vec<String> = env::args().skip(1).collect();
     let mut json_mode = false;
@@ -266,6 +292,16 @@ fn run() -> Result<()> {
         }
     }
     let scope = explicit_scope.clone().unwrap_or_else(|| "global".into());
+    // Nur `recall` kennt `--validated-only`: dann ohne ungeprüfte Hinweise wie vor 0.3.0-rc.7.
+    let validated_only =
+        args.first().is_some_and(|c| c == "recall") && take_validated_only(&mut args);
+    let recall = |store: &MemoryStore, query: &str, limit: usize| {
+        if validated_only {
+            store.recall(query, &scope, limit)
+        } else {
+            store.recall_with_hints(query, &scope, limit)
+        }
+    };
     match args.as_slice() {
         [] => println!("{HELP}"),
         [cmd] if cmd == "--help" || cmd == "help" => println!("{HELP}"),
@@ -465,7 +501,7 @@ fn run() -> Result<()> {
             emit(memories, human, json_mode)?;
         }
         [cmd, db, query] if cmd == "recall" => {
-            let records = MemoryStore::open_existing(db)?.recall(query, &scope, 5)?;
+            let records = recall(&MemoryStore::open_existing(db)?, query, 5)?;
             emit(&records, summary(&records), json_mode)?;
         }
         [cmd, db, query, flag, limit] if cmd == "recall" && flag == "--limit" => {
@@ -476,7 +512,7 @@ fn run() -> Result<()> {
                 .ok()
                 .filter(|n| (1..=20).contains(n))
                 .ok_or_else(|| io::Error::other("Limit muss 1 bis 20 sein"))?;
-            let records = MemoryStore::open_existing(db)?.recall(query, &scope, limit)?;
+            let records = recall(&MemoryStore::open_existing(db)?, query, limit)?;
             emit(&records, summary(&records), json_mode)?;
         }
         [cmd, db, question] if cmd == "ask" => {

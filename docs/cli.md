@@ -415,6 +415,14 @@ gespeicherten Erfahrungen passt:
 cargo run -p vmind-cli --locked -- --json --scope beispiel recall vmind.db 'SQLite Migration' --limit 10
 ```
 
+Ab 0.3.0-rc.7 füllen ungeprüfte aktive Einträge (`pending`) die Plätze, die nach allen
+validierten Suchstufen frei bleiben, mit denselben Suchstufen. Validierte Treffer und ihre
+Reihenfolge bleiben unverändert vorn; Bereichs- und Rückzugsfilter gelten wie bisher. In der
+Textausgabe steht vor jedem ungeprüften Treffer „UNGEPRÜFT – nur Hinweis“, in JSON zeigt
+`status` den Zustand, im Ollama-Kontext stehen sie getrennt unter `unconfirmed_hints`.
+`--validated-only` (JSONL/MCP `validated_only: true`) liefert genau das bisherige Verhalten.
+Validiert wird dadurch nichts; dafür bleiben `validate` und Prüfbefehle zuständig.
+
 Für länger laufende Clients:
 
 ```sh

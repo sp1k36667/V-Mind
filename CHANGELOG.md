@@ -1,12 +1,12 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.6 (on `main`)
+## Unreleased: candidate 0.3.0-rc.7 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.6` (`vmind --version`, MCP
+Not released yet. The source now reports version `0.3.0-rc.7` (`vmind --version`, MCP
 server info); there is no tag, no published download and no installation of it. The
-earlier candidates `0.3.0-rc.1` to `0.3.0-rc.5` did not yet contain all changes below
+earlier candidates `0.3.0-rc.1` to `0.3.0-rc.6` did not yet contain all changes below
 (rc.1 lacked #40, #42, #43; rc.2 lacked #44; rc.3 lacked #46; rc.4 lacked #47; rc.5 lacked
-the repair hint in `check`).
+#48; rc.6 lacked unverified hints in `recall`).
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
@@ -76,7 +76,12 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
 - `vmind check` and `revalidate` name a repair at the moment it happens: when a run passes
   directly after a failure of the same active check, the output shows the run IDs and the
   `propose-repair` call (JSON `repair` / `repairs`), unless the scope already has a proposal.
-  Read-only; if the hint cannot be computed, the stored run and its result stay unchanged.
+  Read-only; if the hint cannot be computed, the stored run and its result stay unchanged. (#48)
+- `recall` (CLI, JSONL, MCP, local model context) also returns unverified (`pending`) entries
+  as hints, only in places left free after all validated search stages, marked in every
+  output and kept apart in the model context. Validated hits and their order are unchanged;
+  `--validated-only` / `validated_only: true` gives exactly the previous result (retrieval
+  corpora: byte-identical). Nothing becomes validated by this.
 
 ### Changed
 

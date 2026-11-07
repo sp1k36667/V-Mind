@@ -31,11 +31,13 @@ Most AI memories store whatever the model considers important. V-Mind strictly s
 ```
   propose / add            validate (human/CLI, with evidence)       invalidate
  ───────────────▶ pending ─────────────────────────────────▶ validated ──────────▶ invalidated
-                  never retrieved                             retrieved             never retrieved again,
-                                                                                    history is kept
+                  retrieved only as a                         retrieved first       never retrieved again,
+                  marked hint                                                       history is kept
 ```
 
-- **Only validated knowledge** is retrieved, always with source, reviewer and evidence.
+- **Validated knowledge comes first**, always with source, reviewer and evidence. Unverified
+  proposals follow only in free places, marked as hints, so an AI can use its own fresh
+  lessons at once without them passing for verified knowledge (`--validated-only` hides them).
 - **Through MCP, an AI can only propose knowledge.** Approval is deliberately not offered
   as an MCP tool, only on the command line or through an executable check. An AI that can
   also run shell commands can call that command line too; see
@@ -238,7 +240,7 @@ be used. After that Claude has these tools:
 | Tool | Purpose |
 |---|---|
 | `resume` | Load project state: goal, tasks, decisions, next step |
-| `recall` | Find verified knowledge via full-text search |
+| `recall` | Find knowledge via full-text search: verified first, unverified as marked hints |
 | `get` | Show an entry with its full history, active check and recent check runs |
 | `propose` | Propose a new lesson as *unverified* |
 | `log` | Record a task, decision, next step or note |
