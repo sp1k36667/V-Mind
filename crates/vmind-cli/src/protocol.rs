@@ -65,6 +65,13 @@ enum Operation {
         #[serde(default = "five")]
         limit: usize,
     },
+    /// Nur lesend, exakt dieser Bereich ohne global-Beimischung.
+    JournalSearch {
+        scope: String,
+        query: String,
+        #[serde(default = "five")]
+        limit: usize,
+    },
     Log {
         scope: String,
         kind: String,
@@ -155,6 +162,11 @@ pub fn dispatch(store: &MemoryStore, mut value: Value) -> Value {
                 after,
                 limit,
             } => json!({"events":store.journal_page(&scope,after,limit)?}),
+            Operation::JournalSearch {
+                scope,
+                query,
+                limit,
+            } => json!({"events":store.journal_search(&scope,&query,limit)?}),
             Operation::Log {
                 scope,
                 kind,
@@ -180,7 +192,7 @@ pub fn dispatch(store: &MemoryStore, mut value: Value) -> Value {
                 limit,
             } => json!({"messages":store.messages(&conversation_id,after,limit)?}),
             Operation::Describe => json!({"protocol":"vmind-jsonl", "version":1,
-                "operations":["describe", "recall", "get", "propose", "pending", "repairs", "propose_repair", "stats", "resume", "journal", "log", "session_new", "sessions", "message", "messages"],
+                "operations":["describe", "recall", "get", "propose", "pending", "repairs", "propose_repair", "stats", "resume", "journal", "journal_search", "log", "session_new", "sessions", "message", "messages"],
                 "default_scope":"global", "recall_includes_global":true,
                 "proposals_require_external_validation":true,
                 "validation":"CLI validate or CLI check/revalidate; no validation or check execution in this protocol"}),
@@ -392,5 +404,40 @@ mod project_tests {
                 .len(),
             1
         );
+    }
+    #[test]
+    fn journal_search_finds_entries_of_the_exact_scope_and_rejects_unknown_fields() {
+        let s = MemoryStore::in_memory().unwrap();
+        let own = s
+            .journal("p", "note", None, None, "Migration geprüft", "T")
+            .unwrap();
+        s.journal("global", "note", None, None, "Migration global", "T")
+            .unwrap();
+        let found = dispatch(
+            &s,
+            json!({"id":3,"op":"journal_search","scope":"p","query":"MIGRATION"}),
+        );
+        assert_eq!(found["ok"], true, "{found}");
+        assert_eq!(found["data"]["events"].as_array().unwrap().len(), 1);
+        assert_eq!(found["data"]["events"][0]["id"], own);
+        let typo = dispatch(
+            &s,
+            json!({"op":"journal_search","scope":"p","query":"x","after":1}),
+        );
+        assert_eq!(typo["ok"], false);
+        let without_scope = dispatch(&s, json!({"op":"journal_search","query":"x"}));
+        assert_eq!(without_scope["ok"], false);
+        let bad_limit = dispatch(
+            &s,
+            json!({"op":"journal_search","scope":"p","query":"x","limit":21}),
+        );
+        assert!(
+            bad_limit["error"]
+                .as_str()
+                .unwrap()
+                .contains("Limit muss 1 bis 20 sein")
+        );
+        let ops = dispatch(&s, json!({"op":"describe"}))["data"]["operations"].clone();
+        assert!(ops.as_array().unwrap().contains(&json!("journal_search")));
     }
 }

@@ -114,6 +114,16 @@ fn tools() -> Vec<Value> {
             &[],
         ),
         tool(
+            "journal_search",
+            "Projekttagebuch genau dieses Bereichs durchsuchen (ohne `global`), nur lesend. \
+             Jedes Wort muss in Text, Quelle oder Aufgabenschlüssel vorkommen; Teilwörter zählen, \
+             Groß-/Kleinschreibung nicht, Akzente schon (é ≠ e). Neueste zuerst. Für \
+             Projekthistorie und frühere Entscheidungen; für geprüftes Wissen `recall` nutzen.",
+            json!({"query":{"type":"string"},"scope":scope,
+                "limit":{"type":"integer","minimum":1,"maximum":20,"default":5}}),
+            &["query"],
+        ),
+        tool(
             "log",
             "Projektereignis speichern. Bei kind=task sind task_key und task_status \
              Pflicht, sonst nicht erlaubt. `done` nur mit konkretem Prüfnachweis in source.",
@@ -403,6 +413,30 @@ mod tests {
         assert_eq!(smuggled["isError"], true);
         let bad_limit = call_tool(&s, None, "recall", json!({"query":"x","limit":0}));
         assert_eq!(bad_limit["isError"], true);
+    }
+
+    #[test]
+    fn journal_search_tool_uses_configured_scope_and_rejects_unknown_fields() {
+        let s = MemoryStore::in_memory().unwrap();
+        let own = s
+            .journal("p", "note", None, None, "Hook-Änderung geprüft", "T")
+            .unwrap();
+        s.journal("global", "note", None, None, "Hook-Änderung global", "T")
+            .unwrap();
+        let found = call_tool(&s, Some("p"), "journal_search", json!({"query":"ÄNDERUNG"}));
+        assert_eq!(found["isError"], false, "{found}");
+        let events = text_json(&found)["events"].clone();
+        assert_eq!(events.as_array().unwrap().len(), 1);
+        assert_eq!(events[0]["id"], own);
+        let typo = call_tool(
+            &s,
+            Some("p"),
+            "journal_search",
+            json!({"query":"x","after":1}),
+        );
+        assert_eq!(typo["isError"], true);
+        let no_scope = call_tool(&s, None, "journal_search", json!({"query":"x"}));
+        assert_eq!(no_scope["isError"], true);
     }
 
     #[test]

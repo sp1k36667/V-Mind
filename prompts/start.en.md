@@ -36,6 +36,13 @@ with `messages`, page by page. Set `after` to the last ID you read; an empty pag
 the end. Missing entries do not prove that work never happened. If things contradict
 each other, check the current state of the work.
 
+Retrieval order: first `resume` for the current state; then `journal_search` with
+suitable words to find earlier decisions, checks and tasks in the project journal (this
+scope only, without `global`); then `recall` for knowledge; for details of a knowledge
+entry `get` (CLI: `show`). `journal_search` requires every word (partial words count,
+case does not, accents do) and returns the newest matches first. Matches are work
+reports, not verified knowledge.
+
 With context-only access, use the state you were given. If truncation prevents a
 reliable answer, name the gap and ask the host specifically for the missing history.
 Do not invent memories and do not claim completeness.
@@ -53,8 +60,10 @@ after a decision, change, check or blocker.
 - `note`: an additional observation, change, error or open point.
 
 Every entry needs a `body` and a traceable `source`, for example a file path, test name,
-observed result or user decision. Name affected files, checks you ran and remaining
-limits when they matter for continuing. Report `done` only after the work is really
+observed result or user decision. A good journal entry contains: the affected files, the
+check you ran with its actual result, the reason for the change or decision and the next
+step; plus remaining limits when they matter for continuing. `journal_search` finds such
+entries again later by their words. Report `done` only after the work is really
 finished. Do not plan in the past tense. A failed test stays documented as a failure.
 
 Changes are appended as new events. The latest status of a task counts. Earlier steps
@@ -122,6 +131,8 @@ optional `id` matches the response to the request.
 - `describe`: no other fields; returns the protocol version and operation names.
 - `resume`: `scope`, optional `conversation_id`; current project and conversation state.
 - `journal`: `scope`, optional `after` (default 0), `limit` (default 5, 1–100).
+- `journal_search`: `scope`, `query`, optional `limit` (default 5, 1–20); read-only,
+  exactly this scope without `global`, every word must occur, newest first.
 - `log`: `scope`, `kind`, `body`, `source`; only for `kind: task` also give `task_key`
   and `task_status`. No task fields for other kinds.
 - `recall`: `query`, `scope`, optional `limit` (default 5, 1–20), `validated_only`.
@@ -158,6 +169,7 @@ Common pattern: `vmind [--json] [--scope SCOPE] COMMAND ...`.
 Run one command per terminal step. Current help: `vmind --help`.
 
 - `resume DB [CONVERSATION_ID]`, `journal DB [AFTER_ID]`
+- `journal-search DB QUERY [--limit N]`; search the project journal of this scope only.
 - `log DB goal|decision|next_step|note TEXT SOURCE`
 - `task DB KEY open|in_progress|done|blocked TEXT SOURCE`
 - `recall DB QUERY`, `show DB ID`, `pending DB`, `stats DB`

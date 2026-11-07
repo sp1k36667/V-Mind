@@ -123,6 +123,31 @@ fn page(after: i64, limit: usize) -> Result<()> {
     }
     Ok(())
 }
+/// Wörter der Tagebuchsuche: Folgen alphanumerischer Zeichen, klein geschrieben, ohne Dubletten.
+fn journal_words(query: &str) -> Vec<String> {
+    let mut words: Vec<String> = Vec::new();
+    for word in query
+        .split(|c: char| !c.is_alphanumeric())
+        .filter(|s| !s.is_empty())
+    {
+        let word = word.to_lowercase();
+        if !words.contains(&word) {
+            words.push(word);
+        }
+    }
+    words
+}
+/// UND-Verknüpfung: jedes Wort muss in body, source oder task_key vorkommen.
+fn journal_matches(entry: &JournalEntry, words: &[String]) -> bool {
+    let fields = [
+        entry.body.to_lowercase(),
+        entry.source.to_lowercase(),
+        entry.task_key.as_deref().unwrap_or("").to_lowercase(),
+    ];
+    words
+        .iter()
+        .all(|word| fields.iter().any(|field| field.contains(word.as_str())))
+}
 impl MemoryStore {
     /// Append-only Ereignis; task_key bezeichnet dieselbe Aufgabe über mehrere Statuswechsel.
     pub fn journal(
@@ -157,6 +182,45 @@ impl MemoryStore {
         ))?;
         stmt.query_map(params![scope, after, limit as i64], entry)?
             .collect()
+    }
+    /// Durchsucht nur lesend das Projekttagebuch genau dieses Bereichs, ohne global-Beimischung.
+    /// Ein Eintrag passt, wenn jedes Wort des Suchtexts als Teilzeichenfolge in body, source
+    /// oder task_key vorkommt. Groß-/Kleinschreibung zählt nicht (auch bei Umlauten), Akzente
+    /// werden nicht angeglichen (é ≠ e). Lineare Suche ohne Index, neueste zuerst.
+    pub fn journal_search(
+        &self,
+        scope: &str,
+        query: &str,
+        limit: usize,
+    ) -> Result<Vec<JournalEntry>> {
+        bounded(scope, 128)?;
+        if query.chars().count() > 2000 {
+            return Err(invalid("Suchtext zu lang"));
+        }
+        if !(1..=20).contains(&limit) {
+            return Err(invalid("Limit muss 1 bis 20 sein"));
+        }
+        let words = journal_words(query);
+        if words.is_empty() {
+            return Ok(Vec::new());
+        }
+        // Der Suchtext bleibt reine Daten: SQL filtert nur nach Bereich, Rust nach Wörtern.
+        self.read_snapshot(|store| {
+            let mut stmt = store.conn.prepare(&format!(
+                "SELECT {JOURNAL} FROM project_journal WHERE scope=?1 ORDER BY id DESC"
+            ))?;
+            let mut found = Vec::new();
+            for row in stmt.query_map([scope], entry)? {
+                let row = row?;
+                if journal_matches(&row, &words) {
+                    found.push(row);
+                    if found.len() == limit {
+                        break;
+                    }
+                }
+            }
+            Ok(found)
+        })
     }
     pub fn create_conversation(&self, scope: &str, title: &str) -> Result<String> {
         bounded(scope, 128)?;
