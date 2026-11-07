@@ -11,10 +11,10 @@ test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen) ... E
 ERROR: test_texte_nach_neuladen (__main__.Abnahme.test_texte_nach_neuladen)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/009-f16-termine-P/verification/gemeinsam.py", line 82, in test_texte_nach_neuladen
+  File "<LAUF>/laeufe/009-f16-termine-P/verification/gemeinsam.py", line 82, in test_texte_nach_neuladen
     texte = " ".join(json.dumps(e, ensure_ascii=False) for e in self.oeffnen().list())
                                                                 ~~~~~~~~~~~~~~~~~~~^^
-  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/009-f16-termine-P/app.py", line 49, in list
+  File "<LAUF>/laeufe/009-f16-termine-P/app.py", line 49, in list
     raise ValueError("Invalid ID")
 ValueError: Invalid ID
 
@@ -22,10 +22,10 @@ ValueError: Invalid ID
 ERROR: test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/009-f16-termine-P/verification/gemeinsam.py", line 66, in test_ziel_ids_nach_neuladen
+  File "<LAUF>/laeufe/009-f16-termine-P/verification/gemeinsam.py", line 66, in test_ziel_ids_nach_neuladen
     geladen = [e["id"] for e in neu_geladen.list()]
                                 ~~~~~~~~~~~~~~~~^^
-  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/009-f16-termine-P/app.py", line 49, in list
+  File "<LAUF>/laeufe/009-f16-termine-P/app.py", line 49, in list
     raise ValueError("Invalid ID")
 ValueError: Invalid ID
 
@@ -33,7 +33,7 @@ ValueError: Invalid ID
 FAIL: test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/009-f16-termine-P/verification/gemeinsam.py", line 115, in test_cli_fehler_exitcode
+  File "<LAUF>/laeufe/009-f16-termine-P/verification/gemeinsam.py", line 115, in test_cli_fehler_exitcode
     self.assertEqual(hinzu.returncode, 0, hinzu.stderr)
     ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 AssertionError: 1 != 0 : 

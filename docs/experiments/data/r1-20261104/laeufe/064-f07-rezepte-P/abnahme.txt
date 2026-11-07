@@ -11,10 +11,10 @@ test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen) ... E
 ERROR: test_texte_nach_neuladen (__main__.Abnahme.test_texte_nach_neuladen)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/064-f07-rezepte-P/verification/gemeinsam.py", line 82, in test_texte_nach_neuladen
+  File "<LAUF>/laeufe/064-f07-rezepte-P/verification/gemeinsam.py", line 82, in test_texte_nach_neuladen
     texte = " ".join(json.dumps(e, ensure_ascii=False) for e in self.oeffnen().list())
                                                                 ~~~~~~~~~~~~~~~~~~~^^
-  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/064-f07-rezepte-P/app.py", line 45, in list
+  File "<LAUF>/laeufe/064-f07-rezepte-P/app.py", line 45, in list
     raise ValueError("ID must be int")
 ValueError: ID must be int
 
@@ -22,10 +22,10 @@ ValueError: ID must be int
 ERROR: test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/064-f07-rezepte-P/verification/gemeinsam.py", line 66, in test_ziel_ids_nach_neuladen
+  File "<LAUF>/laeufe/064-f07-rezepte-P/verification/gemeinsam.py", line 66, in test_ziel_ids_nach_neuladen
     geladen = [e["id"] for e in neu_geladen.list()]
                                 ~~~~~~~~~~~~~~~~^^
-  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/064-f07-rezepte-P/app.py", line 45, in list
+  File "<LAUF>/laeufe/064-f07-rezepte-P/app.py", line 45, in list
     raise ValueError("ID must be int")
 ValueError: ID must be int
 
@@ -33,7 +33,7 @@ ValueError: ID must be int
 FAIL: test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/064-f07-rezepte-P/verification/gemeinsam.py", line 117, in test_cli_fehler_exitcode
+  File "<LAUF>/laeufe/064-f07-rezepte-P/verification/gemeinsam.py", line 117, in test_cli_fehler_exitcode
     self.assertEqual(liste.returncode, 0, liste.stderr)
     ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 AssertionError: 1 != 0 : ID must be int
