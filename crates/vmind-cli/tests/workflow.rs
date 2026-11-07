@@ -1240,3 +1240,93 @@ fn resume_reports_open_hints_and_stale_fields_in_json_and_text() {
     assert!(text.contains("Ungeprüfte Einträge in diesem Bereich: 2 (neueste: #2, #1)"));
     assert!(!text.contains("möglicherweise veraltet"));
 }
+
+#[test]
+fn journal_search_lists_matches_of_the_exact_scope_as_json_and_text() {
+    let temp = Temp::new();
+    let path = temp.0.join("tagebuch.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    let log = |scope: &str, body: &str| {
+        cli(&["--scope", scope, "log", db, "note", body, "Test"])["event_id"]
+            .as_i64()
+            .unwrap()
+    };
+    let old = log("p", "Migration geprüft");
+    log("global", "Migration global");
+    log("anderes", "Migration anderswo");
+    cli(&[
+        "--scope",
+        "p",
+        "task",
+        db,
+        "suche",
+        "done",
+        "Migration abgeschlossen",
+        "cargo test",
+    ]);
+    let found = cli(&["--scope", "p", "journal-search", db, "MIGRATION"]);
+    let found = found.as_array().unwrap();
+    assert_eq!(found.len(), 2);
+    assert!(found.iter().all(|e| e["scope"] == "p"));
+    assert_eq!(found[0]["task_key"], "suche");
+    assert_eq!(found[1]["id"], old);
+    let limited = cli(&[
+        "--scope",
+        "p",
+        "journal-search",
+        db,
+        "migration",
+        "--limit",
+        "1",
+    ]);
+    assert_eq!(limited.as_array().unwrap().len(), 1);
+    let out = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(["--scope", "p", "journal-search", db, "migration"])
+        .output()
+        .unwrap();
+    assert!(out.status.success());
+    let text = String::from_utf8(out.stdout).unwrap();
+    assert!(text.contains("task / suche: done]"), "{text}");
+    assert!(
+        text.contains("Migration abgeschlossen\nQuelle: cargo test"),
+        "{text}"
+    );
+    assert!(!text.contains("global"), "{text}");
+    let none = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(["--scope", "p", "journal-search", db, "nichtvorhanden"])
+        .output()
+        .unwrap();
+    assert!(
+        String::from_utf8(none.stdout)
+            .unwrap()
+            .contains("Keine Tagebucheinträge gefunden.")
+    );
+}
+
+#[test]
+fn invalid_journal_search_limit_is_rejected_before_the_database_is_opened() {
+    let temp = Temp::new();
+    let missing = temp.0.join("fehlt.db");
+    let broken = temp.0.join("kaputt.db");
+    std::fs::write(&broken, b"kein SQLite").unwrap();
+    for path in [&missing, &broken] {
+        for bad in ["0", "21", "fünf"] {
+            let out = Command::new(env!("CARGO_BIN_EXE_vmind"))
+                .args([
+                    "journal-search",
+                    path.to_str().unwrap(),
+                    "x",
+                    "--limit",
+                    bad,
+                ])
+                .output()
+                .unwrap();
+            assert!(!out.status.success(), "--limit {bad} angenommen");
+            let message = String::from_utf8_lossy(&out.stderr);
+            assert!(message.contains("Limit muss 1 bis 20 sein"), "{message}");
+        }
+    }
+    assert!(!missing.exists(), "fehlende Datenbank wurde angelegt");
+    assert_eq!(std::fs::read(&broken).unwrap(), b"kein SQLite");
+}

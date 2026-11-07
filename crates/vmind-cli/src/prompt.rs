@@ -37,6 +37,8 @@ mod tests {
             "`describe`",
             "`resume`",
             "`journal`",
+            "`journal_search`",
+            "journal-search DB",
             "`log`",
             "`recall`",
             "`get`",

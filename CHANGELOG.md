@@ -1,12 +1,13 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.9 (on `main`)
+## Unreleased: candidate 0.3.0-rc.10 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.9` (`vmind --version`, MCP
+Not released yet. The source now reports version `0.3.0-rc.10` (`vmind --version`, MCP
 server info); there is no tag, no published download and no installation of it. The
-earlier candidates `0.3.0-rc.1` to `0.3.0-rc.8` did not yet contain all changes below
+earlier candidates `0.3.0-rc.1` to `0.3.0-rc.9` did not yet contain all changes below
 (rc.1 lacked #40, #42, #43; rc.2 lacked #44; rc.3 lacked #46; rc.4 lacked #47; rc.5 lacked
-#48; rc.6 lacked #53; rc.7 lacked #54; rc.8 lacked the stale-task and open-hint warnings).
+#48; rc.6 lacked #53; rc.7 lacked #54; rc.8 lacked the stale-task and open-hint warnings;
+rc.9 lacked the journal search).
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
@@ -93,6 +94,14 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
   full days old (marked in the text output), and `open_hints` gives the number and newest IDs
   of active unverified entries in the exact scope. Read-only; missing, invalid or future
   timestamps never fail `resume` or warn.
+- Journal search: `vmind journal-search DB QUERY [--limit N]`, JSONL operation and MCP tool
+  `journal_search`. Read-only search in the project journal of exactly one scope (never
+  `global` or other scopes, unlike `recall`). An entry matches when every word of the query
+  occurs in its body, source or task key; partial words count, case is ignored (umlauts
+  included), accents are not folded (`é` ≠ `e`). Newest first, limit 1 to 20 (default 5),
+  checked before the database is opened. Linear scan without an index that stops after
+  `limit` matches. The start instructions describe what a good journal entry contains and
+  the retrieval order `resume` → `journal_search` → `recall` → `get`/`show`.
 
 ### Changed
 

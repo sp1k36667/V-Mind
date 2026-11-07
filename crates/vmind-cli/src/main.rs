@@ -12,7 +12,7 @@ mod runner;
 use serde::Serialize;
 use serde_json::json;
 use std::{env, error::Error, io};
-use vmind_core::{MemoryStore, Record};
+use vmind_core::{JournalEntry, MemoryStore, Record};
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 const HELP: &str = "V-Mind – lokales Gedächtnis für KI-Werkzeuge
@@ -42,6 +42,9 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
   stats DB
   journal DB                    (erste 100 Projektereignisse)
   journal DB NACH_ID             (nächste Seite)
+  journal-search DB SUCHTEXT [--limit N]
+                                (Projekttagebuch nur dieses Bereichs durchsuchen, nur lesend;
+                                 alle Wörter müssen vorkommen; N 1 bis 20, sonst 5)
   log DB goal|decision|next_step|note TEXT QUELLE
   task DB SCHLÜSSEL open|in_progress|done|blocked TEXT QUELLE
   resume DB                     (Fortsetzungsstand des Projektbereichs)
@@ -69,6 +72,35 @@ fn emit(value: impl Serialize, human: String, json_mode: bool) -> Result<()> {
         println!("{human}");
     }
     Ok(())
+}
+/// Limit für `recall` und `journal-search`; vor dem Öffnen der Datenbank prüfen, denn
+/// open_existing kann ältere Schemas umstellen und ein ungültiger Aufruf darf nichts verändern.
+fn search_limit(limit: &str) -> Result<usize> {
+    Ok(limit
+        .parse()
+        .ok()
+        .filter(|n| (1..=20).contains(n))
+        .ok_or_else(|| io::Error::other("Limit muss 1 bis 20 sein"))?)
+}
+fn journal_summary(entries: &[JournalEntry]) -> String {
+    if entries.is_empty() {
+        return "Keine Tagebucheinträge gefunden.".into();
+    }
+    entries
+        .iter()
+        .map(|e| {
+            let task = match (&e.task_key, &e.task_status) {
+                (Some(key), Some(status)) => format!(" / {key}: {status}"),
+                (Some(key), None) => format!(" / {key}"),
+                _ => String::new(),
+            };
+            format!(
+                "#{} [{} / {}{task}]\n{}\nQuelle: {}",
+                e.id, e.created_at, e.kind, e.body, e.source
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n\n")
 }
 fn summary(records: &[Record]) -> String {
     if records.is_empty() {
@@ -544,15 +576,19 @@ fn run() -> Result<()> {
             emit(&records, summary(&records), json_mode)?;
         }
         [cmd, db, query, flag, limit] if cmd == "recall" && flag == "--limit" => {
-            // Vor dem Öffnen prüfen: open_existing kann ältere Schemas umstellen, ein
-            // ungültiger Aufruf darf die Datenbank nicht verändern.
-            let limit = limit
-                .parse()
-                .ok()
-                .filter(|n| (1..=20).contains(n))
-                .ok_or_else(|| io::Error::other("Limit muss 1 bis 20 sein"))?;
+            // Vor dem Öffnen prüfen (siehe search_limit).
+            let limit = search_limit(limit)?;
             let records = recall(&MemoryStore::open_existing(db)?, query, limit)?;
             emit(&records, summary(&records), json_mode)?;
+        }
+        [cmd, db, query] if cmd == "journal-search" => {
+            let found = MemoryStore::open_existing(db)?.journal_search(&scope, query, 5)?;
+            emit(&found, journal_summary(&found), json_mode)?;
+        }
+        [cmd, db, query, flag, limit] if cmd == "journal-search" && flag == "--limit" => {
+            let limit = search_limit(limit)?;
+            let found = MemoryStore::open_existing(db)?.journal_search(&scope, query, limit)?;
+            emit(&found, journal_summary(&found), json_mode)?;
         }
         [cmd, db, question] if cmd == "ask" => {
             ask(db, &scope, question, question, None, json_mode)?

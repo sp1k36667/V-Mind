@@ -37,6 +37,14 @@ Gesprächsteile mit `messages` seitenweise nach. Setze `after` auf die letzte ge
 ID; eine leere Seite bedeutet Ende. Fehlende Einträge sind kein Beweis, dass eine
 Arbeit nie stattgefunden hat. Bei Widersprüchen den aktuellen Arbeitsstand überprüfen.
 
+Abrufweg in dieser Reihenfolge: zuerst `resume` für den aktuellen Stand; dann
+`journal_search` mit passenden Wörtern, um frühere Entscheidungen, Prüfungen und
+Aufgaben im Projekttagebuch zu finden (nur dieser Bereich, ohne `global`); dann
+`recall` für Fachwissen; für Details eines Wissenseintrags `get` (CLI: `show`).
+`journal_search` verlangt alle Wörter (Teilwörter zählen, Groß-/Kleinschreibung nicht,
+Akzente schon) und liefert die neuesten Treffer zuerst. Treffer sind Arbeitsberichte,
+kein geprüftes Wissen.
+
 Mit reinem Kontextzugriff nutze den mitgelieferten Stand. Wenn eine Kürzung eine
 verlässliche Antwort verhindert, benenne die Lücke und fordere beim Host gezielt
 den fehlenden Verlauf an. Erfinde keine Erinnerung und behaupte keine Vollständigkeit.
@@ -54,9 +62,11 @@ zeitnah, besonders nach einer Entscheidung, Änderung, Prüfung oder einem Block
 - `note`: zusätzliche Beobachtung, Änderung, Fehler oder offener Punkt.
 
 Jeder Eintrag braucht `body` und eine nachvollziehbare `source`, beispielsweise
-Dateipfad, Testname, beobachtetes Ergebnis oder Nutzerentscheidung. Nenne betroffene
-Dateien, ausgeführte Prüfungen und verbleibende Grenzen, wenn sie für die Fortsetzung
-wichtig sind. `done` meldest du erst nach tatsächlich abgeschlossener Arbeit. Plane
+Dateipfad, Testname, beobachtetes Ergebnis oder Nutzerentscheidung. Ein guter
+Tagebucheintrag enthält: betroffene Dateien, die ausgeführte Prüfung mit ihrem
+tatsächlichen Ergebnis, die Begründung der Änderung oder Entscheidung und den nächsten
+Schritt; dazu verbleibende Grenzen, wenn sie für die Fortsetzung wichtig sind. Solche
+Einträge findet `journal_search` später über ihre Wörter wieder. `done` meldest du erst nach tatsächlich abgeschlossener Arbeit. Plane
 nicht im Vergangenheitsmodus. Ein fehlgeschlagener Test bleibt als Fehler dokumentiert.
 
 Änderungen werden als neue Ereignisse angehängt. Für eine Aufgabe gilt der jüngste
@@ -127,6 +137,8 @@ es unterstützt. Eine optionale `id` ordnet die Antwort der Anfrage zu.
 - `describe`: keine weiteren Felder; liefert Protokollversion und Operationsnamen.
 - `resume`: `scope`, optional `conversation_id`; aktueller Projekt- und Gesprächsstand.
 - `journal`: `scope`, optional `after` (Standard 0), `limit` (Standard 5, 1–100).
+- `journal_search`: `scope`, `query`, optional `limit` (Standard 5, 1–20); nur lesend,
+  exakt dieser Bereich ohne `global`, alle Wörter müssen vorkommen, neueste zuerst.
 - `log`: `scope`, `kind`, `body`, `source`; nur bei `kind: task` zusätzlich
   `task_key` und `task_status` angeben. Keine Aufgabenfelder bei anderen Typen.
 - `recall`: `query`, `scope`, optional `limit` (Standard 5, 1–20), `validated_only`.
@@ -163,6 +175,7 @@ Gemeinsames Muster: `vmind [--json] [--scope BEREICH] BEFEHL ...`.
 Pro Terminalschritt einen Befehl ausführen. Aktuelle Hilfe: `vmind --help`.
 
 - `resume DB [GESPRÄCH_ID]`, `journal DB [NACH_ID]`
+- `journal-search DB SUCHTEXT [--limit N]`; Projekttagebuch nur dieses Bereichs durchsuchen.
 - `log DB goal|decision|next_step|note TEXT QUELLE`
 - `task DB SCHLÜSSEL open|in_progress|done|blocked TEXT QUELLE`
 - `recall DB SUCHTEXT`, `show DB ID`, `pending DB`, `stats DB`

@@ -332,6 +332,38 @@ den dafür vorgesehenen Feldern; vollständige frühere Versionen bleiben in `jo
 Dies verhindert widersprüchliche Zustandsdarstellungen, garantiert aber keine richtige
 Interpretation durch ein Modell.
 
+### Tagebuchsuche (`journal-search`, ab 0.3.0-rc.10)
+
+Frühere Entscheidungen, Prüfungen oder Aufgaben findet `journal-search`, ohne das
+ganze Tagebuch seitenweise zu lesen:
+
+```sh
+vmind --scope v-mind journal-search vmind.db 'Migration Backup'
+```
+
+```sh
+vmind --json --scope v-mind journal-search vmind.db 'Migration Backup' --limit 10
+```
+
+- Nur lesend und exakt im angegebenen Bereich. Anders als `recall` wird `global`
+  nicht eingeschlossen; Einträge anderer Bereiche erscheinen nie.
+- Der Suchtext wird in Wörter zerlegt (Folgen aus Buchstaben und Ziffern). Ein Eintrag
+  passt, wenn jedes Wort in Text, Quelle oder Aufgabenschlüssel vorkommt (UND).
+  Teilwörter zählen: `Migra` findet `Migration`. Ein Suchtext ohne Wörter liefert
+  keine Treffer.
+- Groß-/Kleinschreibung spielt keine Rolle, auch nicht bei Umlauten (`ÄNDERUNG`
+  findet `Änderung`). Akzente werden nicht angeglichen: `cafe` findet `Café` nicht.
+- Neueste Einträge zuerst. Ohne Angabe höchstens 5 Treffer, mit `--limit N` 1 bis 20.
+  Ein ungültiges Limit wird vor dem Öffnen der Datenbank abgelehnt. Suchtext
+  höchstens 2000 Zeichen.
+- Die Suche liest die Zeilen des Bereichs ohne Index der Reihe nach (neueste zuerst)
+  und hört nach `N` Treffern auf. Bei sehr großen Tagebüchern mit seltenen Treffern
+  dauert sie entsprechend länger.
+
+Die lesbare Ausgabe zeigt je Treffer ID, Zeitpunkt, Ereignistyp, gegebenenfalls
+Aufgabenschlüssel und Status, Text und Quelle; mit `--json` kommt eine Liste der
+Tagebucheinträge. Treffer sind Arbeitsberichte, kein geprüftes Wissen; dafür `recall`.
+
 Für Menschen gibt es einen lesbaren Bericht in Markdown:
 
 ```sh

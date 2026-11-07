@@ -160,6 +160,21 @@ Erfolg: `data.events`. Für die nächste Seite `after` auf die letzte Ereignis-I
 `limit` standardmäßig 5, zulässig 1 bis 100, `after` muss >=0 sein. Die Einträge sind
 chronologisch nach ID sortiert; eine leere Liste bedeutet Ende.
 
+Projekttagebuch durchsuchen (nur lesend, ab 0.3.0-rc.10):
+
+```json
+{"id":15,"op":"journal_search","scope":"v-mind","query":"Migration Backup","limit":5}
+```
+
+`scope` und `query` sind Pflicht, `limit` standardmäßig 5 (zulässig 1 bis 20), `query`
+höchstens 2000 Zeichen. Gesucht wird exakt im angegebenen Bereich; anders als bei
+`recall` wird `global` nicht eingeschlossen. Ein Eintrag passt, wenn jedes Wort des
+Suchtexts (Folgen aus Buchstaben und Ziffern) als Teilwort in `body`, `source` oder
+`task_key` vorkommt. Groß-/Kleinschreibung zählt nicht, auch nicht bei Umlauten;
+Akzente werden nicht angeglichen (`é` ≠ `e`). Erfolg: `data.events`, neueste zuerst
+(ID absteigend). Ein Suchtext ohne Wörter liefert eine leere Liste. Lineare Suche
+ohne Index; sie endet nach `limit` Treffern.
+
 ```json
 {"id":11,"op":"session_new","scope":"v-mind","title":"Implementierung"}
 ```
@@ -193,7 +208,7 @@ pro Zeile, dieselbe 1-MiB-Grenze. Unterstützt werden `initialize`, `ping`,
 erhalten keine Antwort. Ausgehandelte Versionen: 2024-11-05, 2025-03-26, 2025-06-18
 und 2025-11-25; bei unbekannter Version antwortet der Server mit der neuesten.
 
-Werkzeuge: `recall`, `get`, `propose`, `pending`, `repairs`, `propose_repair`, `stats`, `resume`, `journal`, `log`,
+Werkzeuge: `recall`, `get`, `propose`, `pending`, `repairs`, `propose_repair`, `stats`, `resume`, `journal`, `journal_search`, `log`,
 `session_new`, `sessions`, `message`, `messages`. Ihre Argumente entsprechen den
 gleichnamigen JSONL-Operationen ohne `op` und `id`. Jeder Aufruf läuft durch
 denselben Dispatcher; Feldprüfung, Grenzen und Fehlertexte sind identisch.
