@@ -1,6 +1,6 @@
 # Abnahme vor Release 0.3
 
-Status: **Abnahmeliste; Schritte 1–3 am Kandidaten 0.3.0-rc.6 bestanden, Schritt 4 offen.** Sie legt fest, was vor einem Tag
+Status: **Abnahmeliste; am Kandidaten 0.3.0-rc.6 Schritte 1–3 und 4.4 bestanden, 4.1–4.3 offen.** Schritt 3 wurde nur an einer synthetischen Schema-5-Datenbank geprüft; die im Plan vorgesehene Kopie der echten Datenbank wurde nicht geprüft. Sie legt fest, was vor einem Tag
 `v0.3.0` tatsächlich geprüft sein muss und wer es prüfen kann. Versionsvorbereitung und isolierte Prüfungen gehören zum bestehenden Arbeitsauftrag.
 Tag/Veröffentlichung und Änderungen der echten Installation/Teamdatenbank werden
 separat mit dem Nutzer koordiniert. Teamnachrichten ersetzen keine Nutzerentscheidung.
@@ -80,7 +80,7 @@ alle drei Builds samt Pakettest erfolgreich, Veröffentlichung übersprungen. Cl
 Linux-Archiv heruntergeladen und isoliert geprüft, nur mit synthetischen Daten im
 Arbeitsverzeichnis der Sitzung; keine echte Datenbank, keine Modellaufrufe.
 
-| Archiv | SHA-256 (von Claude nachgerechnet) |
+| Archiv | SHA-256 (von Claude und Codex unabhängig nachgerechnet) |
 | --- | --- |
 | `vmind-5ae5181…-linux-x86_64.tar.gz` | `8dacb6f13eeaf9d0d226e481c1a9db6d885ed88d881a9621f0002207582c0f59` |
 | `vmind-5ae5181…-macos-arm64.tar.gz` | `1b6b456a511d1150794d563f0455a5bb1806e657946879faa5f536e0c85ecdd1` |
@@ -103,7 +103,8 @@ Arbeitsverzeichnis der Sitzung; keine echte Datenbank, keine Modellaufrufe.
 | 3.5 Rückweg | bestanden: zurückgespielte Sicherung öffnet das alte Binary als Schema 5 mit gleichem `resume`-Stand | C |
 | 3.6 Altes Binary auf Schema 6 | bestanden: verweigert mit „Unbekannte Datenbankversion“, Datei unverändert (SHA-256 gleich) | C |
 | — Sicherung | bestanden: `backup` geprüft, überschreibt kein vorhandenes Ziel, Kopie liefert denselben Stand | C |
-| 4.1–4.4 Reale Clients | **offen** | N, C, X |
+| 4.1–4.3 Reale Clients | **offen** | N, C |
+| 4.4 Codex über JSONL | bestanden am Linux-Archiv, isoliert mit synthetischer Test-DB: `session_new`, `log`, `message`, `messages` | X |
 
 Grenzen: Das Upgrade wurde an einer synthetischen statt an einer Kopie der echten
 Datenbank geprüft (Vorgabe Codex #352: keine echten Inhalte in PR, GitHub oder Logs). macOS
@@ -111,7 +112,7 @@ und Windows sind nur durch die CI-Pakettests belegt. Unter 3.6 meldet das alte 0
 missverständliche Präfix „Invalid parameter name:“ (behoben ab #17, betrifft nur das alte
 Binary). Prüfskript und Protokoll liegen nur lokal beim Prüfenden.
 
-**Noch offen vor einem Release:** Schritt 4 (realer Client), Entscheidung über die
+**Noch offen vor einem Release:** Schritte 4.1–4.3 (realer Client), Entscheidung über die
 endgültige Versionsnummer, Tag und Veröffentlichung (Nutzerfreigabe) und Schritt 5
 (Upgrade der echten Teamdatenbank, eigene Nutzerfreigabe).
 
