@@ -214,6 +214,11 @@ vmind init vmind.db
 
 Die Datenbank ist lokal und gehört nicht ins Git-Repository (`*.db` in `.gitignore`).
 
+Für die V-Mind-Datenbank empfehlen wir eine lokale SSD, am besten eine NVMe-SSD (meist im
+M.2-Format). Die geringere Latenz hilft bei häufigen kleinen SQLite-Schreibvorgängen,
+besonders wenn mehrere Clients dieselbe Datenbank nutzen. Eine Festplatte (HDD) wird
+ebenfalls unterstützt.
+
 ### 3. MCP-Server eintragen
 
 Lege im Projektordner eine Datei `.mcp.json` an. Ersetze `mein-projekt` durch einen
