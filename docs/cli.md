@@ -40,7 +40,14 @@ Gemessen mit zwei gleichzeitig schreibenden Prozessen (je 12.000 Schreibvorgäng
 Testdatenbank auf ext4-SSD): mit `wal` etwa 8–9 s statt 32–34 s, ohne Sperrfehler. `wal`
 braucht ein lokales Dateisystem mit gemeinsamem Speicher; auf Netzlaufwerken nicht verwenden.
 Auf einem lokalen NTFS-Laufwerk (Linux-Treiber `ntfs3`) funktionierten Wechsel, `doctor`,
-Sicherung und Rückwechsel.
+Sicherung und Rückwechsel, gleichzeitiger Betrieb aber nicht zuverlässig: Starten zwei
+Prozesse gleichzeitig, solange noch keine `-shm`-Datei existiert, bricht einer davon oft mit
+„disk I/O error“ ab (SQLite `SQLITE_IOERR_SHMMAP`). Gegenprobe mit je zwei gleichzeitig
+startenden Prozessen und einem Schreibvorgang, 100 Wiederholungen: ntfs3 70 von 200
+Öffnungen fehlgeschlagen, ext4 0 von 200. Der betroffene Prozess meldet den Fehler und endet;
+es geht nichts still verloren. Unter Linux mit `ntfs3` und auf Netzlaufwerken daher beim
+Standard `delete` bleiben, der keine `-shm`-Datei nutzt. Gemessen wurde nur der Linux-Treiber
+`ntfs3`, nicht NTFS unter Windows.
 
 ### Geheimnis-Audit (Entwicklungsstand)
 
