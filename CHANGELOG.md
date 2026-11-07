@@ -58,7 +58,10 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
   with a clear message and keeps the mode if another process uses the file. `vmind doctor`
   reports the journal mode. Read-only tools, backup and doctor work on WAL databases also
   after all connections are closed; the `-wal`/`-shm` files get the database's permissions.
-  In a two-writer load test WAL took 8–9 s instead of 32–34 s. (#44)
+  In a two-writer load test WAL took 8–9 s instead of 32–34 s. (#44) On Linux `ntfs3` two
+  processes starting at once on a WAL database without a `-shm` file often failed with "disk
+  I/O error" (70 of 200 opens, ext4 0 of 200); keep the default `delete` there and on network
+  drives (documented in `docs/cli.md`).
 - Repair proposals: `vmind repairs DB` (also JSONL/MCP `repairs`) lists, read-only, check
   commands of visible entries that failed and passed in the directly following run.
   `vmind propose-repair DB RUN PROBLEM SOLUTION` (`propose_repair`) stores exactly one
