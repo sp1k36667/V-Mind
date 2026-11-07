@@ -986,3 +986,58 @@ fn recall_marks_unconfirmed_hints_and_validated_only_hides_them() {
     );
     assert_eq!(text.matches("UNGEPRÜFT").count(), 1);
 }
+#[test]
+fn validated_only_is_read_only_as_an_option_behind_db_and_query() {
+    let temp = Temp::new();
+    let dir = temp.0.join("--validated-only");
+    std::fs::create_dir(&dir).unwrap();
+    // Datenbank, deren Pfad wörtlich mit der Option endet.
+    let path = dir.join("--validated-only");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    cli(&[
+        "--scope",
+        "p",
+        "add",
+        db,
+        "error_solution",
+        "--validated-only Hinweis",
+        "L",
+        "T",
+    ]);
+    // Suchtext gleich der Option: bleibt Suchtext, Hinweis erscheint.
+    let as_query = cli(&["--scope", "p", "recall", db, "--validated-only"]);
+    assert_eq!(as_query[0]["status"], "pending");
+    // Als Option hinter dem Suchtext: blendet den Hinweis aus.
+    let strict = cli(&[
+        "--scope",
+        "p",
+        "recall",
+        db,
+        "--validated-only",
+        "--validated-only",
+    ]);
+    assert_eq!(strict, serde_json::json!([]));
+    // Wert nach --limit wird nicht als Schalter verbraucht.
+    let (ok, _) = cli_status(&[
+        "--scope",
+        "p",
+        "recall",
+        db,
+        "Hinweis",
+        "--limit",
+        "--validated-only",
+    ]);
+    assert!(!ok, "ungültiges Limit statt stillem Schalter");
+    let strict_limit = cli(&[
+        "--scope",
+        "p",
+        "recall",
+        db,
+        "Hinweis",
+        "--validated-only",
+        "--limit",
+        "2",
+    ]);
+    assert_eq!(strict_limit, serde_json::json!([]));
+}

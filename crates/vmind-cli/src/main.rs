@@ -255,6 +255,25 @@ pub(crate) fn observed_lines(sessions: &[vmind_core::SessionSummary]) -> Vec<Str
         .collect()
 }
 
+/// Entfernt `--validated-only` nur aus den Optionen hinter DB und Suchtext von `recall`.
+/// Die Positionsargumente und der Wert nach `--limit` bleiben unverändert, auch wenn sie
+/// wörtlich so lauten.
+fn take_validated_only(args: &mut Vec<String>) -> bool {
+    const OPTIONS_START: usize = 3; // recall DB SUCHTEXT
+    let mut found = false;
+    let mut i = OPTIONS_START;
+    while i < args.len() {
+        if args[i] == "--limit" {
+            i += 2;
+        } else if args[i] == "--validated-only" {
+            args.remove(i);
+            found = true;
+        } else {
+            i += 1;
+        }
+    }
+    found
+}
 fn run() -> Result<()> {
     let mut args: Vec<String> = env::args().skip(1).collect();
     let mut json_mode = false;
@@ -275,10 +294,7 @@ fn run() -> Result<()> {
     let scope = explicit_scope.clone().unwrap_or_else(|| "global".into());
     // Nur `recall` kennt `--validated-only`: dann ohne ungeprüfte Hinweise wie vor 0.3.0-rc.7.
     let validated_only =
-        args.first().is_some_and(|c| c == "recall") && args.iter().any(|a| a == "--validated-only");
-    if validated_only {
-        args.retain(|a| a != "--validated-only");
-    }
+        args.first().is_some_and(|c| c == "recall") && take_validated_only(&mut args);
     let recall = |store: &MemoryStore, query: &str, limit: usize| {
         if validated_only {
             store.recall(query, &scope, limit)
