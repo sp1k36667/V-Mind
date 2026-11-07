@@ -20,6 +20,8 @@ enum Operation {
         scope: String,
         #[serde(default = "five")]
         limit: usize,
+        #[serde(default)]
+        validated_only: bool,
     },
     Get {
         memory_id: i64,
@@ -107,7 +109,15 @@ pub fn dispatch(store: &MemoryStore, mut value: Value) -> Value {
                 query,
                 scope,
                 limit,
-            } => json!({"memories": store.recall(&query, &scope, limit)?}),
+                validated_only,
+            } => {
+                let memories = if validated_only {
+                    store.recall(&query, &scope, limit)?
+                } else {
+                    store.recall_with_hints(&query, &scope, limit)?
+                };
+                json!({"memories": memories})
+            }
             Operation::Get { memory_id } => {
                 json!({"memory": store.get(memory_id)?, "history":store.history(memory_id)?,
                     "check":store.active_check(memory_id)?,
@@ -231,7 +241,7 @@ pub fn serve(store: &MemoryStore, input: impl BufRead, mut output: impl Write) -
 mod tests {
     use super::*;
     #[test]
-    fn proposals_are_not_recalled_until_external_validation() {
+    fn proposals_are_only_hints_until_external_validation() {
         let s = MemoryStore::in_memory().unwrap();
         let result = dispatch(
             &s,
@@ -240,16 +250,24 @@ mod tests {
         );
         assert_eq!(result["id"], "first");
         assert_eq!(result["data"]["status"], "pending");
-        let recall = || {
+        let recall = |validated_only: bool| {
             dispatch(
                 &s,
-                json!({"id":2,"op":"recall","scope":"demo","query":"Transaktionen"}),
+                json!({"id":2,"op":"recall","scope":"demo","query":"Transaktionen",
+                    "validated_only":validated_only}),
             )
         };
-        assert_eq!(recall()["data"]["memories"].as_array().unwrap().len(), 0);
         let id = result["data"]["memory_id"].as_i64().unwrap();
+        // Ungeprüft: als Hinweis sichtbar, aber nicht im validierten Abruf.
+        assert_eq!(recall(false)["data"]["memories"][0]["id"], id);
+        assert_eq!(recall(false)["data"]["memories"][0]["status"], "pending");
+        assert_eq!(
+            recall(true)["data"]["memories"].as_array().unwrap().len(),
+            0
+        );
         s.validate(id, "Tester", "Integrationstest").unwrap();
-        assert_eq!(recall()["data"]["memories"][0]["id"], id);
+        assert_eq!(recall(true)["data"]["memories"][0]["id"], id);
+        assert_eq!(recall(false)["data"]["memories"][0]["status"], "validated");
         assert_eq!(
             dispatch(&s, json!({"op":"validate","memory_id":id}))["ok"],
             false

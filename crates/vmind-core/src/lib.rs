@@ -470,6 +470,21 @@ impl MemoryStore {
     /// BM25-Volltextsuche, nur validierte aktive Einträge; Projekt plus global.
     /// Zuerst ganze Wörter, danach füllen Teilworttreffer auf (Beugungen, Komposita).
     pub fn recall(&self, query: &str, scope: &str, limit: usize) -> Result<Vec<Record>> {
+        self.recall_statuses(query, scope, limit, &["validated"])
+    }
+    /// Wie `recall`; danach füllen ungeprüfte aktive Einträge (`pending`) freie Plätze mit
+    /// denselben Suchstufen. Validierte Treffer und ihre Reihenfolge bleiben unverändert vorn;
+    /// ungeprüfte sind am Status erkennbar und nur Hinweise.
+    pub fn recall_with_hints(&self, query: &str, scope: &str, limit: usize) -> Result<Vec<Record>> {
+        self.recall_statuses(query, scope, limit, &["validated", "pending"])
+    }
+    fn recall_statuses(
+        &self,
+        query: &str,
+        scope: &str,
+        limit: usize,
+        statuses: &[&str],
+    ) -> Result<Vec<Record>> {
         nonblank(scope)?;
         if query.chars().count() > 2000 {
             return Err(invalid("Suchtext zu lang"));
@@ -479,50 +494,56 @@ impl MemoryStore {
         }
         let terms = search_terms(query);
         self.read_snapshot(|store| {
-            let mut found = store.ranked(
-                "memories_fts",
-                &match_expression(terms.iter()),
-                scope,
-                limit,
-            )?;
-            if found.len() < limit {
-                let partial = match_expression(
-                    terms
-                        .iter()
-                        .filter(|t| t.chars().count() >= MIN_PARTIAL_TERM_CHARS),
-                );
-                for extra in store.ranked("memories_trigram", &partial, scope, limit)? {
-                    if found.len() == limit {
-                        break;
-                    }
-                    if !found.iter().any(|r| r.id == extra.id) {
-                        found.push(extra);
-                    }
-                }
-            }
-            // Dritte Stufe: Wortformen füllen nur noch freie Plätze; bisherige Treffer und ihre
-            // Reihenfolge bleiben unverändert vorn.
-            if found.len() < limit {
-                let forms = word_form_expression(&terms);
-                for extra in store.ranked("memories_fts", &forms, scope, limit)? {
-                    if found.len() == limit {
-                        break;
-                    }
-                    if !found.iter().any(|r| r.id == extra.id) {
-                        found.push(extra);
-                    }
-                }
+            let mut found = Vec::new();
+            for status in statuses {
+                store.recall_stages(&terms, scope, limit, status, &mut found)?;
             }
             store.enrich_records(found)
         })
     }
-    /// Validierte aktive Treffer eines FTS-Index im Bereich plus global, nach BM25.
+    /// Die drei Suchstufen für einen Status; jede füllt nur noch freie Plätze, ohne Duplikate.
+    fn recall_stages(
+        &self,
+        terms: &[String],
+        scope: &str,
+        limit: usize,
+        status: &str,
+        found: &mut Vec<Record>,
+    ) -> Result<()> {
+        let partial = match_expression(
+            terms
+                .iter()
+                .filter(|t| t.chars().count() >= MIN_PARTIAL_TERM_CHARS),
+        );
+        // Ganze Wörter, dann Teilwörter, dann Wortformen; bisherige Treffer bleiben vorn.
+        let stages = [
+            ("memories_fts", match_expression(terms.iter())),
+            ("memories_trigram", partial),
+            ("memories_fts", word_form_expression(terms)),
+        ];
+        for (index, expression) in &stages {
+            if found.len() >= limit {
+                break;
+            }
+            for extra in self.ranked(index, expression, scope, limit, status)? {
+                if found.len() == limit {
+                    break;
+                }
+                if !found.iter().any(|r| r.id == extra.id) {
+                    found.push(extra);
+                }
+            }
+        }
+        Ok(())
+    }
+    /// Aktive Treffer eines Status aus einem FTS-Index im Bereich plus global, nach BM25.
     fn ranked(
         &self,
         index: &str,
         expression: &str,
         scope: &str,
         limit: usize,
+        status: &str,
     ) -> Result<Vec<Record>> {
         if expression.is_empty() {
             return Ok(Vec::new());
@@ -531,11 +552,11 @@ impl MemoryStore {
             "SELECT {FIELDS}
             FROM {index} JOIN memories m ON m.id={index}.rowid
             LEFT JOIN invalidations i ON i.memory_id=m.id
-            WHERE {index} MATCH ?1 AND m.status='validated' AND i.memory_id IS NULL
+            WHERE {index} MATCH ?1 AND m.status=?4 AND i.memory_id IS NULL
             AND m.scope IN ('global', ?2)
             ORDER BY bm25({index}, 2.0, 1.0), m.id LIMIT ?3"
         ))?;
-        stmt.query_map(params![expression, scope, limit as i64], record)?
+        stmt.query_map(params![expression, scope, limit as i64, status], record)?
             .collect()
     }
     pub fn pending(&self, scope: &str) -> Result<Vec<Record>> {

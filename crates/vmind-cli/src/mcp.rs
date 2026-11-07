@@ -42,12 +42,15 @@ fn tools() -> Vec<Value> {
     vec![
         tool(
             "recall",
-            "Validiertes aktives Wissen per Volltextsuche (FTS5/BM25) finden. Ein \
-             Projektbereich schließt `global` ein. Leere Treffer sind ein gültiges Ergebnis. \
+            "Aktives Wissen per Volltextsuche (FTS5/BM25) finden. Ein Projektbereich schließt \
+             `global` ein. Leere Treffer sind ein gültiges Ergebnis. Zuerst validierte Einträge; \
+             ungeprüfte (`status: pending`) folgen nur in freien Plätzen und sind Hinweise, keine \
+             bestätigten Lösungen; `validated_only: true` lässt sie weg. \
              `check` zeigt den Zustand der aktiven Prüfdefinition samt Zeit und letztem Pass/Fail; \
              es wird beim Abruf nichts ausgeführt und keine heutige Gültigkeit garantiert.",
             json!({"query":{"type":"string"},"scope":scope,
-                "limit":{"type":"integer","minimum":1,"maximum":20,"default":5}}),
+                "limit":{"type":"integer","minimum":1,"maximum":20,"default":5},
+                "validated_only":{"type":"boolean","default":false}}),
             &["query"],
         ),
         tool(
@@ -60,8 +63,9 @@ fn tools() -> Vec<Value> {
         ),
         tool(
             "propose",
-            "Neue Erfahrung als ungeprüften Vorschlag (pending) speichern. Sie erscheint \
-             erst nach externer Validierung im Abruf. Quelle mit reproduzierbarem Testfall.",
+            "Neue Erfahrung als ungeprüften Vorschlag (pending) speichern. Sie erscheint im \
+             Abruf sofort als markierter Hinweis hinter validierten Treffern und gilt erst nach \
+             externer Validierung als geprüft. Quelle mit reproduzierbarem Testfall.",
             json!({"kind":{"type":"string","enum":["error_solution","long_term"]},
                 "problem":{"type":"string"},"solution":{"type":"string"},
                 "source":{"type":"string"},"scope":scope}),
@@ -338,7 +342,7 @@ mod tests {
     }
 
     #[test]
-    fn proposals_stay_out_of_recall_until_external_validation() {
+    fn proposals_are_only_hints_until_external_validation() {
         let s = MemoryStore::in_memory().unwrap();
         let proposed = call_tool(
             &s,
@@ -349,18 +353,16 @@ mod tests {
         );
         assert_eq!(proposed["isError"], false);
         let id = text_json(&proposed)["memory_id"].as_i64().unwrap();
-        let recall = || {
-            text_json(&call_tool(
-                &s,
-                Some("demo"),
-                "recall",
-                json!({"query":"Tabelle"}),
-            ))
-        };
-        assert_eq!(recall()["memories"].as_array().unwrap().len(), 0);
+        let recall = |args| text_json(&call_tool(&s, Some("demo"), "recall", args));
+        let hint = recall(json!({"query":"Tabelle"}));
+        assert_eq!(hint["memories"][0]["id"], id);
+        assert_eq!(hint["memories"][0]["status"], "pending");
+        let strict = recall(json!({"query":"Tabelle","validated_only":true}));
+        assert_eq!(strict["memories"].as_array().unwrap().len(), 0);
         s.validate(id, "Tester", "Integrationstest").unwrap();
-        assert_eq!(recall()["memories"][0]["id"], id);
-        assert_eq!(recall()["memories"][0]["scope"], "demo");
+        let checked = recall(json!({"query":"Tabelle","validated_only":true}));
+        assert_eq!(checked["memories"][0]["id"], id);
+        assert_eq!(checked["memories"][0]["scope"], "demo");
     }
 
     #[test]
