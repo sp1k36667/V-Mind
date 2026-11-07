@@ -138,7 +138,9 @@ es unterstützt. Eine optionale `id` ordnet die Antwort der Anfrage zu.
 - `propose_repair`: `scope`, `failed_run`, `problem`, `solution`; ein ungeprüfter
   Vorschlag je Reparatur. Problem und Lösung selbst formulieren, die Quelle setzt V-Mind.
   `resume` nennt unter `open_repairs` Reparaturen ohne Vorschlag; nur echte Reparaturen
-  beschreiben, nichts erfinden.
+  beschreiben, nichts erfinden. `stale_tasks` markiert Aufgaben, deren Status seit Tagen
+  unverändert ist: prüfen und Status aktualisieren; `open_hints` nennt eigene ungeprüfte
+  Einträge des Bereichs.
 - `stats`: `scope`; Wissensstatistik und Schemaversion.
 - `session_new`: `scope`, `title`; liefert `conversation_id`.
 - `sessions`: `scope`; maximal 100 Gespräche.

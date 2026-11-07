@@ -119,10 +119,11 @@ pub fn markdown(report: &Report) -> String {
     }
     for t in tasks {
         out.push(format!(
-            "- **{}** {}: {}",
+            "- **{}** {}: {}{}",
             line(t.task_status.as_deref().unwrap_or("?")),
             line(t.task_key.as_deref().unwrap_or("?")),
-            line(&t.body)
+            line(&t.body),
+            crate::stale_note(&r.stale_tasks, t.id)
         ));
     }
     out.extend([
@@ -192,6 +193,9 @@ pub fn markdown(report: &Report) -> String {
     }
     if let Some(hint) = crate::repair_hint(&r.open_repairs) {
         out.extend([String::new(), format!("- {}", line(&hint))]);
+    }
+    if let Some(hints) = crate::open_hints_line(&r.open_hints) {
+        out.extend([String::new(), format!("- {}", line(&hints))]);
     }
     out.extend([
         String::new(),

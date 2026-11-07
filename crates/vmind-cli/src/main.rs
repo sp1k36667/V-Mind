@@ -162,10 +162,11 @@ fn resume_output(db: &str, scope: &str, session: Option<&str>, json_mode: bool) 
         .iter()
         .map(|t| {
             format!(
-                "- [{}] {}: {}",
+                "- [{}] {}: {}{}",
                 t.task_status.as_deref().unwrap_or("?"),
                 t.task_key.as_deref().unwrap_or("?"),
-                t.body
+                t.body,
+                stale_note(&resume.stale_tasks, t.id)
             )
         })
         .collect::<Vec<_>>()
@@ -215,7 +216,41 @@ fn resume_output(db: &str, scope: &str, session: Option<&str>, json_mode: bool) 
         Some(hint) => format!("{text}\n\n{hint}"),
         None => text,
     };
+    let text = match open_hints_line(&resume.open_hints) {
+        Some(line) => format!("{text}\n\n{line}"),
+        None => text,
+    };
     emit(resume, text, json_mode)
+}
+
+/// Zusatz für eine möglicherweise veraltete Aufgabe, sonst leer.
+pub(crate) fn stale_note(stale: &[vmind_core::StaleTask], id: i64) -> String {
+    stale
+        .iter()
+        .find(|s| s.id == id)
+        .map_or(String::new(), |s| {
+            format!(
+                " (möglicherweise veraltet: Status seit {} Tagen unverändert)",
+                s.age_days
+            )
+        })
+}
+
+/// Hinweis auf eigene ungeprüfte Einträge des Bereichs; `None`, wenn es keine gibt.
+pub(crate) fn open_hints_line(hints: &vmind_core::OpenHints) -> Option<String> {
+    (hints.total > 0).then(|| {
+        let ids = hints
+            .newest_ids
+            .iter()
+            .map(|i| format!("#{i}"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!(
+            "Ungeprüfte Einträge in diesem Bereich: {} (neueste: {ids}); im Abruf erscheinen sie \
+             als Hinweise, Details mit show DB ID.",
+            hints.total
+        )
+    })
 }
 
 /// Hinweis auf Reparaturen ohne Vorschlag; `None`, wenn es keine gibt.
@@ -618,5 +653,30 @@ fn main() {
     if let Err(error) = run() {
         eprintln!("V-Mind: {error}");
         std::process::exit(1);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn stale_note_and_open_hints_line_only_appear_when_relevant() {
+        let stale = vec![vmind_core::StaleTask {
+            id: 7,
+            task_key: Some("a".into()),
+            task_status: Some("in_progress".into()),
+            age_days: 3,
+        }];
+        assert!(stale_note(&stale, 7).contains("seit 3 Tagen"));
+        assert_eq!(stale_note(&stale, 8), "");
+        let none = vmind_core::OpenHints::default();
+        assert_eq!(open_hints_line(&none), None);
+        let some = vmind_core::OpenHints {
+            total: 4,
+            newest_ids: vec![9, 8, 5],
+        };
+        let line = open_hints_line(&some).unwrap();
+        assert!(line.contains(": 4 (neueste: #9, #8, #5)"));
     }
 }

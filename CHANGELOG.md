@@ -1,12 +1,12 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.8 (on `main`)
+## Unreleased: candidate 0.3.0-rc.9 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.8` (`vmind --version`, MCP
+Not released yet. The source now reports version `0.3.0-rc.9` (`vmind --version`, MCP
 server info); there is no tag, no published download and no installation of it. The
-earlier candidates `0.3.0-rc.1` to `0.3.0-rc.7` did not yet contain all changes below
+earlier candidates `0.3.0-rc.1` to `0.3.0-rc.8` did not yet contain all changes below
 (rc.1 lacked #40, #42, #43; rc.2 lacked #44; rc.3 lacked #46; rc.4 lacked #47; rc.5 lacked
-#48; rc.6 lacked #53; rc.7 lacked the `hint` hook).
+#48; rc.6 lacked #53; rc.7 lacked #54; rc.8 lacked the stale-task and open-hint warnings).
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
@@ -87,7 +87,12 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
   at most 3 hits) as additional context, so the AI gets earlier solutions without having to
   think of `recall`. Read-only; the error text, command and output are not stored or
   repeated. Any problem (no hit, invalid input, missing or older database, lock longer than
-  0.5 s) ends silently and successfully. Not yet tried in a real Claude Code session.
+  0.5 s) ends silently and successfully. Not yet tried in a real Claude Code session. (#54)
+- `resume` (CLI, JSONL, MCP, local model context) and `report` warn about stale state:
+  `stale_tasks` lists shown tasks whose last status `in_progress` or `blocked` is at least two
+  full days old (marked in the text output), and `open_hints` gives the number and newest IDs
+  of active unverified entries in the exact scope. Read-only; missing, invalid or future
+  timestamps never fail `resume` or warn.
 
 ### Changed
 

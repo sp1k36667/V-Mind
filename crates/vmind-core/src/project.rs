@@ -7,6 +7,37 @@ const RESUME_OPEN_TASKS: usize = 20;
 const RESUME_DONE_TASKS: usize = 5;
 const RESUME_DECISIONS: usize = 5;
 const RESUME_RECENT_EVENTS: usize = 5;
+/// Ab so vielen vollen Tagen gilt eine Aufgabe in Arbeit oder blockiert als möglicherweise veraltet.
+const STALE_TASK_DAYS: i64 = 2;
+const OPEN_HINT_IDS: i64 = 3;
+
+/// Aufgabe im Fortsetzungsstand, deren letzter Status `in_progress` oder `blocked` seit
+/// mindestens zwei vollen Tagen unverändert ist. Nur ein Hinweis; der Status bleibt.
+#[derive(Debug, Serialize)]
+pub struct StaleTask {
+    pub id: i64,
+    pub task_key: Option<String>,
+    pub task_status: Option<String>,
+    pub age_days: i64,
+}
+
+/// Aktive ungeprüfte Einträge genau dieses Bereichs; nur IDs, keine Texte.
+#[derive(Debug, Default, Serialize)]
+pub struct OpenHints {
+    pub total: i64,
+    /// Höchstens drei IDs, neueste zuerst.
+    pub newest_ids: Vec<i64>,
+}
+
+/// Volle Tage seit `created_at`; `None` bei fehlendem, ungültigem oder künftigem Zeitstempel.
+/// `now` ist die julianische Zeit, einmal je Snapshot bestimmt.
+fn age_days(conn: &rusqlite::Connection, now: f64, created_at: &str) -> Result<Option<i64>> {
+    let then: Option<f64> = conn.query_row("SELECT julianday(?1)", [created_at], |r| r.get(0))?;
+    Ok(then
+        .map(|t| now - t)
+        .filter(|d| d.is_finite() && *d >= 0.0)
+        .map(|d| d.floor() as i64))
+}
 
 #[derive(Debug, Serialize)]
 pub struct JournalEntry {
@@ -53,6 +84,9 @@ pub struct Resume {
     pub observation_count: i64,
     /// Reparaturen ohne Vorschlag in diesem Bereich; nur IDs, keine Texte.
     pub open_repairs: crate::OpenRepairs,
+    /// Angezeigte Aufgaben, die möglicherweise veraltet sind (siehe `StaleTask`).
+    pub stale_tasks: Vec<StaleTask>,
+    pub open_hints: OpenHints,
 }
 const JOURNAL: &str = "id,scope,kind,task_key,task_status,body,source,created_at";
 fn entry(r: &rusqlite::Row<'_>) -> Result<JournalEntry> {
@@ -309,6 +343,36 @@ impl MemoryStore {
             |r| r.get(0),
         )?;
         let open_repairs = self.open_repairs(scope)?;
+        let now: f64 = conn.query_row("SELECT julianday('now')", [], |r| r.get(0))?;
+        let mut stale_tasks = Vec::new();
+        for t in &tasks {
+            if !matches!(t.task_status.as_deref(), Some("in_progress" | "blocked")) {
+                continue;
+            }
+            if let Some(age) = age_days(conn, now, &t.created_at)?
+                && age >= STALE_TASK_DAYS
+            {
+                stale_tasks.push(StaleTask {
+                    id: t.id,
+                    task_key: t.task_key.clone(),
+                    task_status: t.task_status.clone(),
+                    age_days: age,
+                });
+            }
+        }
+        let active_pending = "FROM memories m WHERE m.scope=?1 AND m.status='pending'
+            AND NOT EXISTS(SELECT 1 FROM invalidations i WHERE i.memory_id=m.id)";
+        let open_hints = OpenHints {
+            total: conn.query_row(&format!("SELECT count(*) {active_pending}"), [scope], |r| {
+                r.get(0)
+            })?,
+            newest_ids: conn
+                .prepare(&format!(
+                    "SELECT m.id {active_pending} ORDER BY m.id DESC LIMIT ?2"
+                ))?
+                .query_map(params![scope, OPEN_HINT_IDS], |r| r.get(0))?
+                .collect::<Result<_>>()?,
+        };
         if let Some(tx) = tx {
             tx.commit()?;
         }
@@ -327,6 +391,8 @@ impl MemoryStore {
             observed_sessions,
             observation_count,
             open_repairs,
+            stale_tasks,
+            open_hints,
         })
     }
 }
