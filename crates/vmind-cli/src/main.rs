@@ -1,5 +1,6 @@
 mod audit_cmd;
 mod check_cmd;
+mod hint;
 mod mcp;
 mod observe;
 mod ollama;
@@ -47,6 +48,8 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
   resume DB GESPRÄCH_ID
   report DB                     (lesbarer Projektbericht in Markdown, nur lesen)
   observe DB                    (Claude-Code-Hook: Meldung von stdin, nur Werkzeug/Ergebnis/Pfad)
+  hint DB                       (Claude-Code-Hook PostToolUseFailure: passendes Wissen als Kontext,
+                                 nur lesend, speichert nichts)
   sessions DB
   session-new DB TITEL
   messages DB GESPRÄCH_ID [NACH_ID]
@@ -337,6 +340,7 @@ fn run() -> Result<()> {
         }
         [cmd, db] if cmd == "audit-secrets" => audit_cmd::run(db, json_mode)?,
         [cmd, db] if cmd == "observe" => observe::run(db, &scope)?,
+        [cmd, db] if cmd == "hint" => hint::run(db, &scope)?,
         [cmd, db] if cmd == "report" => {
             let report = report::build(&MemoryStore::open_read_only(db)?, &scope)?;
             let text = report::markdown(&report);

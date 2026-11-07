@@ -267,11 +267,19 @@ impl MemoryStore {
     }
     /// Reads only an existing current-schema database; never creates or upgrades.
     pub fn open_read_only(path: impl AsRef<Path>) -> Result<Self> {
+        Self::open_read_only_waiting(path, std::time::Duration::from_secs(5))
+    }
+    /// Wie `open_read_only`, aber mit eigener Wartezeit bei Sperren, die schon vor dem
+    /// ersten Zugriff gilt; für Hooks, die nicht blockieren dürfen.
+    pub fn open_read_only_waiting(
+        path: impl AsRef<Path>,
+        wait: std::time::Duration,
+    ) -> Result<Self> {
         let conn = Connection::open_with_flags(
             literal_file_path(path)?,
             OpenFlags::SQLITE_OPEN_READ_ONLY,
         )?;
-        conn.busy_timeout(std::time::Duration::from_secs(5))?;
+        conn.busy_timeout(wait)?;
         let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
         if version != SCHEMA_VERSION {
             return Err(invalid(

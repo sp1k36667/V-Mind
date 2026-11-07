@@ -93,3 +93,32 @@ deliberately.
 checked:** a completed Bash call is not a passed test, a finished task or a validation.
 File paths and session IDs are metadata that can be confidential. Observations are
 currently never deleted automatically.
+
+## 5. Optional: matching knowledge when a tool call fails (PostToolUseFailure hook, 0.3.0-rc.8)
+
+*Covered by automated tests* (`hint_hook_returns_matching_knowledge_as_marked_context_without_writing`,
+`hint_hook_stays_silent_and_successful_on_every_failure_path`); not yet tried in a real
+Claude Code session. Opt-in: add it next to or instead of `observe`.
+
+```json
+{
+  "hooks": {
+    "PostToolUseFailure": [
+      {"matcher": "Bash", "hooks": [{"type": "command",
+        "command": "vmind --scope my-project hint \"$CLAUDE_PROJECT_DIR/vmind.db\"",
+        "timeout": 5}]}
+    ]
+  }
+}
+```
+
+When a tool call fails, `hint` searches with the first 1000 characters of the hook's `error`
+field (`recall` with unverified hints, at most 3 hits) and returns the hits as
+`additionalContext`, marked `[geprüft]` (validated) or `[UNGEPRÜFT]` (unverified hint), with
+problem, solution and source shortened to 300 characters each. The AI still analyses the
+error itself; V-Mind only contributes what was solved before. **Read-only:** the error text,
+command and output are neither stored nor repeated in the context; nothing is run. Without a
+hit, for other events, invalid input, a missing database or an older schema, and when the
+database stays locked for more than 0.5 s (the wait starts before the first database access),
+the hook prints nothing and exits successfully, so it never blocks a tool call. The `timeout`
+of 5 seconds in the example also caps the whole hook on the Claude Code side. Like `observe` it never creates or upgrades a database.

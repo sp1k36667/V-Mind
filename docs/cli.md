@@ -334,6 +334,35 @@ Schema fordert er ein bewusstes Upgrade, statt zu migrieren. Er enthält nichts,
 gespeichert ist; Lücken stehen ausdrücklich als „noch nicht gespeichert“ da. Mit `--json`
 kommen dieselben Daten als JSON.
 
+### Fehlerhinweise für Claude Code (`hint`, ab 0.3.0-rc.8)
+
+Schlägt ein Werkzeugaufruf fehl, kann ein `PostToolUseFailure`-Hook passendes Wissen direkt
+in den Kontext der KI geben, ohne dass sie selbst an `recall` denken muss:
+
+```json
+{
+  "hooks": {
+    "PostToolUseFailure": [
+      {"matcher": "Bash", "hooks": [{"type": "command",
+        "command": "vmind --scope v-mind hint \"$CLAUDE_PROJECT_DIR/vmind.db\"",
+        "timeout": 5}]}
+    ]
+  }
+}
+```
+
+`hint` sucht mit den ersten 1000 Zeichen des Hook-Feldes `error` (wie `recall`, mit
+ungeprüften Hinweisen, höchstens 3 Treffer) und gibt die Treffer als `additionalContext`
+zurück, markiert als `[geprüft]` oder `[UNGEPRÜFT]`, Problem, Lösung und Quelle je auf 300
+Zeichen gekürzt. Die Analyse macht weiter die KI; V-Mind liefert nur, was schon einmal gelöst
+wurde. **Nur lesend:** Fehlertext, Befehl und Ausgabe werden weder gespeichert noch im Kontext
+wiederholt, nichts wird ausgeführt. Ohne Treffer, bei anderen Ereignissen, ungültiger
+Eingabe, fehlender oder älterer Datenbank und wenn die Datenbank länger als 0,5 s gesperrt ist
+(die Wartezeit gilt schon vor dem ersten Zugriff), gibt der Hook nichts aus und endet
+erfolgreich; `timeout` 5 im Beispiel begrenzt den ganzen Hook zusätzlich auf Seiten von Claude
+Code; er blockiert nie ein Werkzeug und legt keine
+Datenbank an. In einer echten Claude-Code-Sitzung ist er noch nicht erprobt.
+
 ### Beobachtungen aus Claude Code (ab Schema 6)
 
 Damit ein Projektstand nicht davon abhängt, dass die KI ans Mitschreiben denkt, kann
