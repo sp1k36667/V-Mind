@@ -1,6 +1,6 @@
 # Abnahme vor Release 0.3
 
-Status: **Abnahmeliste, noch nicht durchgeführt.** Sie legt fest, was vor einem Tag
+Status: **Abnahmeliste; Schritte 1–3 am Kandidaten 0.3.0-rc.6 bestanden, Schritt 4 offen.** Sie legt fest, was vor einem Tag
 `v0.3.0` tatsächlich geprüft sein muss und wer es prüfen kann. Versionsvorbereitung und isolierte Prüfungen gehören zum bestehenden Arbeitsauftrag.
 Tag/Veröffentlichung und Änderungen der echten Installation/Teamdatenbank werden
 separat mit dem Nutzer koordiniert. Teamnachrichten ersetzen keine Nutzerentscheidung.
@@ -67,6 +67,49 @@ Grenzen: Lokal ausgeführt wurde nur das Linux-Archiv auf diesem Ubuntu-Rechner.
 und Windows sind durch die Pakettests in CI belegt, nicht durch einen Anwenderversuch
 auf echten Geräten. Die laufende MCP-Probe ist noch auf das ältere Artefakt von
 `2a3af39` gepinnt.
+
+**Noch offen vor einem Release:** Schritt 4 (realer Client), Entscheidung über die
+endgültige Versionsnummer, Tag und Veröffentlichung (Nutzerfreigabe) und Schritt 5
+(Upgrade der echten Teamdatenbank, eigene Nutzerfreigabe).
+
+### Ergebnisse am Kandidaten 0.3.0-rc.6 (Stand 7. November 2026)
+
+Quelle: `5ae51814b8dc882bfedd3204b00fad16c2685ba2` (Merge von #50, enthält #40, #42–#44,
+#46–#51), Paketlauf `release.yml` 42370581822 per `workflow_dispatch`, ausgelöst von Codex:
+alle drei Builds samt Pakettest erfolgreich, Veröffentlichung übersprungen. Claude hat das
+Linux-Archiv heruntergeladen und isoliert geprüft, nur mit synthetischen Daten im
+Arbeitsverzeichnis der Sitzung; keine echte Datenbank, keine Modellaufrufe.
+
+| Archiv | SHA-256 (von Claude nachgerechnet) |
+| --- | --- |
+| `vmind-5ae5181…-linux-x86_64.tar.gz` | `8dacb6f13eeaf9d0d226e481c1a9db6d885ed88d881a9621f0002207582c0f59` |
+| `vmind-5ae5181…-macos-arm64.tar.gz` | `1b6b456a511d1150794d563f0455a5bb1806e657946879faa5f536e0c85ecdd1` |
+| `vmind-5ae5181…-windows-x86_64.zip` | `720d435cac1bfaa797403ac44d3ff89df373a6bd31674ed652933944b6aba7c2` |
+
+| Schritt | Ergebnis (Linux-Archiv, lokal) | Wer |
+| --- | --- | --- |
+| 1.1 Paket am Stand | bestanden: drei Builds samt Pakettest in CI | X (Lauf), CI |
+| 1.2 Prüfsummen | protokolliert (oben); Vergleich mit veröffentlichter `SHA256SUMS.txt` erst beim Release | C |
+| 1.3 Dateien im Archiv | bestanden: `check_release_package.py` lokal, 140 Links, 10 Prozessaufrufe, isoliertes Profil mit leerem `PATH`, Neustart, Sicherung und Wiederherstellung; keine absoluten Pfade oder `..` im Archiv | C |
+| 2.1 leeres Profil | bestanden (im Pakettest); `vmind --version` meldet `vmind 0.3.0-rc.6` | C |
+| 2.2 init/doctor | bestanden: Schema 6, Rechte 0600 | C |
+| 2.3 Startsprachen | bestanden: de und en nennen `propose_repair`; `fr` mit „Sprache muss de oder en sein“ abgewiesen | C |
+| 2.4 Ablauf | bestanden: `add`, `validate`, `recall` mit Wortform („Zertifikate“ findet „Zertifikat“), `recall --limit 0` abgewiesen | C |
+| — Reparaturwissen (#46–#48) | bestanden mit echtem Prüfbefehl: `check` meldet nach fehlgeschlagen→bestanden die Reparatur, `resume` zählt 1 offene, `propose-repair` speichert einen Vorschlag, ein zweiter wird abgelehnt, danach 0 offene | C |
+| — MCP-Werkzeugliste | bestanden: `repairs` und `propose_repair` vorhanden, kein `validate` | C |
+| — Journalmodus (#44) | bestanden: `wal` und zurück zu `delete`, jeweils von `doctor` bestätigt | C |
+| 2.5 Audit | bestanden: Exit 0, Hinweiszeile, keine Funde | C |
+| 3.1–3.4 Upgrade an Kopie | bestanden an einer **synthetischen** Schema-5-Datenbank, angelegt mit dem installierten 0.2.0 (2 Einträge, Ziel, Aufgabe, Prüfbefehl mit Lauf, Gespräch mit Nachricht): `doctor` liest Schema 5 und lässt die Datei byte-gleich; `stats` migriert auf 6 nach automatischer Sicherung; Sicherung inhaltsgleich mit dem Original (gleicher SQL-Dump; byte-gleich ist sie nicht, die Backup-API schreibt Seiten neu); `doctor` gesund; `resume` (Ziel, Aufgaben, Gespräch, Ereignisse) und `recall` unverändert | C |
+| 3.5 Rückweg | bestanden: zurückgespielte Sicherung öffnet das alte Binary als Schema 5 mit gleichem `resume`-Stand | C |
+| 3.6 Altes Binary auf Schema 6 | bestanden: verweigert mit „Unbekannte Datenbankversion“, Datei unverändert (SHA-256 gleich) | C |
+| — Sicherung | bestanden: `backup` geprüft, überschreibt kein vorhandenes Ziel, Kopie liefert denselben Stand | C |
+| 4.1–4.4 Reale Clients | **offen** | N, C, X |
+
+Grenzen: Das Upgrade wurde an einer synthetischen statt an einer Kopie der echten
+Datenbank geprüft (Vorgabe Codex #352: keine echten Inhalte in PR, GitHub oder Logs). macOS
+und Windows sind nur durch die CI-Pakettests belegt. Unter 3.6 meldet das alte 0.2.0 noch das
+missverständliche Präfix „Invalid parameter name:“ (behoben ab #17, betrifft nur das alte
+Binary). Prüfskript und Protokoll liegen nur lokal beim Prüfenden.
 
 **Noch offen vor einem Release:** Schritt 4 (realer Client), Entscheidung über die
 endgültige Versionsnummer, Tag und Veröffentlichung (Nutzerfreigabe) und Schritt 5
