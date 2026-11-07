@@ -1,0 +1,47 @@
+test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode) ... FAIL
+test_ids_steigen_in_einer_instanz (__main__.Abnahme.test_ids_steigen_in_einer_instanz) ... ERROR
+test_kaputtes_json_bleibt_erhalten (__main__.Abnahme.test_kaputtes_json_bleibt_erhalten) ... ok
+test_leere_eingabe_valueerror (__main__.Abnahme.test_leere_eingabe_valueerror) ... ok
+test_sortierung_und_ungueltiges_datum (__main__.Abnahme.test_sortierung_und_ungueltiges_datum) ... ok
+test_texte_nach_neuladen (__main__.Abnahme.test_texte_nach_neuladen) ... ok
+test_unbekannte_id_valueerror (__main__.Abnahme.test_unbekannte_id_valueerror) ... ok
+test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen) ... ERROR
+
+======================================================================
+ERROR: test_ids_steigen_in_einer_instanz (__main__.Abnahme.test_ids_steigen_in_einer_instanz)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/028-f24-termine-O/verification/gemeinsam.py", line 90, in test_ids_steigen_in_einer_instanz
+    store.remove(zweiter)
+    ~~~~~~~~~~~~^^^^^^^^^
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/028-f24-termine-O/app.py", line 57, in remove
+    raise ValueError("ID not found")
+ValueError: ID not found
+
+======================================================================
+ERROR: test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/028-f24-termine-O/verification/gemeinsam.py", line 69, in test_ziel_ids_nach_neuladen
+    self.ADAPTER.aendern(neu_geladen, ids[9])
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/028-f24-termine-O/verification/abnahme.py", line 25, in aendern
+    store.move(eintrag, "2027-07-07")
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/028-f24-termine-O/app.py", line 50, in move
+    raise ValueError("ID not found")
+ValueError: ID not found
+
+======================================================================
+FAIL: test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/028-f24-termine-O/verification/gemeinsam.py", line 115, in test_cli_fehler_exitcode
+    self.assertEqual(hinzu.returncode, 0, hinzu.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : 
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.028s
+
+FAILED (failures=1, errors=2)

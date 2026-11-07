@@ -1,0 +1,955 @@
+{
+ "alle": [
+  "docs/experiments/data/transfer-20261103/haupt/003-rezepte-O-s1009",
+  "docs/experiments/data/transfer-20261103/haupt/016-rezepte-O-s1008",
+  "docs/experiments/data/transfer-20261103/haupt/026-rezepte-O-s1002",
+  "docs/experiments/data/transfer-20261103/haupt/064-rezepte-O-s1010",
+  "docs/experiments/data/transfer-20261103/haupt/074-rezepte-O-s1005",
+  "docs/experiments/data/transfer-20261103/haupt/085-rezepte-O-s1001",
+  "docs/experiments/data/transfer-20261103/haupt/092-rezepte-O-s1006",
+  "docs/experiments/data/transfer-20261103/haupt/095-rezepte-O-s1003",
+  "docs/experiments/data/transfer-20261103/haupt/110-rezepte-O-s1004",
+  "docs/experiments/data/transfer-20261103/vorlauf/007-rezepte-O-s901",
+  "docs/experiments/data/transfer-20261103/vorlauf/013-rezepte-O-s905",
+  "docs/experiments/data/transfer-20261103/vorlauf/014-rezepte-O-s902",
+  "docs/experiments/data/transfer-20261103/vorlauf/016-rezepte-O-s903",
+  "docs/experiments/data/transfer-20261103/vorlauf/019-rezepte-O-s904",
+  "docs/experiments/data/transfer-20261103/haupt/007-termine-O-s1003",
+  "docs/experiments/data/transfer-20261103/haupt/033-termine-O-s1002",
+  "docs/experiments/data/transfer-20261103/haupt/036-termine-O-s1001",
+  "docs/experiments/data/transfer-20261103/haupt/052-termine-O-s1007",
+  "docs/experiments/data/transfer-20261103/haupt/072-termine-O-s1008",
+  "docs/experiments/data/transfer-20261103/haupt/078-termine-O-s1010",
+  "docs/experiments/data/transfer-20261103/haupt/080-termine-O-s1006",
+  "docs/experiments/data/transfer-20261103/haupt/104-termine-O-s1005",
+  "docs/experiments/data/transfer-20261103/haupt/113-termine-O-s1004",
+  "docs/experiments/data/transfer-20261103/haupt/119-termine-O-s1009",
+  "docs/experiments/data/transfer-20261103/vorlauf/003-termine-O-s904",
+  "docs/experiments/data/transfer-20261103/vorlauf/005-termine-O-s905",
+  "docs/experiments/data/transfer-20261103/vorlauf/011-termine-O-s903",
+  "docs/experiments/data/transfer-20261103/vorlauf/012-termine-O-s902",
+  "docs/experiments/data/transfer-20261103/vorlauf/018-termine-O-s901",
+  "docs/experiments/data/transfer-20261103/gegenfall/002-vorrat-O-s1108",
+  "docs/experiments/data/transfer-20261103/gegenfall/004-vorrat-O-s1109",
+  "docs/experiments/data/transfer-20261103/gegenfall/007-vorrat-O-s1103",
+  "docs/experiments/data/transfer-20261103/gegenfall/011-vorrat-O-s1107",
+  "docs/experiments/data/transfer-20261103/gegenfall/014-vorrat-O-s1106",
+  "docs/experiments/data/transfer-20261103/gegenfall/017-vorrat-O-s1104",
+  "docs/experiments/data/transfer-20261103/gegenfall/023-vorrat-O-s1105",
+  "docs/experiments/data/transfer-20261103/gegenfall/026-vorrat-O-s1102",
+  "docs/experiments/data/transfer-20261103/gegenfall/030-vorrat-O-s1101"
+ ],
+ "gestrichen": [
+  "docs/experiments/data/transfer-20261103/gegenfall/030-vorrat-O-s1101",
+  "docs/experiments/data/transfer-20261103/vorlauf/016-rezepte-O-s903"
+ ],
+ "faelle": [
+  {
+   "aufgabe": "rezepte",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/003-rezepte-O-s1009",
+   "seed_erstlauf": 1009,
+   "familie": "ids_str",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ungueltige_minuten_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "FAIL"
+   },
+   "sha_app": "e505b74603c8cc518663bcd673190b30174d090783db62d8e81452ee40e5add9",
+   "sha_abnahme": "c857a4e9a4554e1ef361b76ccdd8c6ad6235c23e481c2f68646b03253f72b14a",
+   "fall": 0,
+   "seed": 7000
+  },
+  {
+   "aufgabe": "rezepte",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/016-rezepte-O-s1008",
+   "seed_erstlauf": 1008,
+   "familie": "ids_str",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ungueltige_minuten_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "FAIL"
+   },
+   "sha_app": "7e9bb9cd004cbc585ef101383cb259a496fa5e8476e8d499a8e9e9d647551109",
+   "sha_abnahme": "230520bdd01930296afcae94c532d72871d9a1e09123f9b3e95c710f7e89308d",
+   "fall": 1,
+   "seed": 7001
+  },
+  {
+   "aufgabe": "rezepte",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/026-rezepte-O-s1002",
+   "seed_erstlauf": 1002,
+   "familie": "ids_str",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ungueltige_minuten_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "FAIL"
+   },
+   "sha_app": "3e1541046cc200df814fddbae40128fe5cd3e9bb7ea015abdd05d696e7e45157",
+   "sha_abnahme": "fa2057f782331a9c28a030cd84673a27150d85dd19c5acece0796608e8c98d4a",
+   "fall": 2,
+   "seed": 7002
+  },
+  {
+   "aufgabe": "rezepte",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/064-rezepte-O-s1010",
+   "seed_erstlauf": 1010,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_kaputtes_json_bleibt_erhalten",
+    "test_texte_nach_neuladen",
+    "test_ungueltige_minuten_valueerror",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "ok",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "FAIL",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ungueltige_minuten_valueerror": "ERROR",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "a10a352c348b0efd3b9cdc2fbff40059360531765206c1a7f3d2d4ba5cdb93a1",
+   "sha_abnahme": "69c53ca009a066b85edd42514df31b1c233a11906ba46fde400869af12e49110",
+   "fall": 3,
+   "seed": 7003
+  },
+  {
+   "aufgabe": "rezepte",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/074-rezepte-O-s1005",
+   "seed_erstlauf": 1005,
+   "familie": "sonstige",
+   "nicht_ok": [
+    "test_ids_steigen_in_einer_instanz",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "ok",
+    "test_ids_steigen_in_einer_instanz": "ERROR",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ungueltige_minuten_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "96913424097f0d962bf3e72b8d6da55a89402a348a7f6e2f3faa27435f00811c",
+   "sha_abnahme": "11c675a08349921f283705a0914c62bee21def6e9111235d8d0e4d483637dc0f",
+   "fall": 4,
+   "seed": 7004
+  },
+  {
+   "aufgabe": "rezepte",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/085-rezepte-O-s1001",
+   "seed_erstlauf": 1001,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_texte_nach_neuladen",
+    "test_ungueltige_minuten_valueerror",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ungueltige_minuten_valueerror": "ERROR",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "f24d099e6c34716ef6ee960dfba545324142e4cd83feea0bb955883d22c8ae9a",
+   "sha_abnahme": "759ce9e0a8e920dc74e6ae11d61ecd2c42c5660e9a42127c6524c48eb6b13e74",
+   "fall": 5,
+   "seed": 7005
+  },
+  {
+   "aufgabe": "rezepte",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/092-rezepte-O-s1006",
+   "seed_erstlauf": 1006,
+   "familie": "ids_str",
+   "nicht_ok": [
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "ok",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ungueltige_minuten_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "FAIL"
+   },
+   "sha_app": "377bd298ed75c14430f846bba982b6be130d751f7ec5b79ee79fb1670ee0ed31",
+   "sha_abnahme": "40f4e915bec5e62f6fb61ec550283eb71b27d59aebebd25158de040e03bddfd9",
+   "fall": 6,
+   "seed": 7006
+  },
+  {
+   "aufgabe": "rezepte",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/095-rezepte-O-s1003",
+   "seed_erstlauf": 1003,
+   "familie": "ids_str",
+   "nicht_ok": [
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "ok",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ungueltige_minuten_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "FAIL"
+   },
+   "sha_app": "892ab35d0195e4c8f7664dbb55679335f2cc6a4941b073fc12cee29325f8b0fc",
+   "sha_abnahme": "ed09b923e4221d921cf7fc51755a3709d9c98b1b1bb27a48185af9827d30eb52",
+   "fall": 7,
+   "seed": 7007
+  },
+  {
+   "aufgabe": "rezepte",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/110-rezepte-O-s1004",
+   "seed_erstlauf": 1004,
+   "familie": "kaputte_datei",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_texte_nach_neuladen",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ungueltige_minuten_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "41f68c7e6a2f244e5bc97f178351eb762e521f665cdd9622858921d6e7619446",
+   "sha_abnahme": "99a82d4cb6cba09071fc5e2eeae94a6367cd242a8febc47b5639550ec2a6b89a",
+   "fall": 8,
+   "seed": 7008
+  },
+  {
+   "aufgabe": "rezepte",
+   "stufe": "vorlauf",
+   "ordner": "docs/experiments/data/transfer-20261103/vorlauf/007-rezepte-O-s901",
+   "seed_erstlauf": 901,
+   "familie": "sonstige",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ungueltige_minuten_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ok"
+   },
+   "sha_app": "cce9bdb3daeb2ea981fcd6da79f0bea3a80fa676a4b9e71b68e52e67305654b2",
+   "sha_abnahme": "494d58b9e1bd8d847f808805396f3a64def9502e7d0e1d29443182b7d11cb9f4",
+   "fall": 9,
+   "seed": 7009
+  },
+  {
+   "aufgabe": "rezepte",
+   "stufe": "vorlauf",
+   "ordner": "docs/experiments/data/transfer-20261103/vorlauf/013-rezepte-O-s905",
+   "seed_erstlauf": 905,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_texte_nach_neuladen",
+    "test_ungueltige_minuten_valueerror",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ungueltige_minuten_valueerror": "ERROR",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "45854b231bd84dda381065b4e82e9d973dba752dd437508003ba544db0d84ff7",
+   "sha_abnahme": "8d5af812a866428e3745c19a132ed6266e9c540b33bfd7e78452faa1f0f3474e",
+   "fall": 10,
+   "seed": 7010
+  },
+  {
+   "aufgabe": "rezepte",
+   "stufe": "vorlauf",
+   "ordner": "docs/experiments/data/transfer-20261103/vorlauf/014-rezepte-O-s902",
+   "seed_erstlauf": 902,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_texte_nach_neuladen",
+    "test_ungueltige_minuten_valueerror",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ungueltige_minuten_valueerror": "ERROR",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "9ff921243ee03faad2bd3499b44bca87b5ebb58c32b2d5a4b3b0b1292b399ea6",
+   "sha_abnahme": "a5eb686f49f61d32c90034f9f01d9251a2b7cb286464df7616490147730d0c51",
+   "fall": 11,
+   "seed": 7011
+  },
+  {
+   "aufgabe": "rezepte",
+   "stufe": "vorlauf",
+   "ordner": "docs/experiments/data/transfer-20261103/vorlauf/019-rezepte-O-s904",
+   "seed_erstlauf": 904,
+   "familie": "ids_str",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ungueltige_minuten_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "FAIL"
+   },
+   "sha_app": "616875c4f29f7c96f58421996f01250866887f34dce20b1097270b60c5f41f91",
+   "sha_abnahme": "c21dba3c6739fb07153c72b2470578c4552fb6c7c982012801a53536c216fb76",
+   "fall": 12,
+   "seed": 7012
+  },
+  {
+   "aufgabe": "termine",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/007-termine-O-s1003",
+   "seed_erstlauf": 1003,
+   "familie": "ids_str",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "FAIL"
+   },
+   "sha_app": "e4f708699f94f1e3c4ee78e5cfccbd95435b0cd285ad8543aa036811c04f3ead",
+   "sha_abnahme": "5381d8ecf64805ded63158433530429373270bf7bb06fe86fe26ffd4f10f85f1",
+   "fall": 13,
+   "seed": 7013
+  },
+  {
+   "aufgabe": "termine",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/033-termine-O-s1002",
+   "seed_erstlauf": 1002,
+   "familie": "sonstige",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "cb5caa4bc7a8ab03cfe246efa23c51c1f0e1125b11cd3cdf54827f34d3f8959f",
+   "sha_abnahme": "d150c33f7468b7be77853ba5f1c7cf635f907a3aca812395a6559042ee6e5331",
+   "fall": 14,
+   "seed": 7014
+  },
+  {
+   "aufgabe": "termine",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/036-termine-O-s1001",
+   "seed_erstlauf": 1001,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_sortierung_und_ungueltiges_datum",
+    "test_texte_nach_neuladen",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "ERROR",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "66336635888930463d332b9fc2aad1d2589165d2751e9e7cf5f24f21104d48b4",
+   "sha_abnahme": "f87157eda8505edab92e18cdc468ab17c60789c775216d8b25d506c0cf115975",
+   "fall": 15,
+   "seed": 7015
+  },
+  {
+   "aufgabe": "termine",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/052-termine-O-s1007",
+   "seed_erstlauf": 1007,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_sortierung_und_ungueltiges_datum",
+    "test_texte_nach_neuladen",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "ERROR",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "e7b0c3f5cf0e0619ea628ba9720e2e81605d32fad7994065c19f1038af00cea6",
+   "sha_abnahme": "1f253650d88655dd07b083a7225342c726007852ba7fae775d9adb8022a3ce3a",
+   "fall": 16,
+   "seed": 7016
+  },
+  {
+   "aufgabe": "termine",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/072-termine-O-s1008",
+   "seed_erstlauf": 1008,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_sortierung_und_ungueltiges_datum",
+    "test_texte_nach_neuladen",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "ERROR",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "095a2bb2144d91d680dfca80ebd57ba3b2a99b1b051ecb26dc251c7c531ac579",
+   "sha_abnahme": "f926c45010491db2e4239bec7421789d00349506ecc2fcf8ec73e381e17b0824",
+   "fall": 17,
+   "seed": 7017
+  },
+  {
+   "aufgabe": "termine",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/078-termine-O-s1010",
+   "seed_erstlauf": 1010,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_sortierung_und_ungueltiges_datum",
+    "test_texte_nach_neuladen",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "ok",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "ERROR",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "8019e8ee1c49948c863e3bed7aa1b2e2a5b28c93f8996da6c0302af828006930",
+   "sha_abnahme": "841bcd053a9f5ec52a716b69a03da61ef18b9034a026a37b26ea2effbc8c46c5",
+   "fall": 18,
+   "seed": 7018
+  },
+  {
+   "aufgabe": "termine",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/080-termine-O-s1006",
+   "seed_erstlauf": 1006,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_sortierung_und_ungueltiges_datum",
+    "test_texte_nach_neuladen",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "ERROR",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "9680dd1ca586c58d09c75d06b2925d75177b7e50aee80678a33286aaca4779e2",
+   "sha_abnahme": "05be47bd0ae2ad73a9599a7191859a87a60bf72856374e26a9f2ad9e764c6653",
+   "fall": 19,
+   "seed": 7019
+  },
+  {
+   "aufgabe": "termine",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/104-termine-O-s1005",
+   "seed_erstlauf": 1005,
+   "familie": "ids_str",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "FAIL"
+   },
+   "sha_app": "04b3ac65aa5e96153cdb35325418751fddf734484d0d9a87155ef33152206ddf",
+   "sha_abnahme": "d2707cff7976084f8450a6661b1d5e3afa0602b92a7ab354263d8b47311729f7",
+   "fall": 20,
+   "seed": 7020
+  },
+  {
+   "aufgabe": "termine",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/113-termine-O-s1004",
+   "seed_erstlauf": 1004,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_sortierung_und_ungueltiges_datum",
+    "test_texte_nach_neuladen",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "ok",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "ERROR",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "b1a59024cdeb94a8cb0dd373050bb0f0c776c2a206b1b95f6b80662ede83a438",
+   "sha_abnahme": "7f037c59bde63c6950afdc58e2621b10aca09d361cb38b854717a74b9b701e3a",
+   "fall": 21,
+   "seed": 7021
+  },
+  {
+   "aufgabe": "termine",
+   "stufe": "haupt",
+   "ordner": "docs/experiments/data/transfer-20261103/haupt/119-termine-O-s1009",
+   "seed_erstlauf": 1009,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_sortierung_und_ungueltiges_datum",
+    "test_texte_nach_neuladen",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "ERROR",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "cd3ae2dc738beffa585e445590c4f278004c417630abfe1c5f5ba64115e9d797",
+   "sha_abnahme": "f71a48b5c7b6a59e1d97ce2feef89ebe7955743eec9058d43d519e099a53086d",
+   "fall": 22,
+   "seed": 7022
+  },
+  {
+   "aufgabe": "termine",
+   "stufe": "vorlauf",
+   "ordner": "docs/experiments/data/transfer-20261103/vorlauf/003-termine-O-s904",
+   "seed_erstlauf": 904,
+   "familie": "kein_valueerror",
+   "nicht_ok": [
+    "test_ids_steigen_in_einer_instanz",
+    "test_sortierung_und_ungueltiges_datum",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "ok",
+    "test_ids_steigen_in_einer_instanz": "ERROR",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "FAIL",
+    "test_texte_nach_neuladen": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "f6af85fde6368675fc1be97997c4f64336d1fc1d2b2fb10283d052e3d5a9a156",
+   "sha_abnahme": "813306bed0f622ce2ded23cb0f081b35e276fe7222a50937de81524c7b0a4c88",
+   "fall": 23,
+   "seed": 7023
+  },
+  {
+   "aufgabe": "termine",
+   "stufe": "vorlauf",
+   "ordner": "docs/experiments/data/transfer-20261103/vorlauf/005-termine-O-s905",
+   "seed_erstlauf": 905,
+   "familie": "sonstige",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_ids_steigen_in_einer_instanz",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ERROR",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "17a9defea49229b24c2c778fcf1c6a667245dc506d4995c94d046b038738c268",
+   "sha_abnahme": "f856f8204630f7f5e0c331f194dafe943a2974c950b0bd02aef2cfb10f736874",
+   "fall": 24,
+   "seed": 7024
+  },
+  {
+   "aufgabe": "termine",
+   "stufe": "vorlauf",
+   "ordner": "docs/experiments/data/transfer-20261103/vorlauf/011-termine-O-s903",
+   "seed_erstlauf": 903,
+   "familie": "sonstige",
+   "nicht_ok": [
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "ok",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "ceddab248678e205415bff2db08e12e9b3664a413e2f156a228b21e596f4d6fd",
+   "sha_abnahme": "94804e974b7db37352aabba34d358c21b5293fe813740d416f3bcf6c1e84bfba",
+   "fall": 25,
+   "seed": 7025
+  },
+  {
+   "aufgabe": "termine",
+   "stufe": "vorlauf",
+   "ordner": "docs/experiments/data/transfer-20261103/vorlauf/012-termine-O-s902",
+   "seed_erstlauf": 902,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_ids_steigen_in_einer_instanz",
+    "test_sortierung_und_ungueltiges_datum",
+    "test_texte_nach_neuladen",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "ok",
+    "test_ids_steigen_in_einer_instanz": "ERROR",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "ERROR",
+    "test_texte_nach_neuladen": "ERROR",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "b613bf537df56da404ff25cd03aa72cdb1df39d9ab93d8f78cc3273327df542f",
+   "sha_abnahme": "0057b75a5b14e7705b3211f333dc4067a37356d0778c5dfb8e1c5c8f0c4125bc",
+   "fall": 26,
+   "seed": 7026
+  },
+  {
+   "aufgabe": "termine",
+   "stufe": "vorlauf",
+   "ordner": "docs/experiments/data/transfer-20261103/vorlauf/018-termine-O-s901",
+   "seed_erstlauf": 901,
+   "familie": "sonstige",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_ziel_ids_nach_neuladen"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_ids_steigen_in_einer_instanz": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_sortierung_und_ungueltiges_datum": "ok",
+    "test_texte_nach_neuladen": "ok",
+    "test_unbekannte_id_valueerror": "ok",
+    "test_ziel_ids_nach_neuladen": "ERROR"
+   },
+   "sha_app": "53b857030e83483b34bd0cde82a5a0d391762e08b9ec0f5968b935e9772e7fea",
+   "sha_abnahme": "b4f96efb9d289f002c675185c7ffbb5a9ec097a1f066c2f7c6febe8d1a56446a",
+   "fall": 27,
+   "seed": 7027
+  },
+  {
+   "aufgabe": "vorrat",
+   "stufe": "gegenfall",
+   "ordner": "docs/experiments/data/transfer-20261103/gegenfall/002-vorrat-O-s1108",
+   "seed_erstlauf": 1108,
+   "familie": "sonstige",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_ungueltige_menge_valueerror": "ok",
+    "test_ziel_namen_nach_neuladen": "ok",
+    "test_zusammenfuehren_und_entfernen_bei_null": "ok"
+   },
+   "sha_app": "fa3df1fb8eb630f42a21b2356c3d806f809d32d02ee0e74cb7fe37f483a8663f",
+   "sha_abnahme": "5d1799acaf8a48a8af0f71250389c7e8444664cc29ee5462de8065b796c40a2d",
+   "fall": 28,
+   "seed": 7028
+  },
+  {
+   "aufgabe": "vorrat",
+   "stufe": "gegenfall",
+   "ordner": "docs/experiments/data/transfer-20261103/gegenfall/004-vorrat-O-s1109",
+   "seed_erstlauf": 1109,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_ziel_namen_nach_neuladen",
+    "test_zusammenfuehren_und_entfernen_bei_null"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_ungueltige_menge_valueerror": "ok",
+    "test_ziel_namen_nach_neuladen": "ERROR",
+    "test_zusammenfuehren_und_entfernen_bei_null": "ERROR"
+   },
+   "sha_app": "0555d88edf042219af5363ffbdd79ffd100d9cd803be8b1a71a0d8d34c89fc93",
+   "sha_abnahme": "5276b76982b4ba4dd2dae8b48ce2f50d388eac6817d1d29dbe5fa53679736edd",
+   "fall": 29,
+   "seed": 7029
+  },
+  {
+   "aufgabe": "vorrat",
+   "stufe": "gegenfall",
+   "ordner": "docs/experiments/data/transfer-20261103/gegenfall/007-vorrat-O-s1103",
+   "seed_erstlauf": 1103,
+   "familie": "sonstige",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_ungueltige_menge_valueerror": "ok",
+    "test_ziel_namen_nach_neuladen": "ok",
+    "test_zusammenfuehren_und_entfernen_bei_null": "ok"
+   },
+   "sha_app": "f760e144f37482002871373db8d1e061e9867687ddd2d97aa1c078a499e5b290",
+   "sha_abnahme": "6cb326ac81198da0a1716a4e9edc47dbc2a03bc1cc38237561cae058dde116e8",
+   "fall": 30,
+   "seed": 7030
+  },
+  {
+   "aufgabe": "vorrat",
+   "stufe": "gegenfall",
+   "ordner": "docs/experiments/data/transfer-20261103/gegenfall/011-vorrat-O-s1107",
+   "seed_erstlauf": 1107,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_ziel_namen_nach_neuladen",
+    "test_zusammenfuehren_und_entfernen_bei_null"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_ungueltige_menge_valueerror": "ok",
+    "test_ziel_namen_nach_neuladen": "ERROR",
+    "test_zusammenfuehren_und_entfernen_bei_null": "ERROR"
+   },
+   "sha_app": "e9eb96f8275f32cdec5a35414781353eb2619d5a889acc5b0305c3e08152bfce",
+   "sha_abnahme": "b46699088214c52ccce1034e138f8355f9b228022e195d8e4580412f45715deb",
+   "fall": 31,
+   "seed": 7031
+  },
+  {
+   "aufgabe": "vorrat",
+   "stufe": "gegenfall",
+   "ordner": "docs/experiments/data/transfer-20261103/gegenfall/014-vorrat-O-s1106",
+   "seed_erstlauf": 1106,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_ziel_namen_nach_neuladen",
+    "test_zusammenfuehren_und_entfernen_bei_null"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_ungueltige_menge_valueerror": "ok",
+    "test_ziel_namen_nach_neuladen": "ERROR",
+    "test_zusammenfuehren_und_entfernen_bei_null": "ERROR"
+   },
+   "sha_app": "ebfd85474511ad14374c28cd8c0e7ff44139d3d387c59bbaefe66f2996d6cfef",
+   "sha_abnahme": "81aa8c344e508fefde108a591ba444e93691752f761ca6c7083c74b1242c60e4",
+   "fall": 32,
+   "seed": 7032
+  },
+  {
+   "aufgabe": "vorrat",
+   "stufe": "gegenfall",
+   "ordner": "docs/experiments/data/transfer-20261103/gegenfall/017-vorrat-O-s1104",
+   "seed_erstlauf": 1104,
+   "familie": "sonstige",
+   "nicht_ok": [
+    "test_cli_fehler_exitcode",
+    "test_leere_eingabe_valueerror",
+    "test_ungueltige_menge_valueerror",
+    "test_ziel_namen_nach_neuladen",
+    "test_zusammenfuehren_und_entfernen_bei_null"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "FAIL",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ERROR",
+    "test_ungueltige_menge_valueerror": "ERROR",
+    "test_ziel_namen_nach_neuladen": "ERROR",
+    "test_zusammenfuehren_und_entfernen_bei_null": "ERROR"
+   },
+   "sha_app": "09bb2bdd20d8012158991fd2267883d118775a45b3453cc4b77028b5ac57883b",
+   "sha_abnahme": "fdf39afa5e93eac87be98ba7d0aefcee984eb11b94d66caf61d6c75fac85303e",
+   "fall": 33,
+   "seed": 7033
+  },
+  {
+   "aufgabe": "vorrat",
+   "stufe": "gegenfall",
+   "ordner": "docs/experiments/data/transfer-20261103/gegenfall/023-vorrat-O-s1105",
+   "seed_erstlauf": 1105,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_ziel_namen_nach_neuladen",
+    "test_zusammenfuehren_und_entfernen_bei_null"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_ungueltige_menge_valueerror": "ok",
+    "test_ziel_namen_nach_neuladen": "ERROR",
+    "test_zusammenfuehren_und_entfernen_bei_null": "ERROR"
+   },
+   "sha_app": "15d6327e4a88000424a2ace9d57b3a6410a0d2d34a6de72319e32db46fed05cb",
+   "sha_abnahme": "45ce94c59e7986a093ad80a3d99aa573795df29d65e309c8e7db3e36da16931e",
+   "fall": 34,
+   "seed": 7034
+  },
+  {
+   "aufgabe": "vorrat",
+   "stufe": "gegenfall",
+   "ordner": "docs/experiments/data/transfer-20261103/gegenfall/026-vorrat-O-s1102",
+   "seed_erstlauf": 1102,
+   "familie": "list_name",
+   "nicht_ok": [
+    "test_ziel_namen_nach_neuladen",
+    "test_zusammenfuehren_und_entfernen_bei_null"
+   ],
+   "status_vorher": {
+    "test_cli_fehler_exitcode": "ok",
+    "test_kaputtes_json_bleibt_erhalten": "ok",
+    "test_leere_eingabe_valueerror": "ok",
+    "test_ungueltige_menge_valueerror": "ok",
+    "test_ziel_namen_nach_neuladen": "ERROR",
+    "test_zusammenfuehren_und_entfernen_bei_null": "ERROR"
+   },
+   "sha_app": "d7f9ff2a20f5d2d6af09e439283d2c7b46ec6437bab21e7647ea5fa1b975ee71",
+   "sha_abnahme": "d6711bb421446ea10258eb99ce0c0d506272970fc8801ff90dda229f97e1fe46",
+   "fall": 35,
+   "seed": 7035
+  }
+ ]
+}

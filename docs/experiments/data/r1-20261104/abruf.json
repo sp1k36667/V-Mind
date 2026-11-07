@@ -1,0 +1,1106 @@
+{
+ "0": {
+  "anfrage": "AssertionError: # != # : Error: AssertionError: False is not true : IDs nach Neuladen keine int test_cli_fehler_exitcode test_ziel_ids_nach_neuladen",
+  "roh": [
+   2,
+   10,
+   11,
+   5,
+   7,
+   3,
+   9,
+   1,
+   4,
+   8
+  ],
+  "l_ids": [
+   2
+  ],
+  "p_ids": [
+   9
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AssertionError: IDs nach Neuladen keine int. Einträge werden unter numerischen IDs gespeichert; nach json.load sind JSON-Objektschlüssel immer Strings. Nach dem erneuten Öffnen liefert list() IDs als Text, Suche und Vergleich mit int-IDs scheitern.",
+     "richtig": "Beim Laden der Datei die Schlüssel des Eintrags-Objekts in ganze Zahlen umwandeln, bevor mit ihnen gesucht oder verglichen wird, zum Beispiel mit einem Dictionary-Ausdruck, der int(schluessel) auf den Wert abbildet. Beim Speichern darf json.dump die Schlüssel wieder als Text schreiben."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Rangfolge von Vorzeichen und Potenz falsch verdrahtet: -2 ** 2 ergibt 4 statt -4 (Python und die Aufgabe verlangen -4).",
+     "richtig": "Genau dieses Gerüst verwenden:\ndef vorzeichen():\n    if peek() == '-': consume(); return -vorzeichen()\n    if peek() == '+': consume(); return vorzeichen()\n    return potenz()\ndef potenz():\n    basis = atom()\n    if peek() == '**':\n        consume()\n        return basis ** vorzeichen()\n    return basis\nterm() ruft vorzeichen() auf, nicht potenz(). So gilt -2 ** 2 = -4, 2 ** 3 ** 2 = 512, 2 ** -1 = 0.5."
+    }
+   ]
+  }
+ },
+ "1": {
+  "anfrage": "AssertionError: # != # : AssertionError: False is not true : IDs nach Neuladen keine int test_cli_fehler_exitcode test_ziel_ids_nach_neuladen",
+  "roh": [
+   2,
+   10,
+   11,
+   5,
+   7,
+   3,
+   9,
+   6
+  ],
+  "l_ids": [
+   2
+  ],
+  "p_ids": [
+   9
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AssertionError: IDs nach Neuladen keine int. Einträge werden unter numerischen IDs gespeichert; nach json.load sind JSON-Objektschlüssel immer Strings. Nach dem erneuten Öffnen liefert list() IDs als Text, Suche und Vergleich mit int-IDs scheitern.",
+     "richtig": "Beim Laden der Datei die Schlüssel des Eintrags-Objekts in ganze Zahlen umwandeln, bevor mit ihnen gesucht oder verglichen wird, zum Beispiel mit einem Dictionary-Ausdruck, der int(schluessel) auf den Wert abbildet. Beim Speichern darf json.dump die Schlüssel wieder als Text schreiben."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Rangfolge von Vorzeichen und Potenz falsch verdrahtet: -2 ** 2 ergibt 4 statt -4 (Python und die Aufgabe verlangen -4).",
+     "richtig": "Genau dieses Gerüst verwenden:\ndef vorzeichen():\n    if peek() == '-': consume(); return -vorzeichen()\n    if peek() == '+': consume(); return vorzeichen()\n    return potenz()\ndef potenz():\n    basis = atom()\n    if peek() == '**':\n        consume()\n        return basis ** vorzeichen()\n    return basis\nterm() ruft vorzeichen() auf, nicht potenz(). So gilt -2 ** 2 = -4, 2 ** 3 ** 2 = 512, 2 ** -1 = 0.5."
+    }
+   ]
+  }
+ },
+ "2": {
+  "anfrage": "AssertionError: # != # : AssertionError: False is not true : IDs nach Neuladen keine int test_cli_fehler_exitcode test_ziel_ids_nach_neuladen",
+  "roh": [
+   2,
+   10,
+   11,
+   5,
+   7,
+   3,
+   9,
+   6
+  ],
+  "l_ids": [
+   2
+  ],
+  "p_ids": [
+   9
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AssertionError: IDs nach Neuladen keine int. Einträge werden unter numerischen IDs gespeichert; nach json.load sind JSON-Objektschlüssel immer Strings. Nach dem erneuten Öffnen liefert list() IDs als Text, Suche und Vergleich mit int-IDs scheitern.",
+     "richtig": "Beim Laden der Datei die Schlüssel des Eintrags-Objekts in ganze Zahlen umwandeln, bevor mit ihnen gesucht oder verglichen wird, zum Beispiel mit einem Dictionary-Ausdruck, der int(schluessel) auf den Wert abbildet. Beim Speichern darf json.dump die Schlüssel wieder als Text schreiben."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Rangfolge von Vorzeichen und Potenz falsch verdrahtet: -2 ** 2 ergibt 4 statt -4 (Python und die Aufgabe verlangen -4).",
+     "richtig": "Genau dieses Gerüst verwenden:\ndef vorzeichen():\n    if peek() == '-': consume(); return -vorzeichen()\n    if peek() == '+': consume(); return vorzeichen()\n    return potenz()\ndef potenz():\n    basis = atom()\n    if peek() == '**':\n        consume()\n        return basis ** vorzeichen()\n    return basis\nterm() ruft vorzeichen() auf, nicht potenz(). So gilt -2 ** 2 = -4, 2 ** 3 ** 2 = 512, 2 ** -1 = 0.5."
+    }
+   ]
+  }
+ },
+ "3": {
+  "anfrage": "AttributeError: 'RecipeBook' object has no attribute 'list' AssertionError: ValueError not raised test_texte_nach_neuladen test_ungueltige_minuten_valueerror test_ziel_ids_nach_neuladen test_kaputtes_json_bleibt_erhalten",
+  "roh": [
+   1,
+   2,
+   10,
+   11,
+   8,
+   5,
+   6,
+   7,
+   3
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "4": {
+  "anfrage": "ValueError: Unknown ID test_ids_steigen_in_einer_instanz test_ziel_ids_nach_neuladen",
+  "roh": [
+   2,
+   11,
+   8,
+   7,
+   10,
+   6,
+   5,
+   3
+  ],
+  "l_ids": [],
+  "p_ids": [],
+  "klasse": "leer",
+  "gedaechtnis": {
+   "O": [],
+   "L": [],
+   "P": []
+  }
+ },
+ "5": {
+  "anfrage": "AttributeError: 'RecipeBook' object has no attribute 'list' AssertionError: # != # : test_texte_nach_neuladen test_ungueltige_minuten_valueerror test_ziel_ids_nach_neuladen test_cli_fehler_exitcode",
+  "roh": [
+   1,
+   2,
+   11,
+   5,
+   8,
+   7,
+   10,
+   3,
+   6
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "6": {
+  "anfrage": "AssertionError: False is not true : IDs nach Neuladen keine int test_ziel_ids_nach_neuladen",
+  "roh": [
+   2,
+   10,
+   11,
+   7,
+   9,
+   6,
+   5,
+   3
+  ],
+  "l_ids": [
+   2
+  ],
+  "p_ids": [
+   9
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AssertionError: IDs nach Neuladen keine int. Einträge werden unter numerischen IDs gespeichert; nach json.load sind JSON-Objektschlüssel immer Strings. Nach dem erneuten Öffnen liefert list() IDs als Text, Suche und Vergleich mit int-IDs scheitern.",
+     "richtig": "Beim Laden der Datei die Schlüssel des Eintrags-Objekts in ganze Zahlen umwandeln, bevor mit ihnen gesucht oder verglichen wird, zum Beispiel mit einem Dictionary-Ausdruck, der int(schluessel) auf den Wert abbildet. Beim Speichern darf json.dump die Schlüssel wieder als Text schreiben."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Rangfolge von Vorzeichen und Potenz falsch verdrahtet: -2 ** 2 ergibt 4 statt -4 (Python und die Aufgabe verlangen -4).",
+     "richtig": "Genau dieses Gerüst verwenden:\ndef vorzeichen():\n    if peek() == '-': consume(); return -vorzeichen()\n    if peek() == '+': consume(); return vorzeichen()\n    return potenz()\ndef potenz():\n    basis = atom()\n    if peek() == '**':\n        consume()\n        return basis ** vorzeichen()\n    return basis\nterm() ruft vorzeichen() auf, nicht potenz(). So gilt -2 ** 2 = -4, 2 ** 3 ** 2 = 512, 2 ** -1 = 0.5."
+    }
+   ]
+  }
+ },
+ "7": {
+  "anfrage": "AssertionError: False is not true : IDs nach Neuladen keine int test_ziel_ids_nach_neuladen",
+  "roh": [
+   2,
+   10,
+   11,
+   7,
+   9,
+   6,
+   5,
+   3
+  ],
+  "l_ids": [
+   2
+  ],
+  "p_ids": [
+   9
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AssertionError: IDs nach Neuladen keine int. Einträge werden unter numerischen IDs gespeichert; nach json.load sind JSON-Objektschlüssel immer Strings. Nach dem erneuten Öffnen liefert list() IDs als Text, Suche und Vergleich mit int-IDs scheitern.",
+     "richtig": "Beim Laden der Datei die Schlüssel des Eintrags-Objekts in ganze Zahlen umwandeln, bevor mit ihnen gesucht oder verglichen wird, zum Beispiel mit einem Dictionary-Ausdruck, der int(schluessel) auf den Wert abbildet. Beim Speichern darf json.dump die Schlüssel wieder als Text schreiben."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Rangfolge von Vorzeichen und Potenz falsch verdrahtet: -2 ** 2 ergibt 4 statt -4 (Python und die Aufgabe verlangen -4).",
+     "richtig": "Genau dieses Gerüst verwenden:\ndef vorzeichen():\n    if peek() == '-': consume(); return -vorzeichen()\n    if peek() == '+': consume(); return vorzeichen()\n    return potenz()\ndef potenz():\n    basis = atom()\n    if peek() == '**':\n        consume()\n        return basis ** vorzeichen()\n    return basis\nterm() ruft vorzeichen() auf, nicht potenz(). So gilt -2 ** 2 = -4, 2 ** 3 ** 2 = 512, 2 ** -1 = 0.5."
+    }
+   ]
+  }
+ },
+ "8": {
+  "anfrage": "ValueError: Damaged JSON file AssertionError: # != # : Unknown command test_texte_nach_neuladen test_ziel_ids_nach_neuladen test_cli_fehler_exitcode",
+  "roh": [
+   2,
+   11,
+   5,
+   8,
+   7,
+   10,
+   3,
+   6
+  ],
+  "l_ids": [],
+  "p_ids": [],
+  "klasse": "leer",
+  "gedaechtnis": {
+   "O": [],
+   "L": [],
+   "P": []
+  }
+ },
+ "9": {
+  "anfrage": "AssertionError: # != # : test_cli_fehler_exitcode",
+  "roh": [
+   5,
+   2,
+   3
+  ],
+  "l_ids": [],
+  "p_ids": [],
+  "klasse": "leer",
+  "gedaechtnis": {
+   "O": [],
+   "L": [],
+   "P": []
+  }
+ },
+ "10": {
+  "anfrage": "AttributeError: 'RecipeBook' object has no attribute 'list' AssertionError: # != # : Traceback (most recent call last): TypeError: object of type 'Namespace' has no len() test_texte_nach_neuladen test_ungueltige_minuten_valueerror test_ziel_ids_nach_neuladen test_cli_fehler_exitcode",
+  "roh": [
+   1,
+   2,
+   8,
+   7,
+   10,
+   6,
+   11,
+   5,
+   3
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "11": {
+  "anfrage": "AttributeError: 'RecipeBook' object has no attribute 'list' AssertionError: # != # : test_texte_nach_neuladen test_ungueltige_minuten_valueerror test_ziel_ids_nach_neuladen test_cli_fehler_exitcode",
+  "roh": [
+   1,
+   2,
+   11,
+   5,
+   8,
+   7,
+   10,
+   3,
+   6
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "12": {
+  "anfrage": "AssertionError: # != # : AssertionError: False is not true : IDs nach Neuladen keine int test_cli_fehler_exitcode test_ziel_ids_nach_neuladen",
+  "roh": [
+   2,
+   10,
+   11,
+   5,
+   7,
+   3,
+   9,
+   6
+  ],
+  "l_ids": [
+   2
+  ],
+  "p_ids": [
+   9
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AssertionError: IDs nach Neuladen keine int. Einträge werden unter numerischen IDs gespeichert; nach json.load sind JSON-Objektschlüssel immer Strings. Nach dem erneuten Öffnen liefert list() IDs als Text, Suche und Vergleich mit int-IDs scheitern.",
+     "richtig": "Beim Laden der Datei die Schlüssel des Eintrags-Objekts in ganze Zahlen umwandeln, bevor mit ihnen gesucht oder verglichen wird, zum Beispiel mit einem Dictionary-Ausdruck, der int(schluessel) auf den Wert abbildet. Beim Speichern darf json.dump die Schlüssel wieder als Text schreiben."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Rangfolge von Vorzeichen und Potenz falsch verdrahtet: -2 ** 2 ergibt 4 statt -4 (Python und die Aufgabe verlangen -4).",
+     "richtig": "Genau dieses Gerüst verwenden:\ndef vorzeichen():\n    if peek() == '-': consume(); return -vorzeichen()\n    if peek() == '+': consume(); return vorzeichen()\n    return potenz()\ndef potenz():\n    basis = atom()\n    if peek() == '**':\n        consume()\n        return basis ** vorzeichen()\n    return basis\nterm() ruft vorzeichen() auf, nicht potenz(). So gilt -2 ** 2 = -4, 2 ** 3 ** 2 = 512, 2 ** -1 = 0.5."
+    }
+   ]
+  }
+ },
+ "13": {
+  "anfrage": "AssertionError: # != # : AssertionError: False is not true : IDs nach Neuladen keine int test_cli_fehler_exitcode test_ziel_ids_nach_neuladen",
+  "roh": [
+   2,
+   10,
+   11,
+   5,
+   7,
+   3,
+   9,
+   6
+  ],
+  "l_ids": [
+   2
+  ],
+  "p_ids": [
+   9
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AssertionError: IDs nach Neuladen keine int. Einträge werden unter numerischen IDs gespeichert; nach json.load sind JSON-Objektschlüssel immer Strings. Nach dem erneuten Öffnen liefert list() IDs als Text, Suche und Vergleich mit int-IDs scheitern.",
+     "richtig": "Beim Laden der Datei die Schlüssel des Eintrags-Objekts in ganze Zahlen umwandeln, bevor mit ihnen gesucht oder verglichen wird, zum Beispiel mit einem Dictionary-Ausdruck, der int(schluessel) auf den Wert abbildet. Beim Speichern darf json.dump die Schlüssel wieder als Text schreiben."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Rangfolge von Vorzeichen und Potenz falsch verdrahtet: -2 ** 2 ergibt 4 statt -4 (Python und die Aufgabe verlangen -4).",
+     "richtig": "Genau dieses Gerüst verwenden:\ndef vorzeichen():\n    if peek() == '-': consume(); return -vorzeichen()\n    if peek() == '+': consume(); return vorzeichen()\n    return potenz()\ndef potenz():\n    basis = atom()\n    if peek() == '**':\n        consume()\n        return basis ** vorzeichen()\n    return basis\nterm() ruft vorzeichen() auf, nicht potenz(). So gilt -2 ** 2 = -4, 2 ** 3 ** 2 = 512, 2 ** -1 = 0.5."
+    }
+   ]
+  }
+ },
+ "14": {
+  "anfrage": "ValueError: ID not found AssertionError: # != # : test_ziel_ids_nach_neuladen test_cli_fehler_exitcode",
+  "roh": [
+   2,
+   10,
+   11,
+   5,
+   8,
+   7,
+   3,
+   6
+  ],
+  "l_ids": [],
+  "p_ids": [],
+  "klasse": "leer",
+  "gedaechtnis": {
+   "O": [],
+   "L": [],
+   "P": []
+  }
+ },
+ "15": {
+  "anfrage": "AttributeError: 'Calendar' object has no attribute 'list' AssertionError: # != # : Unbekannter Befehl test_sortierung_und_ungueltiges_datum test_texte_nach_neuladen test_ziel_ids_nach_neuladen test_cli_fehler_exitcode",
+  "roh": [
+   1,
+   2,
+   11,
+   5,
+   7,
+   10,
+   3,
+   6
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "16": {
+  "anfrage": "AttributeError: 'Calendar' object has no attribute 'list' AssertionError: # != # : test_sortierung_und_ungueltiges_datum test_texte_nach_neuladen test_ziel_ids_nach_neuladen test_cli_fehler_exitcode",
+  "roh": [
+   1,
+   2,
+   11,
+   5,
+   7,
+   10,
+   3,
+   6
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "17": {
+  "anfrage": "AttributeError: 'Calendar' object has no attribute 'list' AssertionError: # != # : test_sortierung_und_ungueltiges_datum test_texte_nach_neuladen test_ziel_ids_nach_neuladen test_cli_fehler_exitcode",
+  "roh": [
+   1,
+   2,
+   11,
+   5,
+   7,
+   10,
+   3,
+   6
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "18": {
+  "anfrage": "AttributeError: 'Calendar' object has no attribute 'list' test_sortierung_und_ungueltiges_datum test_texte_nach_neuladen test_ziel_ids_nach_neuladen",
+  "roh": [
+   1,
+   2,
+   11,
+   7,
+   10,
+   6,
+   5,
+   3
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "19": {
+  "anfrage": "AttributeError: 'Calendar' object has no attribute 'list' AssertionError: # != # : test_sortierung_und_ungueltiges_datum test_texte_nach_neuladen test_ziel_ids_nach_neuladen test_cli_fehler_exitcode",
+  "roh": [
+   1,
+   2,
+   11,
+   5,
+   7,
+   10,
+   3,
+   6
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "20": {
+  "anfrage": "AssertionError: # != # : AssertionError: False is not true : IDs nach Neuladen keine int test_cli_fehler_exitcode test_ziel_ids_nach_neuladen",
+  "roh": [
+   2,
+   10,
+   11,
+   5,
+   7,
+   3,
+   9,
+   6
+  ],
+  "l_ids": [
+   2
+  ],
+  "p_ids": [
+   9
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AssertionError: IDs nach Neuladen keine int. Einträge werden unter numerischen IDs gespeichert; nach json.load sind JSON-Objektschlüssel immer Strings. Nach dem erneuten Öffnen liefert list() IDs als Text, Suche und Vergleich mit int-IDs scheitern.",
+     "richtig": "Beim Laden der Datei die Schlüssel des Eintrags-Objekts in ganze Zahlen umwandeln, bevor mit ihnen gesucht oder verglichen wird, zum Beispiel mit einem Dictionary-Ausdruck, der int(schluessel) auf den Wert abbildet. Beim Speichern darf json.dump die Schlüssel wieder als Text schreiben."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Rangfolge von Vorzeichen und Potenz falsch verdrahtet: -2 ** 2 ergibt 4 statt -4 (Python und die Aufgabe verlangen -4).",
+     "richtig": "Genau dieses Gerüst verwenden:\ndef vorzeichen():\n    if peek() == '-': consume(); return -vorzeichen()\n    if peek() == '+': consume(); return vorzeichen()\n    return potenz()\ndef potenz():\n    basis = atom()\n    if peek() == '**':\n        consume()\n        return basis ** vorzeichen()\n    return basis\nterm() ruft vorzeichen() auf, nicht potenz(). So gilt -2 ** 2 = -4, 2 ** 3 ** 2 = 512, 2 ** -1 = 0.5."
+    }
+   ]
+  }
+ },
+ "21": {
+  "anfrage": "AttributeError: 'Calendar' object has no attribute 'list' test_sortierung_und_ungueltiges_datum test_texte_nach_neuladen test_ziel_ids_nach_neuladen",
+  "roh": [
+   1,
+   2,
+   11,
+   7,
+   10,
+   6,
+   5,
+   3
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "22": {
+  "anfrage": "AttributeError: 'Calendar' object has no attribute 'list' AssertionError: # != # : test_sortierung_und_ungueltiges_datum test_texte_nach_neuladen test_ziel_ids_nach_neuladen test_cli_fehler_exitcode",
+  "roh": [
+   1,
+   2,
+   11,
+   5,
+   7,
+   10,
+   3,
+   6
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "23": {
+  "anfrage": "ValueError: ID not found AssertionError: ValueError not raised test_ids_steigen_in_einer_instanz test_ziel_ids_nach_neuladen test_sortierung_und_ungueltiges_datum",
+  "roh": [
+   2,
+   10,
+   11,
+   8,
+   7,
+   6,
+   5,
+   3
+  ],
+  "l_ids": [],
+  "p_ids": [],
+  "klasse": "leer",
+  "gedaechtnis": {
+   "O": [],
+   "L": [],
+   "P": []
+  }
+ },
+ "24": {
+  "anfrage": "ValueError: ID not found AssertionError: # != # : test_ids_steigen_in_einer_instanz test_ziel_ids_nach_neuladen test_cli_fehler_exitcode",
+  "roh": [
+   2,
+   10,
+   11,
+   5,
+   8,
+   7,
+   3,
+   6
+  ],
+  "l_ids": [],
+  "p_ids": [],
+  "klasse": "leer",
+  "gedaechtnis": {
+   "O": [],
+   "L": [],
+   "P": []
+  }
+ },
+ "25": {
+  "anfrage": "ValueError: ID not found test_ziel_ids_nach_neuladen",
+  "roh": [
+   2,
+   10,
+   11,
+   8,
+   7,
+   6,
+   5,
+   3
+  ],
+  "l_ids": [],
+  "p_ids": [],
+  "klasse": "leer",
+  "gedaechtnis": {
+   "O": [],
+   "L": [],
+   "P": []
+  }
+ },
+ "26": {
+  "anfrage": "ValueError: ID not found. AttributeError: 'Calendar' object has no attribute 'list' test_ids_steigen_in_einer_instanz test_sortierung_und_ungueltiges_datum test_texte_nach_neuladen test_ziel_ids_nach_neuladen",
+  "roh": [
+   1,
+   2,
+   10,
+   11,
+   8,
+   7,
+   6,
+   5,
+   3
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "27": {
+  "anfrage": "ValueError: ID not found AssertionError: # != # : test_ziel_ids_nach_neuladen test_cli_fehler_exitcode",
+  "roh": [
+   2,
+   10,
+   11,
+   5,
+   8,
+   7,
+   3,
+   6
+  ],
+  "l_ids": [],
+  "p_ids": [],
+  "klasse": "leer",
+  "gedaechtnis": {
+   "O": [],
+   "L": [],
+   "P": []
+  }
+ },
+ "28": {
+  "anfrage": "AssertionError: # != # : test_cli_fehler_exitcode",
+  "roh": [
+   5,
+   2,
+   3
+  ],
+  "l_ids": [],
+  "p_ids": [],
+  "klasse": "leer",
+  "gedaechtnis": {
+   "O": [],
+   "L": [],
+   "P": []
+  }
+ },
+ "29": {
+  "anfrage": "AttributeError: 'Pantry' object has no attribute 'list' test_ziel_namen_nach_neuladen test_zusammenfuehren_und_entfernen_bei_null",
+  "roh": [
+   1,
+   2,
+   11,
+   7,
+   10,
+   5,
+   6,
+   3,
+   4
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "30": {
+  "anfrage": "AssertionError: # != # : test_cli_fehler_exitcode",
+  "roh": [
+   5,
+   2,
+   3
+  ],
+  "l_ids": [],
+  "p_ids": [],
+  "klasse": "leer",
+  "gedaechtnis": {
+   "O": [],
+   "L": [],
+   "P": []
+  }
+ },
+ "31": {
+  "anfrage": "AttributeError: 'Pantry' object has no attribute 'list' AssertionError: # != # : test_ziel_namen_nach_neuladen test_zusammenfuehren_und_entfernen_bei_null test_cli_fehler_exitcode",
+  "roh": [
+   1,
+   2,
+   11,
+   5,
+   7,
+   10,
+   3,
+   6,
+   4
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "32": {
+  "anfrage": "AttributeError: 'Pantry' object has no attribute 'list' test_ziel_namen_nach_neuladen test_zusammenfuehren_und_entfernen_bei_null",
+  "roh": [
+   1,
+   2,
+   11,
+   7,
+   10,
+   5,
+   6,
+   3,
+   4
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "33": {
+  "anfrage": "FileNotFoundError: [Errno #] No such file or directory: '<tmp>/daten.json' AssertionError: # != # : Traceback (most recent call last): test_leere_eingabe_valueerror test_ungueltige_menge_valueerror test_ziel_namen_nach_neuladen test_zusammenfuehren_und_entfernen_bei_null test_cli_fehler_exitcode",
+  "roh": [
+   2,
+   1,
+   10,
+   11,
+   8,
+   7,
+   6,
+   5,
+   3
+  ],
+  "l_ids": [],
+  "p_ids": [],
+  "klasse": "leer",
+  "gedaechtnis": {
+   "O": [],
+   "L": [],
+   "P": []
+  }
+ },
+ "34": {
+  "anfrage": "AttributeError: 'Pantry' object has no attribute 'list' test_ziel_namen_nach_neuladen test_zusammenfuehren_und_entfernen_bei_null",
+  "roh": [
+   1,
+   2,
+   11,
+   7,
+   10,
+   5,
+   6,
+   3,
+   4
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ },
+ "35": {
+  "anfrage": "AttributeError: 'Pantry' object has no attribute 'list' test_ziel_namen_nach_neuladen test_zusammenfuehren_und_entfernen_bei_null",
+  "roh": [
+   1,
+   2,
+   11,
+   7,
+   10,
+   5,
+   6,
+   3,
+   4
+  ],
+  "l_ids": [
+   1
+  ],
+  "p_ids": [
+   11
+  ],
+  "klasse": "richtig",
+  "gedaechtnis": {
+   "O": [],
+   "L": [
+    {
+     "wann": "AttributeError: object has no attribute 'list'. Die Aufgabe verlangt eine Methode list(); im Programm heißt die Methode anders. Prüfungen, die store.list() aufrufen, scheitern mit diesem AttributeError.",
+     "richtig": "Methoden- und Klassennamen genau so benennen, wie die Aufgabe sie vorgibt, auch list(). Eine Methode namens list in einer Klasse ist erlaubt und verdeckt das eingebaute list außerhalb der Klasse nicht. Alle Aufrufe der Methode im Programm, etwa in der Kommandozeile, auf denselben Namen umstellen."
+    }
+   ],
+   "P": [
+    {
+     "wann": "Gleichstand beim schnellsten Weg falsch: Bei gleicher Zeit wird ein Weg mit mehr Orten oder nicht der alphabetisch kleinste gewählt, weil eine eigene Vergleichslogik am Ziel den Heap-Schlüssel übergeht.",
+     "richtig": "Im Heap den Schlüssel (zeit, anzahl_orte, wegliste) verwenden und den ersten Eintrag, der das Ziel erreicht, sofort zurückgeben: return (zeit, weg). Dijkstra mit diesem Schlüssel liefert dann automatisch weniger Orte und bei Gleichstand die kleinste Liste; keine zusätzliche Vergleichslogik am Ziel."
+    }
+   ]
+  }
+ }
+}

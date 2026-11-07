@@ -1,0 +1,130 @@
+{
+  "gueltig": true,
+  "probleme": [],
+  "technisch": 0,
+  "attrappe": false,
+  "commit": "defea2dcd54cea5044ce2d2533f5206fa1db469e",
+  "kennzahlen": {
+    "O": {
+      "repariert": 7,
+      "von": 36,
+      "anteil": 0.19444444444444445,
+      "regression": 2,
+      "regression_unbekannt": 0,
+      "technisch": 0,
+      "dauer_s": 1071.7,
+      "ausgabe_tokens": 32059,
+      "dauer_je_reparatur_s": 153.1
+    },
+    "P": {
+      "repariert": 6,
+      "von": 36,
+      "anteil": 0.16666666666666666,
+      "regression": 5,
+      "regression_unbekannt": 0,
+      "technisch": 0,
+      "dauer_s": 1070.5,
+      "ausgabe_tokens": 31793,
+      "dauer_je_reparatur_s": 178.4
+    },
+    "L": {
+      "repariert": 9,
+      "von": 36,
+      "anteil": 0.25,
+      "regression": 2,
+      "regression_unbekannt": 0,
+      "technisch": 0,
+      "dauer_s": 1073.8,
+      "ausgabe_tokens": 31898,
+      "dauer_je_reparatur_s": 119.3
+    }
+  },
+  "kriterien": {
+    "l_minus_o": {
+      "wert_pp": 5.6,
+      "erfuellt": false
+    },
+    "mcnemar": {
+      "b": 2,
+      "c": 0,
+      "p": 0.25,
+      "erfuellt": false
+    },
+    "l_minus_p": {
+      "wert_pp": 8.3,
+      "erfuellt": false
+    },
+    "regression": {
+      "haupt_pp": 0.0,
+      "sensitiv_pp": 0.0,
+      "erfuellt": true
+    }
+  },
+  "pilot_ueber_schwellen": false,
+  "beschreibend": {
+    "abruf": {
+      "richtig": 25,
+      "leer": 11
+    },
+    "abruf_je_familie": {
+      "ids_str": {
+        "richtig": 8
+      },
+      "kaputte_datei": {
+        "leer": 1
+      },
+      "kein_valueerror": {
+        "leer": 1
+      },
+      "list_name": {
+        "richtig": 17
+      },
+      "sonstige": {
+        "leer": 9
+      }
+    },
+    "l_minus_p_nicht_leer": {
+      "faelle": 25,
+      "L": 7,
+      "P": 4
+    },
+    "je_aufgabe": {
+      "rezepte": {
+        "O": 1,
+        "P": 1,
+        "L": 3,
+        "faelle": 13
+      },
+      "termine": {
+        "O": 1,
+        "P": 1,
+        "L": 1,
+        "faelle": 15
+      },
+      "vorrat": {
+        "O": 5,
+        "P": 4,
+        "L": 5,
+        "faelle": 8
+      }
+    },
+    "je_abrufklasse": {
+      "richtig": {
+        "O": 5,
+        "P": 4,
+        "L": 7
+      },
+      "falsch": {
+        "O": 0,
+        "P": 0,
+        "L": 0
+      },
+      "leer": {
+        "O": 2,
+        "P": 2,
+        "L": 2
+      }
+    }
+  },
+  "hinweis": "Pilot mit 36 Fällen; simulierte Trennschärfe 0,56 bei 30 pp, Fehlalarm bis 0,12 bei starkem unspezifischem Effekt."
+}

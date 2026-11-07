@@ -1,0 +1,30 @@
+{
+ "fall": 35,
+ "aufgabe": "vorrat",
+ "arm": "P",
+ "seed": 7035,
+ "nr": 41,
+ "technischer_fehler": null,
+ "gedaechtnis_eintraege": 1,
+ "status": {
+  "test_cli_fehler_exitcode": "FAIL",
+  "test_kaputtes_json_bleibt_erhalten": "ok",
+  "test_leere_eingabe_valueerror": "ok",
+  "test_ungueltige_menge_valueerror": "ok",
+  "test_ziel_namen_nach_neuladen": "ok",
+  "test_zusammenfuehren_und_entfernen_bei_null": "ok"
+ },
+ "repariert": false,
+ "behoben": [
+  "test_ziel_namen_nach_neuladen",
+  "test_zusammenfuehren_und_entfernen_bei_null"
+ ],
+ "regression": [
+  "test_cli_fehler_exitcode"
+ ],
+ "abnahme_vollstaendig": true,
+ "dauer_s": 26.0,
+ "ausgabe_tokens": 754,
+ "prompt_tokens": 1529,
+ "code_zeilen": 81
+}

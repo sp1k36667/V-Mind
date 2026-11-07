@@ -1,0 +1,767 @@
+{
+ "commit": "defea2dcd54cea5044ce2d2533f5206fa1db469e",
+ "sauber": true,
+ "attrappe": false,
+ "plan_sha256": "eb9def40ae3311a90a795644444ba8c7f6b49cecc6713289a3b5a7757f7a3a63",
+ "prompttexte_sha256": "3bf8884c01105515893ebbc4244bb38df0439a8911a282afca08bb607772fcfc",
+ "eintraege_sha256": "028cf6c17faccc6f8f4c1c0cb511ccdadc74bb680bab2072cd7397e19246ee83",
+ "system_sha256": "4d78c12da5240a92a456eba0d05b38254ddf6d04c353d952e217daf6ce040f25",
+ "laeufe": [
+  {
+   "fall": 20,
+   "aufgabe": "termine",
+   "arm": "L",
+   "seed": 7020,
+   "nr": 1
+  },
+  {
+   "fall": 25,
+   "aufgabe": "termine",
+   "arm": "P",
+   "seed": 7025,
+   "nr": 2
+  },
+  {
+   "fall": 3,
+   "aufgabe": "rezepte",
+   "arm": "P",
+   "seed": 7003,
+   "nr": 3
+  },
+  {
+   "fall": 10,
+   "aufgabe": "rezepte",
+   "arm": "L",
+   "seed": 7010,
+   "nr": 4
+  },
+  {
+   "fall": 21,
+   "aufgabe": "termine",
+   "arm": "O",
+   "seed": 7021,
+   "nr": 5
+  },
+  {
+   "fall": 8,
+   "aufgabe": "rezepte",
+   "arm": "L",
+   "seed": 7008,
+   "nr": 6
+  },
+  {
+   "fall": 18,
+   "aufgabe": "termine",
+   "arm": "L",
+   "seed": 7018,
+   "nr": 7
+  },
+  {
+   "fall": 23,
+   "aufgabe": "termine",
+   "arm": "P",
+   "seed": 7023,
+   "nr": 8
+  },
+  {
+   "fall": 16,
+   "aufgabe": "termine",
+   "arm": "P",
+   "seed": 7016,
+   "nr": 9
+  },
+  {
+   "fall": 15,
+   "aufgabe": "termine",
+   "arm": "L",
+   "seed": 7015,
+   "nr": 10
+  },
+  {
+   "fall": 2,
+   "aufgabe": "rezepte",
+   "arm": "P",
+   "seed": 7002,
+   "nr": 11
+  },
+  {
+   "fall": 10,
+   "aufgabe": "rezepte",
+   "arm": "P",
+   "seed": 7010,
+   "nr": 12
+  },
+  {
+   "fall": 29,
+   "aufgabe": "vorrat",
+   "arm": "L",
+   "seed": 7029,
+   "nr": 13
+  },
+  {
+   "fall": 12,
+   "aufgabe": "rezepte",
+   "arm": "L",
+   "seed": 7012,
+   "nr": 14
+  },
+  {
+   "fall": 1,
+   "aufgabe": "rezepte",
+   "arm": "P",
+   "seed": 7001,
+   "nr": 15
+  },
+  {
+   "fall": 26,
+   "aufgabe": "termine",
+   "arm": "O",
+   "seed": 7026,
+   "nr": 16
+  },
+  {
+   "fall": 28,
+   "aufgabe": "vorrat",
+   "arm": "L",
+   "seed": 7028,
+   "nr": 17
+  },
+  {
+   "fall": 21,
+   "aufgabe": "termine",
+   "arm": "L",
+   "seed": 7021,
+   "nr": 18
+  },
+  {
+   "fall": 16,
+   "aufgabe": "termine",
+   "arm": "L",
+   "seed": 7016,
+   "nr": 19
+  },
+  {
+   "fall": 5,
+   "aufgabe": "rezepte",
+   "arm": "P",
+   "seed": 7005,
+   "nr": 20
+  },
+  {
+   "fall": 8,
+   "aufgabe": "rezepte",
+   "arm": "O",
+   "seed": 7008,
+   "nr": 21
+  },
+  {
+   "fall": 33,
+   "aufgabe": "vorrat",
+   "arm": "O",
+   "seed": 7033,
+   "nr": 22
+  },
+  {
+   "fall": 22,
+   "aufgabe": "termine",
+   "arm": "L",
+   "seed": 7022,
+   "nr": 23
+  },
+  {
+   "fall": 33,
+   "aufgabe": "vorrat",
+   "arm": "P",
+   "seed": 7033,
+   "nr": 24
+  },
+  {
+   "fall": 5,
+   "aufgabe": "rezepte",
+   "arm": "O",
+   "seed": 7005,
+   "nr": 25
+  },
+  {
+   "fall": 25,
+   "aufgabe": "termine",
+   "arm": "O",
+   "seed": 7025,
+   "nr": 26
+  },
+  {
+   "fall": 11,
+   "aufgabe": "rezepte",
+   "arm": "O",
+   "seed": 7011,
+   "nr": 27
+  },
+  {
+   "fall": 24,
+   "aufgabe": "termine",
+   "arm": "O",
+   "seed": 7024,
+   "nr": 28
+  },
+  {
+   "fall": 27,
+   "aufgabe": "termine",
+   "arm": "O",
+   "seed": 7027,
+   "nr": 29
+  },
+  {
+   "fall": 6,
+   "aufgabe": "rezepte",
+   "arm": "P",
+   "seed": 7006,
+   "nr": 30
+  },
+  {
+   "fall": 12,
+   "aufgabe": "rezepte",
+   "arm": "P",
+   "seed": 7012,
+   "nr": 31
+  },
+  {
+   "fall": 32,
+   "aufgabe": "vorrat",
+   "arm": "P",
+   "seed": 7032,
+   "nr": 32
+  },
+  {
+   "fall": 1,
+   "aufgabe": "rezepte",
+   "arm": "L",
+   "seed": 7001,
+   "nr": 33
+  },
+  {
+   "fall": 17,
+   "aufgabe": "termine",
+   "arm": "P",
+   "seed": 7017,
+   "nr": 34
+  },
+  {
+   "fall": 25,
+   "aufgabe": "termine",
+   "arm": "L",
+   "seed": 7025,
+   "nr": 35
+  },
+  {
+   "fall": 32,
+   "aufgabe": "vorrat",
+   "arm": "O",
+   "seed": 7032,
+   "nr": 36
+  },
+  {
+   "fall": 30,
+   "aufgabe": "vorrat",
+   "arm": "P",
+   "seed": 7030,
+   "nr": 37
+  },
+  {
+   "fall": 19,
+   "aufgabe": "termine",
+   "arm": "O",
+   "seed": 7019,
+   "nr": 38
+  },
+  {
+   "fall": 6,
+   "aufgabe": "rezepte",
+   "arm": "O",
+   "seed": 7006,
+   "nr": 39
+  },
+  {
+   "fall": 31,
+   "aufgabe": "vorrat",
+   "arm": "L",
+   "seed": 7031,
+   "nr": 40
+  },
+  {
+   "fall": 35,
+   "aufgabe": "vorrat",
+   "arm": "P",
+   "seed": 7035,
+   "nr": 41
+  },
+  {
+   "fall": 20,
+   "aufgabe": "termine",
+   "arm": "O",
+   "seed": 7020,
+   "nr": 42
+  },
+  {
+   "fall": 13,
+   "aufgabe": "termine",
+   "arm": "P",
+   "seed": 7013,
+   "nr": 43
+  },
+  {
+   "fall": 7,
+   "aufgabe": "rezepte",
+   "arm": "L",
+   "seed": 7007,
+   "nr": 44
+  },
+  {
+   "fall": 4,
+   "aufgabe": "rezepte",
+   "arm": "O",
+   "seed": 7004,
+   "nr": 45
+  },
+  {
+   "fall": 2,
+   "aufgabe": "rezepte",
+   "arm": "L",
+   "seed": 7002,
+   "nr": 46
+  },
+  {
+   "fall": 14,
+   "aufgabe": "termine",
+   "arm": "O",
+   "seed": 7014,
+   "nr": 47
+  },
+  {
+   "fall": 18,
+   "aufgabe": "termine",
+   "arm": "O",
+   "seed": 7018,
+   "nr": 48
+  },
+  {
+   "fall": 29,
+   "aufgabe": "vorrat",
+   "arm": "P",
+   "seed": 7029,
+   "nr": 49
+  },
+  {
+   "fall": 32,
+   "aufgabe": "vorrat",
+   "arm": "L",
+   "seed": 7032,
+   "nr": 50
+  },
+  {
+   "fall": 15,
+   "aufgabe": "termine",
+   "arm": "O",
+   "seed": 7015,
+   "nr": 51
+  },
+  {
+   "fall": 19,
+   "aufgabe": "termine",
+   "arm": "P",
+   "seed": 7019,
+   "nr": 52
+  },
+  {
+   "fall": 0,
+   "aufgabe": "rezepte",
+   "arm": "L",
+   "seed": 7000,
+   "nr": 53
+  },
+  {
+   "fall": 19,
+   "aufgabe": "termine",
+   "arm": "L",
+   "seed": 7019,
+   "nr": 54
+  },
+  {
+   "fall": 31,
+   "aufgabe": "vorrat",
+   "arm": "P",
+   "seed": 7031,
+   "nr": 55
+  },
+  {
+   "fall": 16,
+   "aufgabe": "termine",
+   "arm": "O",
+   "seed": 7016,
+   "nr": 56
+  },
+  {
+   "fall": 22,
+   "aufgabe": "termine",
+   "arm": "P",
+   "seed": 7022,
+   "nr": 57
+  },
+  {
+   "fall": 31,
+   "aufgabe": "vorrat",
+   "arm": "O",
+   "seed": 7031,
+   "nr": 58
+  },
+  {
+   "fall": 9,
+   "aufgabe": "rezepte",
+   "arm": "P",
+   "seed": 7009,
+   "nr": 59
+  },
+  {
+   "fall": 4,
+   "aufgabe": "rezepte",
+   "arm": "P",
+   "seed": 7004,
+   "nr": 60
+  },
+  {
+   "fall": 30,
+   "aufgabe": "vorrat",
+   "arm": "L",
+   "seed": 7030,
+   "nr": 61
+  },
+  {
+   "fall": 29,
+   "aufgabe": "vorrat",
+   "arm": "O",
+   "seed": 7029,
+   "nr": 62
+  },
+  {
+   "fall": 14,
+   "aufgabe": "termine",
+   "arm": "L",
+   "seed": 7014,
+   "nr": 63
+  },
+  {
+   "fall": 7,
+   "aufgabe": "rezepte",
+   "arm": "P",
+   "seed": 7007,
+   "nr": 64
+  },
+  {
+   "fall": 12,
+   "aufgabe": "rezepte",
+   "arm": "O",
+   "seed": 7012,
+   "nr": 65
+  },
+  {
+   "fall": 35,
+   "aufgabe": "vorrat",
+   "arm": "O",
+   "seed": 7035,
+   "nr": 66
+  },
+  {
+   "fall": 23,
+   "aufgabe": "termine",
+   "arm": "L",
+   "seed": 7023,
+   "nr": 67
+  },
+  {
+   "fall": 6,
+   "aufgabe": "rezepte",
+   "arm": "L",
+   "seed": 7006,
+   "nr": 68
+  },
+  {
+   "fall": 33,
+   "aufgabe": "vorrat",
+   "arm": "L",
+   "seed": 7033,
+   "nr": 69
+  },
+  {
+   "fall": 18,
+   "aufgabe": "termine",
+   "arm": "P",
+   "seed": 7018,
+   "nr": 70
+  },
+  {
+   "fall": 23,
+   "aufgabe": "termine",
+   "arm": "O",
+   "seed": 7023,
+   "nr": 71
+  },
+  {
+   "fall": 17,
+   "aufgabe": "termine",
+   "arm": "L",
+   "seed": 7017,
+   "nr": 72
+  },
+  {
+   "fall": 15,
+   "aufgabe": "termine",
+   "arm": "P",
+   "seed": 7015,
+   "nr": 73
+  },
+  {
+   "fall": 26,
+   "aufgabe": "termine",
+   "arm": "L",
+   "seed": 7026,
+   "nr": 74
+  },
+  {
+   "fall": 8,
+   "aufgabe": "rezepte",
+   "arm": "P",
+   "seed": 7008,
+   "nr": 75
+  },
+  {
+   "fall": 9,
+   "aufgabe": "rezepte",
+   "arm": "L",
+   "seed": 7009,
+   "nr": 76
+  },
+  {
+   "fall": 22,
+   "aufgabe": "termine",
+   "arm": "O",
+   "seed": 7022,
+   "nr": 77
+  },
+  {
+   "fall": 20,
+   "aufgabe": "termine",
+   "arm": "P",
+   "seed": 7020,
+   "nr": 78
+  },
+  {
+   "fall": 27,
+   "aufgabe": "termine",
+   "arm": "P",
+   "seed": 7027,
+   "nr": 79
+  },
+  {
+   "fall": 24,
+   "aufgabe": "termine",
+   "arm": "P",
+   "seed": 7024,
+   "nr": 80
+  },
+  {
+   "fall": 3,
+   "aufgabe": "rezepte",
+   "arm": "O",
+   "seed": 7003,
+   "nr": 81
+  },
+  {
+   "fall": 28,
+   "aufgabe": "vorrat",
+   "arm": "O",
+   "seed": 7028,
+   "nr": 82
+  },
+  {
+   "fall": 21,
+   "aufgabe": "termine",
+   "arm": "P",
+   "seed": 7021,
+   "nr": 83
+  },
+  {
+   "fall": 34,
+   "aufgabe": "vorrat",
+   "arm": "P",
+   "seed": 7034,
+   "nr": 84
+  },
+  {
+   "fall": 34,
+   "aufgabe": "vorrat",
+   "arm": "O",
+   "seed": 7034,
+   "nr": 85
+  },
+  {
+   "fall": 14,
+   "aufgabe": "termine",
+   "arm": "P",
+   "seed": 7014,
+   "nr": 86
+  },
+  {
+   "fall": 30,
+   "aufgabe": "vorrat",
+   "arm": "O",
+   "seed": 7030,
+   "nr": 87
+  },
+  {
+   "fall": 24,
+   "aufgabe": "termine",
+   "arm": "L",
+   "seed": 7024,
+   "nr": 88
+  },
+  {
+   "fall": 13,
+   "aufgabe": "termine",
+   "arm": "O",
+   "seed": 7013,
+   "nr": 89
+  },
+  {
+   "fall": 7,
+   "aufgabe": "rezepte",
+   "arm": "O",
+   "seed": 7007,
+   "nr": 90
+  },
+  {
+   "fall": 34,
+   "aufgabe": "vorrat",
+   "arm": "L",
+   "seed": 7034,
+   "nr": 91
+  },
+  {
+   "fall": 11,
+   "aufgabe": "rezepte",
+   "arm": "P",
+   "seed": 7011,
+   "nr": 92
+  },
+  {
+   "fall": 9,
+   "aufgabe": "rezepte",
+   "arm": "O",
+   "seed": 7009,
+   "nr": 93
+  },
+  {
+   "fall": 4,
+   "aufgabe": "rezepte",
+   "arm": "L",
+   "seed": 7004,
+   "nr": 94
+  },
+  {
+   "fall": 1,
+   "aufgabe": "rezepte",
+   "arm": "O",
+   "seed": 7001,
+   "nr": 95
+  },
+  {
+   "fall": 35,
+   "aufgabe": "vorrat",
+   "arm": "L",
+   "seed": 7035,
+   "nr": 96
+  },
+  {
+   "fall": 0,
+   "aufgabe": "rezepte",
+   "arm": "P",
+   "seed": 7000,
+   "nr": 97
+  },
+  {
+   "fall": 28,
+   "aufgabe": "vorrat",
+   "arm": "P",
+   "seed": 7028,
+   "nr": 98
+  },
+  {
+   "fall": 11,
+   "aufgabe": "rezepte",
+   "arm": "L",
+   "seed": 7011,
+   "nr": 99
+  },
+  {
+   "fall": 17,
+   "aufgabe": "termine",
+   "arm": "O",
+   "seed": 7017,
+   "nr": 100
+  },
+  {
+   "fall": 13,
+   "aufgabe": "termine",
+   "arm": "L",
+   "seed": 7013,
+   "nr": 101
+  },
+  {
+   "fall": 26,
+   "aufgabe": "termine",
+   "arm": "P",
+   "seed": 7026,
+   "nr": 102
+  },
+  {
+   "fall": 0,
+   "aufgabe": "rezepte",
+   "arm": "O",
+   "seed": 7000,
+   "nr": 103
+  },
+  {
+   "fall": 10,
+   "aufgabe": "rezepte",
+   "arm": "O",
+   "seed": 7010,
+   "nr": 104
+  },
+  {
+   "fall": 5,
+   "aufgabe": "rezepte",
+   "arm": "L",
+   "seed": 7005,
+   "nr": 105
+  },
+  {
+   "fall": 3,
+   "aufgabe": "rezepte",
+   "arm": "L",
+   "seed": 7003,
+   "nr": 106
+  },
+  {
+   "fall": 2,
+   "aufgabe": "rezepte",
+   "arm": "O",
+   "seed": 7002,
+   "nr": 107
+  },
+  {
+   "fall": 27,
+   "aufgabe": "termine",
+   "arm": "L",
+   "seed": 7027,
+   "nr": 108
+  }
+ ]
+}

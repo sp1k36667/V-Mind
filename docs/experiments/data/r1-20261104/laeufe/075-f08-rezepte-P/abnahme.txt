@@ -1,0 +1,90 @@
+test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode) ... FAIL
+test_ids_steigen_in_einer_instanz (__main__.Abnahme.test_ids_steigen_in_einer_instanz) ... ok
+test_kaputtes_json_bleibt_erhalten (__main__.Abnahme.test_kaputtes_json_bleibt_erhalten) ... ok
+test_leere_eingabe_valueerror (__main__.Abnahme.test_leere_eingabe_valueerror) ... ok
+test_texte_nach_neuladen (__main__.Abnahme.test_texte_nach_neuladen) ... ERROR
+test_unbekannte_id_valueerror (__main__.Abnahme.test_unbekannte_id_valueerror) ... ok
+test_ungueltige_minuten_valueerror (__main__.Abnahme.test_ungueltige_minuten_valueerror) ... ok
+test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen) ... ERROR
+
+======================================================================
+ERROR: test_texte_nach_neuladen (__main__.Abnahme.test_texte_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/075-f08-rezepte-P/app.py", line 15, in __init__
+    loaded = json.load(f)
+  File "/home/sp1k3/miniconda3/lib/python3.13/json/__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "/home/sp1k3/miniconda3/lib/python3.13/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/sp1k3/miniconda3/lib/python3.13/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sp1k3/miniconda3/lib/python3.13/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/075-f08-rezepte-P/verification/gemeinsam.py", line 82, in test_texte_nach_neuladen
+    texte = " ".join(json.dumps(e, ensure_ascii=False) for e in self.oeffnen().list())
+                                                                ~~~~~~~~~~~~^^
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/075-f08-rezepte-P/verification/gemeinsam.py", line 45, in oeffnen
+    return getattr(self.app, self.ADAPTER.klasse)(str(self.pfad))
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/075-f08-rezepte-P/app.py", line 22, in __init__
+    raise ValueError("Damaged JSON file")
+ValueError: Damaged JSON file
+
+======================================================================
+ERROR: test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/075-f08-rezepte-P/app.py", line 15, in __init__
+    loaded = json.load(f)
+  File "/home/sp1k3/miniconda3/lib/python3.13/json/__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "/home/sp1k3/miniconda3/lib/python3.13/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/sp1k3/miniconda3/lib/python3.13/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sp1k3/miniconda3/lib/python3.13/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/075-f08-rezepte-P/verification/gemeinsam.py", line 65, in test_ziel_ids_nach_neuladen
+    neu_geladen = self.oeffnen()
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/075-f08-rezepte-P/verification/gemeinsam.py", line 45, in oeffnen
+    return getattr(self.app, self.ADAPTER.klasse)(str(self.pfad))
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/075-f08-rezepte-P/app.py", line 22, in __init__
+    raise ValueError("Damaged JSON file")
+ValueError: Damaged JSON file
+
+======================================================================
+FAIL: test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/sp1k3/Documents/Codex/2026-10-31/referenced-chatgpt-conversation-this-is-an/work/r1-run-defea2d/laeufe/075-f08-rezepte-P/verification/gemeinsam.py", line 115, in test_cli_fehler_exitcode
+    self.assertEqual(hinzu.returncode, 0, hinzu.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : Unknown command
+
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.027s
+
+FAILED (failures=1, errors=2)
