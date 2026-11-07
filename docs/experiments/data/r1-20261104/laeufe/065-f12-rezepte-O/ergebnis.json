@@ -1,0 +1,29 @@
+{
+ "fall": 12,
+ "aufgabe": "rezepte",
+ "arm": "O",
+ "seed": 7012,
+ "nr": 65,
+ "technischer_fehler": null,
+ "gedaechtnis_eintraege": 0,
+ "status": {
+  "test_cli_fehler_exitcode": "FAIL",
+  "test_ids_steigen_in_einer_instanz": "ok",
+  "test_kaputtes_json_bleibt_erhalten": "ok",
+  "test_leere_eingabe_valueerror": "ok",
+  "test_texte_nach_neuladen": "ERROR",
+  "test_unbekannte_id_valueerror": "ok",
+  "test_ungueltige_minuten_valueerror": "ok",
+  "test_ziel_ids_nach_neuladen": "ERROR"
+ },
+ "repariert": false,
+ "behoben": [],
+ "regression": [
+  "test_texte_nach_neuladen"
+ ],
+ "abnahme_vollstaendig": true,
+ "dauer_s": 31.0,
+ "ausgabe_tokens": 929,
+ "prompt_tokens": 1504,
+ "code_zeilen": 93
+}

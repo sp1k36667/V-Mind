@@ -116,6 +116,10 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
   placebo 10/40; counter-case limit formally violated). Post hoc, the targeted error
   vanished with the lesson, but an unrelated naming error dominated. Report:
   `docs/experiments/transfer-pilot.md` (German). (#35)
+- R1 repair pilot with Gemma 4 12B (pre-registered, 108 calls, frozen at `defea2d`): pilot
+  thresholds missed (fully repaired 7/36 without hint, 6/36 unrelated text, 9/36 V-Mind hints).
+  Retrieval 25 correct, 11 correctly empty, 0 wrong. Post hoc: for the JSON-key error the target
+  check passed 0/8 without and 8/8 with the hint. Report: `docs/experiments/r1.md` (German).
 
 ### Upgrading
 

@@ -1,0 +1,25 @@
+{
+ "fall": 30,
+ "aufgabe": "vorrat",
+ "arm": "O",
+ "seed": 7030,
+ "nr": 87,
+ "technischer_fehler": null,
+ "gedaechtnis_eintraege": 0,
+ "status": {
+  "test_cli_fehler_exitcode": "FAIL",
+  "test_kaputtes_json_bleibt_erhalten": "ok",
+  "test_leere_eingabe_valueerror": "ok",
+  "test_ungueltige_menge_valueerror": "ok",
+  "test_ziel_namen_nach_neuladen": "ok",
+  "test_zusammenfuehren_und_entfernen_bei_null": "ok"
+ },
+ "repariert": false,
+ "behoben": [],
+ "regression": [],
+ "abnahme_vollstaendig": true,
+ "dauer_s": 25.6,
+ "ausgabe_tokens": 748,
+ "prompt_tokens": 1434,
+ "code_zeilen": 90
+}

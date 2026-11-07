@@ -1,0 +1,31 @@
+test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode) ... FAIL
+test_ids_steigen_in_einer_instanz (__main__.Abnahme.test_ids_steigen_in_einer_instanz) ... ok
+test_kaputtes_json_bleibt_erhalten (__main__.Abnahme.test_kaputtes_json_bleibt_erhalten) ... ok
+test_leere_eingabe_valueerror (__main__.Abnahme.test_leere_eingabe_valueerror) ... ok
+test_sortierung_und_ungueltiges_datum (__main__.Abnahme.test_sortierung_und_ungueltiges_datum) ... ok
+test_texte_nach_neuladen (__main__.Abnahme.test_texte_nach_neuladen) ... ok
+test_unbekannte_id_valueerror (__main__.Abnahme.test_unbekannte_id_valueerror) ... ok
+test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen) ... FAIL
+
+======================================================================
+FAIL: test_cli_fehler_exitcode (__main__.Abnahme.test_cli_fehler_exitcode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<LAUF>/laeufe/043-f13-termine-P/verification/gemeinsam.py", line 115, in test_cli_fehler_exitcode
+    self.assertEqual(hinzu.returncode, 0, hinzu.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : 
+
+======================================================================
+FAIL: test_ziel_ids_nach_neuladen (__main__.Abnahme.test_ziel_ids_nach_neuladen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<LAUF>/laeufe/043-f13-termine-P/verification/gemeinsam.py", line 67, in test_ziel_ids_nach_neuladen
+    self.assertTrue(all(type(i) is int for i in geladen), "IDs nach Neuladen keine int")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : IDs nach Neuladen keine int
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.028s
+
+FAILED (failures=2)

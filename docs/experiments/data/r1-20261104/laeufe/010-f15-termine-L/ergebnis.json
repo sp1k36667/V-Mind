@@ -1,0 +1,29 @@
+{
+ "fall": 15,
+ "aufgabe": "termine",
+ "arm": "L",
+ "seed": 7015,
+ "nr": 10,
+ "technischer_fehler": null,
+ "gedaechtnis_eintraege": 1,
+ "status": {
+  "test_cli_fehler_exitcode": "FAIL",
+  "test_ids_steigen_in_einer_instanz": "ok",
+  "test_kaputtes_json_bleibt_erhalten": "ok",
+  "test_leere_eingabe_valueerror": "ok",
+  "test_sortierung_und_ungueltiges_datum": "ok",
+  "test_texte_nach_neuladen": "ERROR",
+  "test_unbekannte_id_valueerror": "ok",
+  "test_ziel_ids_nach_neuladen": "ERROR"
+ },
+ "repariert": false,
+ "behoben": [
+  "test_sortierung_und_ungueltiges_datum"
+ ],
+ "regression": [],
+ "abnahme_vollstaendig": true,
+ "dauer_s": 32.0,
+ "ausgabe_tokens": 961,
+ "prompt_tokens": 1877,
+ "code_zeilen": 100
+}
