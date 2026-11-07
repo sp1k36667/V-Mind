@@ -344,7 +344,8 @@ in den Kontext der KI geben, ohne dass sie selbst an `recall` denken muss:
   "hooks": {
     "PostToolUseFailure": [
       {"matcher": "Bash", "hooks": [{"type": "command",
-        "command": "vmind --scope v-mind hint \"$CLAUDE_PROJECT_DIR/vmind.db\""}]}
+        "command": "vmind --scope v-mind hint \"$CLAUDE_PROJECT_DIR/vmind.db\"",
+        "timeout": 5}]}
     ]
   }
 }
@@ -356,8 +357,10 @@ zurück, markiert als `[geprüft]` oder `[UNGEPRÜFT]`, Problem, Lösung und Que
 Zeichen gekürzt. Die Analyse macht weiter die KI; V-Mind liefert nur, was schon einmal gelöst
 wurde. **Nur lesend:** Fehlertext, Befehl und Ausgabe werden weder gespeichert noch im Kontext
 wiederholt, nichts wird ausgeführt. Ohne Treffer, bei anderen Ereignissen, ungültiger
-Eingabe, fehlender oder älterer Datenbank und wenn die Datenbank länger als 0,5 s gesperrt ist,
-gibt der Hook nichts aus und endet erfolgreich; er blockiert nie ein Werkzeug und legt keine
+Eingabe, fehlender oder älterer Datenbank und wenn die Datenbank länger als 0,5 s gesperrt ist
+(die Wartezeit gilt schon vor dem ersten Zugriff), gibt der Hook nichts aus und endet
+erfolgreich; `timeout` 5 im Beispiel begrenzt den ganzen Hook zusätzlich auf Seiten von Claude
+Code; er blockiert nie ein Werkzeug und legt keine
 Datenbank an. In einer echten Claude-Code-Sitzung ist er noch nicht erprobt.
 
 ### Beobachtungen aus Claude Code (ab Schema 6)

@@ -59,8 +59,7 @@ fn answer(db: &str, scope: &str, raw: &[u8]) -> Option<Value> {
     let input: Value = serde_json::from_slice(raw).ok()?;
     let query = query(&input)?;
     let tool = cut(input["tool_name"].as_str().unwrap_or("Werkzeug"), 40);
-    let store = MemoryStore::open_read_only(db).ok()?;
-    store.set_busy_timeout(BUSY_WAIT).ok()?;
+    let store = MemoryStore::open_read_only_waiting(db, BUSY_WAIT).ok()?;
     let hits = store.recall_with_hints(&query, scope, MAX_HITS).ok()?;
     (!hits.is_empty()).then(|| {
         json!({"hookSpecificOutput": {

@@ -137,3 +137,28 @@ fn create_conversation_under_read_lock_is_stored_exactly_once() {
     );
     assert_eq!(neu.conversations("p").unwrap().len(), 1);
 }
+
+/// Ein Hook darf bei gesperrter Datenbank nur kurz warten, auch schon beim Lesen des Schemas.
+#[test]
+fn read_only_open_with_short_wait_gives_up_quickly_under_an_exclusive_lock() {
+    let temp = Temp::new();
+    let path = temp.0.join("sperre.db");
+    MemoryStore::open(&path).unwrap();
+    let holder = rusqlite::Connection::open(&path).unwrap();
+    holder.execute_batch("BEGIN EXCLUSIVE").unwrap();
+    let start = std::time::Instant::now();
+    let result = MemoryStore::open_read_only_waiting(&path, Duration::from_millis(300))
+        .and_then(|s| s.recall_with_hints("x", "p", 3));
+    let waited = start.elapsed();
+    assert!(result.is_err(), "Sperre muss als Fehler enden");
+    assert!(
+        waited >= Duration::from_millis(250),
+        "wartet die gesetzte Zeit: {waited:?}"
+    );
+    assert!(
+        waited < Duration::from_secs(2),
+        "nicht die 5 s des Standardpfads: {waited:?}"
+    );
+    holder.execute_batch("ROLLBACK").unwrap();
+    assert!(MemoryStore::open_read_only_waiting(&path, Duration::from_millis(300)).is_ok());
+}

@@ -105,7 +105,8 @@ Claude Code session. Opt-in: add it next to or instead of `observe`.
   "hooks": {
     "PostToolUseFailure": [
       {"matcher": "Bash", "hooks": [{"type": "command",
-        "command": "vmind --scope my-project hint \"$CLAUDE_PROJECT_DIR/vmind.db\""}]}
+        "command": "vmind --scope my-project hint \"$CLAUDE_PROJECT_DIR/vmind.db\"",
+        "timeout": 5}]}
     ]
   }
 }
@@ -118,5 +119,6 @@ problem, solution and source shortened to 300 characters each. The AI still anal
 error itself; V-Mind only contributes what was solved before. **Read-only:** the error text,
 command and output are neither stored nor repeated in the context; nothing is run. Without a
 hit, for other events, invalid input, a missing database or an older schema, and when the
-database stays locked for more than 0.5 s, the hook prints nothing and exits successfully, so
-it never blocks a tool call. Like `observe` it never creates or upgrades a database.
+database stays locked for more than 0.5 s (the wait starts before the first database access),
+the hook prints nothing and exits successfully, so it never blocks a tool call. The `timeout`
+of 5 seconds in the example also caps the whole hook on the Claude Code side. Like `observe` it never creates or upgrades a database.
