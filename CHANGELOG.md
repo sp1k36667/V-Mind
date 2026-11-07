@@ -1,12 +1,12 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.7 (on `main`)
+## Unreleased: candidate 0.3.0-rc.8 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.7` (`vmind --version`, MCP
+Not released yet. The source now reports version `0.3.0-rc.8` (`vmind --version`, MCP
 server info); there is no tag, no published download and no installation of it. The
-earlier candidates `0.3.0-rc.1` to `0.3.0-rc.6` did not yet contain all changes below
+earlier candidates `0.3.0-rc.1` to `0.3.0-rc.7` did not yet contain all changes below
 (rc.1 lacked #40, #42, #43; rc.2 lacked #44; rc.3 lacked #46; rc.4 lacked #47; rc.5 lacked
-#48; rc.6 lacked unverified hints in `recall`).
+#48; rc.6 lacked #53; rc.7 lacked the `hint` hook).
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
@@ -81,7 +81,13 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
   as hints, only in places left free after all validated search stages, marked in every
   output and kept apart in the model context. Validated hits and their order are unchanged;
   `--validated-only` / `validated_only: true` gives exactly the previous result (retrieval
-  corpora: byte-identical). Nothing becomes validated by this.
+  corpora: byte-identical). Nothing becomes validated by this. (#53)
+- `vmind hint DB`: opt-in Claude Code hook for `PostToolUseFailure`. It searches with the
+  failed call's error text and returns matching knowledge (validated and unverified, marked,
+  at most 3 hits) as additional context, so the AI gets earlier solutions without having to
+  think of `recall`. Read-only; the error text, command and output are not stored or
+  repeated. Any problem (no hit, invalid input, missing or older database, lock longer than
+  0.5 s) ends silently and successfully. Not yet tried in a real Claude Code session.
 
 ### Changed
 

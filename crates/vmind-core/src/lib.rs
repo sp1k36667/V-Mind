@@ -299,6 +299,10 @@ impl MemoryStore {
         }
         Ok(Self { conn })
     }
+    /// Kürzere Wartezeit bei gesperrter Datenbank, etwa für Hooks, die nicht blockieren dürfen.
+    pub fn set_busy_timeout(&self, wait: std::time::Duration) -> Result<()> {
+        self.conn.busy_timeout(wait)
+    }
     /// Keeps several reads in one consistent SQLite snapshot. The callback must
     /// only read; use open_read_only when this must also be enforced by SQLite.
     pub fn read_snapshot<T>(&self, read: impl FnOnce(&Self) -> Result<T>) -> Result<T> {

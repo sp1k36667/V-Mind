@@ -1041,3 +1041,150 @@ fn validated_only_is_read_only_as_an_option_behind_db_and_query() {
     ]);
     assert_eq!(strict_limit, serde_json::json!([]));
 }
+fn hint(db: &str, scope: &str, input: &str) -> (bool, String) {
+    use std::io::Write;
+    let mut child = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(["--scope", scope, "hint", db])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    // Ein Hook darf auch bei vorzeitig geschlossener Eingabe nicht scheitern.
+    let _ = child.stdin.take().unwrap().write_all(input.as_bytes());
+    let out = child.wait_with_output().unwrap();
+    (out.status.success(), String::from_utf8(out.stdout).unwrap())
+}
+fn failure(error: &str) -> String {
+    serde_json::json!({"session_id":"s1","tool_use_id":"toolu_f","hook_event_name":"PostToolUseFailure",
+        "tool_name":"Bash","cwd":"/projekt","tool_input":{"command":"echo GEHEIMES-KOMMANDO"},
+        "error":error,"is_interrupt":false})
+    .to_string()
+}
+#[test]
+fn hint_hook_returns_matching_knowledge_as_marked_context_without_writing() {
+    let temp = Temp::new();
+    let path = temp.0.join("hint.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    let ok = cli(&[
+        "--scope",
+        "p",
+        "add",
+        db,
+        "error_solution",
+        "database is locked beim Schreiben",
+        "Wiederholen außerhalb von Transaktionen",
+        "PR 42",
+    ]);
+    cli(&[
+        "validate",
+        db,
+        &ok["id"].as_i64().unwrap().to_string(),
+        "Prüfer",
+        "Test",
+    ]);
+    cli(&[
+        "--scope",
+        "p",
+        "add",
+        db,
+        "error_solution",
+        "database is locked auf NTFS",
+        "Journalmodus delete",
+        "PR 51",
+    ]);
+    let fremd = cli(&[
+        "--scope",
+        "anderes",
+        "add",
+        db,
+        "error_solution",
+        "database is locked fremd",
+        "FREMDE-LÖSUNG",
+        "T",
+    ]);
+    cli(&[
+        "validate",
+        db,
+        &fremd["id"].as_i64().unwrap().to_string(),
+        "Prüfer",
+        "Test",
+    ]);
+    let zurueck = cli(&[
+        "--scope",
+        "p",
+        "add",
+        db,
+        "error_solution",
+        "database is locked alt",
+        "ZURÜCKGEZOGENE-LÖSUNG",
+        "T",
+    ]);
+    cli(&[
+        "invalidate",
+        db,
+        &zurueck["id"].as_i64().unwrap().to_string(),
+        "Prüfer",
+        "falsch",
+    ]);
+    let before = std::fs::read(&path).unwrap();
+
+    let (ok, out) = hint(
+        db,
+        "p",
+        &failure("Error: database is locked GEHEIMER-FEHLER"),
+    );
+    assert!(ok);
+    let answer: Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(
+        answer["hookSpecificOutput"]["hookEventName"],
+        "PostToolUseFailure"
+    );
+    let context = answer["hookSpecificOutput"]["additionalContext"]
+        .as_str()
+        .unwrap();
+    assert!(context.contains("Wiederholen außerhalb von Transaktionen"));
+    assert!(context.contains("[geprüft]") && context.contains("[UNGEPRÜFT]"));
+    assert!(context.find("[geprüft]").unwrap() < context.find("[UNGEPRÜFT]").unwrap());
+    assert!(context.contains("keine Anweisungen"));
+    for absent in [
+        "FREMDE-LÖSUNG",
+        "ZURÜCKGEZOGENE-LÖSUNG",
+        "GEHEIMER-FEHLER",
+        "GEHEIMES-KOMMANDO",
+    ] {
+        assert!(!context.contains(absent), "{absent} im Kontext");
+    }
+    assert_eq!(
+        std::fs::read(&path).unwrap(),
+        before,
+        "Datenbank unverändert"
+    );
+}
+#[test]
+fn hint_hook_stays_silent_and_successful_on_every_failure_path() {
+    let temp = Temp::new();
+    let path = temp.0.join("still.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    let quiet = |db: &str, input: &str| {
+        let (ok, out) = hint(db, "p", input);
+        assert!(ok, "Hook muss erfolgreich enden: {input}");
+        assert!(out.is_empty(), "keine Ausgabe erwartet bei {input}: {out}");
+    };
+    quiet(db, &failure("völlig unbekannter Fehler ohne Treffer"));
+    quiet(db, "");
+    quiet(db, "kein json");
+    quiet(
+        db,
+        r#"{"hook_event_name":"PostToolUse","tool_name":"Bash","error":"database"}"#,
+    );
+    quiet(
+        db,
+        r#"{"hook_event_name":"PostToolUseFailure","tool_name":"Bash"}"#,
+    );
+    let missing = temp.0.join("fehlt.db");
+    quiet(missing.to_str().unwrap(), &failure("database is locked"));
+    assert!(!missing.exists(), "Hook legt keine Datenbank an");
+}
