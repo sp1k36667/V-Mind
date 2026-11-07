@@ -63,6 +63,9 @@ bleiben davon unberührt. Die Quelle dient der Deduplizierung und
 ist kein manipulationssicherer Nachweis. `repairs` liefert dieselbe Quelle als `source`.
 `resume` enthält `open_repairs` mit `total` (alle sichtbaren Reparaturen ohne Vorschlag im
 Bereich, unbegrenzt gezählt) und `newest_failed_runs` (höchstens drei, neueste zuerst).
+Außerdem `stale_tasks` (Aufgaben mit Status `in_progress` oder `blocked`, seit mindestens zwei
+vollen Tagen unverändert: `id`, `task_key`, `task_status`, `age_days`) und `open_hints`
+(`total` aktiver ungeprüfter Einträge genau im Bereich, `newest_ids` höchstens drei).
 
 ```json
 {"id":7,"op":"repairs","scope":"projekt-a"}

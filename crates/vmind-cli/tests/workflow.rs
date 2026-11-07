@@ -1188,3 +1188,55 @@ fn hint_hook_stays_silent_and_successful_on_every_failure_path() {
     quiet(missing.to_str().unwrap(), &failure("database is locked"));
     assert!(!missing.exists(), "Hook legt keine Datenbank an");
 }
+#[test]
+fn resume_reports_open_hints_and_stale_fields_in_json_and_text() {
+    let temp = Temp::new();
+    let path = temp.0.join("stand.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    cli(&[
+        "--scope",
+        "p",
+        "add",
+        db,
+        "long_term",
+        "Vermutung A",
+        "L",
+        "T",
+    ]);
+    cli(&[
+        "--scope",
+        "p",
+        "add",
+        db,
+        "long_term",
+        "Vermutung B",
+        "L",
+        "T",
+    ]);
+    cli(&[
+        "--scope",
+        "p",
+        "task",
+        db,
+        "k",
+        "in_progress",
+        "frische Aufgabe",
+        "T",
+    ]);
+    let json = cli(&["--scope", "p", "resume", db]);
+    assert_eq!(json["open_hints"]["total"], 2);
+    assert_eq!(json["open_hints"]["newest_ids"], serde_json::json!([2, 1]));
+    assert_eq!(
+        json["stale_tasks"],
+        serde_json::json!([]),
+        "heute angelegt ist nicht veraltet"
+    );
+    let out = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(["--scope", "p", "resume", db])
+        .output()
+        .unwrap();
+    let text = String::from_utf8(out.stdout).unwrap();
+    assert!(text.contains("Ungeprüfte Einträge in diesem Bereich: 2 (neueste: #2, #1)"));
+    assert!(!text.contains("möglicherweise veraltet"));
+}

@@ -133,7 +133,9 @@ optional `id` matches the response to the request.
 - `propose_repair`: `scope`, `failed_run`, `problem`, `solution`; one unverified
   proposal per repair. Write problem and solution yourself; V-Mind sets the source.
   `resume` lists repairs without a proposal under `open_repairs`; describe only real
-  repairs, invent nothing.
+  repairs, invent nothing. `stale_tasks` flags tasks whose status has not changed for days:
+  check them and update the status; `open_hints` lists your own unverified entries in the
+  scope.
 - `stats`: `scope`; knowledge statistics and schema version.
 - `session_new`: `scope`, `title`; returns `conversation_id`.
 - `sessions`: `scope`; at most 100 conversations.

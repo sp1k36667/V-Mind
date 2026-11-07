@@ -174,6 +174,18 @@ Reparaturen ohne Vorschlag im gewählten Bereich (`total`, gleiche Sichtbarkeit 
 `propose-repair`; ohne offene Reparatur entfällt sie. Es werden keine Texte, Befehle oder
 Ausgaben gezeigt und nichts geschrieben.
 
+Ab 0.3.0-rc.9 warnt der Fortsetzungsstand außerdem vor veralteten Angaben (CLI, JSONL, MCP,
+`report`, Ollama-Kontext; nur lesend, kein Status wird geändert):
+
+- `stale_tasks`: angezeigte Aufgaben, deren letzter Status `in_progress` oder `blocked` seit
+  mindestens zwei vollen Tagen unverändert ist, mit `age_days`. Die Textausgabe ergänzt
+  „möglicherweise veraltet: Status seit N Tagen unverändert“. Die Zeit wird einmal je
+  Abruf bestimmt; fehlende, ungültige oder künftige Zeitstempel warnen nicht und lassen
+  `resume` nicht scheitern.
+- `open_hints`: Zahl der aktiven ungeprüften Einträge genau im gewählten Bereich (ohne
+  `global`, ohne zurückgezogene) und höchstens drei neueste IDs, ohne Texte. So sieht eine
+  KI nach einem Neustart oder einer Kürzung des Kontexts ihre eigenen Vorschläge wieder.
+
 Besteht `check DB ID` oder ein Lauf in `revalidate` direkt nach einem Fehlschlag desselben
 aktiven Prüfbefehls, nennt die Ausgabe genau diese Reparatur: im Text eine Zeile
 „Reparatur erkannt … propose-repair DB LAUF PROBLEM LÖSUNG“, in JSON `repair` (bei `check`,

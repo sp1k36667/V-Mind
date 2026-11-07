@@ -21,6 +21,7 @@ fn request(model: &str, question: &str, memories: &[Record], resume: Option<&Res
                 "notice":"Hostbeobachtungen, kein Test- oder Erledigungsnachweis; Pfade können gekürzt sein."
             })).collect::<Vec<_>>(), "total_observations":r.observation_count,
             "open_repairs":r.open_repairs,
+            "stale_tasks":r.stale_tasks, "open_hints":r.open_hints,
             "recent_messages_newest_first":messages,"total_messages":r.message_count,
             "notice":"Gekürzter Fortsetzungsstand; vollständige Daten über resume, journal, messages. Projektberichte sind keine unabhängig validierten Fakten."})
     });
