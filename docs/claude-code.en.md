@@ -122,3 +122,38 @@ hit, for other events, invalid input, a missing database or an older schema, and
 database stays locked for more than 0.5 s (the wait starts before the first database access),
 the hook prints nothing and exits successfully, so it never blocks a tool call. The `timeout`
 of 5 seconds in the example also caps the whole hook on the Claude Code side. Like `observe` it never creates or upgrades a database.
+
+## 6. Optional: a short reminder on every prompt (UserPromptSubmit hook, 0.3.0-rc.12)
+
+*Covered by automated tests* (`nudge_hook_returns_counts_only_without_prompt_or_stored_text_and_without_writing`,
+`nudge_hook_stays_silent_and_successful_on_every_failure_path`,
+`nudge_hook_never_upgrades_or_backs_up_an_older_database`); not yet tried in a real Claude
+Code session. Opt-in.
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {"hooks": [{"type": "command",
+        "command": "vmind --scope my-project nudge \"$CLAUDE_PROJECT_DIR/vmind.db\"",
+        "timeout": 5}]}
+    ]
+  }
+}
+```
+
+On every prompt `nudge` adds exactly one short line (about 300 characters at most) as
+`additionalContext`: a fixed German reminder to use `journal_search` and `recall`, and, only
+when they apply, the number of tasks in progress or blocked, how many of them may be stale,
+repairs without a proposal, unverified entries, and a note that the stored next step may be
+outdated because a task was reported after it. The task count covers what the `resume`
+snapshot shows; once its limit of 20 unfinished tasks is reached, the line says "mindestens"
+(at least).
+
+**Read-only, fixed words and numbers:** of the hook input only `hook_event_name` is checked;
+the prompt text is neither used, stored nor printed, and no task text or other stored content
+appears. The reminder is shown whenever the database is readable, also with nothing open. For
+invalid input, other events, a missing database or an older schema, and when the database
+stays locked for more than 0.5 s, the hook prints nothing and exits successfully. It keeps no
+session state, writes no file, and never creates or upgrades a database. Note that it adds
+this line to the context of every prompt.

@@ -2,6 +2,7 @@ mod audit_cmd;
 mod check_cmd;
 mod hint;
 mod mcp;
+mod nudge;
 mod observe;
 mod ollama;
 mod prompt;
@@ -53,6 +54,8 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
   observe DB                    (Claude-Code-Hook: Meldung von stdin, nur Werkzeug/Ergebnis/Pfad)
   hint DB                       (Claude-Code-Hook PostToolUseFailure: passendes Wissen als Kontext,
                                  nur lesend, speichert nichts)
+  nudge DB                      (Claude-Code-Hook UserPromptSubmit: kurze Erinnerung und Zahlen zum
+                                 offenen Stand, nur lesend, speichert nichts)
   sessions DB
   session-new DB TITEL
   messages DB GESPRÄCH_ID [NACH_ID]
@@ -408,6 +411,7 @@ fn run() -> Result<()> {
         [cmd, db] if cmd == "audit-secrets" => audit_cmd::run(db, json_mode)?,
         [cmd, db] if cmd == "observe" => observe::run(db, &scope)?,
         [cmd, db] if cmd == "hint" => hint::run(db, &scope)?,
+        [cmd, db] if cmd == "nudge" => nudge::run(db, &scope)?,
         [cmd, db] if cmd == "report" => {
             let report = report::build(&MemoryStore::open_read_only(db)?, &scope)?;
             let text = report::markdown(&report);
