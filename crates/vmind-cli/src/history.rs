@@ -73,8 +73,12 @@ pub fn hook(db: &str, scope: &str) {
     }
 }
 
+fn warning_suffix(warning: Option<&String>) -> String {
+    warning.map_or(String::new(), |w| format!("\n  WARNUNG: {w}"))
+}
+
 fn import_text(report: &HistoryImport) -> String {
-    match &report.error {
+    let body = match &report.error {
         Some(error) => format!("Nicht importiert: {} ({error})", report.source),
         None => format!(
             "{} neue Nachrichten aus {} (Stand: Byte {}{}).",
@@ -87,7 +91,8 @@ fn import_text(report: &HistoryImport) -> String {
                 ""
             }
         ),
-    }
+    };
+    format!("{body}{}", warning_suffix(report.warning.as_ref()))
 }
 
 pub fn import(db: &str, scope: &str, file: &str, json_mode: bool) -> Result<()> {
@@ -108,18 +113,19 @@ pub fn import(db: &str, scope: &str, file: &str, json_mode: bool) -> Result<()> 
 
 fn status_text(status: &HistoryStatus) -> String {
     let mut lines = vec![format!(
-        "Bereich: {}\nNachrichten: {}\nQuellen mit Fehler: {}",
-        status.scope, status.messages, status.failed
+        "Bereich: {}\nNachrichten: {}\nQuellen mit Fehler: {}\nQuellen mit Warnung: {}",
+        status.scope, status.messages, status.failed, status.warned
     )];
     lines.extend(status.sources.iter().map(|s| {
         format!(
-            "{} (Byte {}, {}){}",
+            "{} (Byte {}, {}){}{}",
             s.source_path,
             s.byte_offset,
             s.updated_at,
             s.last_error
                 .as_ref()
-                .map_or(String::new(), |e| format!("\n  FEHLER: {e}"))
+                .map_or(String::new(), |e| format!("\n  FEHLER: {e}")),
+            warning_suffix(s.warning.as_ref())
         )
     }));
     lines.join("\n")
