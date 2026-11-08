@@ -147,26 +147,24 @@ fn without_system_blocks(text: &str) -> Cow<'_, str> {
         return Cow::Borrowed(text);
     }
     let mut kept = String::new();
-    let mut rest = text;
-    loop {
-        let end = rest
-            .find(SYSTEM_BLOCK_CLOSE)
-            .map(|at| at + SYSTEM_BLOCK_CLOSE.len());
-        match (rest.find(SYSTEM_BLOCK_OPEN), end) {
-            (None, None) => {
-                kept.push_str(rest);
-                break;
+    let mut text_start = 0;
+    let mut depth = 0usize;
+    for (at, _) in text.match_indices('<') {
+        let rest = &text[at..];
+        if rest.starts_with(SYSTEM_BLOCK_OPEN) {
+            if depth == 0 {
+                kept.push_str(&text[text_start..at]);
             }
-            (Some(start), None) => {
-                kept.push_str(&rest[..start]);
-                break;
+            depth += 1;
+        } else if rest.starts_with(SYSTEM_BLOCK_CLOSE) {
+            depth = depth.saturating_sub(1);
+            if depth == 0 {
+                text_start = at + SYSTEM_BLOCK_CLOSE.len();
             }
-            (Some(start), Some(end)) if start < end => {
-                kept.push_str(&rest[..start]);
-                rest = &rest[end..];
-            }
-            (_, Some(end)) => rest = &rest[end..],
         }
+    }
+    if depth == 0 {
+        kept.push_str(&text[text_start..]);
     }
     Cow::Owned(kept.trim().to_owned())
 }

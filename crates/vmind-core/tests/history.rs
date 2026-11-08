@@ -706,6 +706,22 @@ fn opening_tag_without_end_after_a_complete_block_keeps_the_text_between() {
 }
 
 #[test]
+fn nested_system_tags_do_not_end_the_outer_block() {
+    let text = format!("Davor Birke {OPEN}außen {} {BLOCK_WORD}", block());
+    assert_cleaned(row("user", "u1", json!(text)), "Birke", "Davor Birke");
+
+    let text = format!(
+        "Davor Birke {OPEN}außen {} {BLOCK_WORD}{CLOSE} danach",
+        block()
+    );
+    assert_cleaned(
+        row("user", "u2", json!(text)),
+        "Birke",
+        "Davor Birke  danach",
+    );
+}
+
+#[test]
 fn closing_tag_without_start_drops_the_text_before_it() {
     let text = format!("{BLOCK_WORD} Rest{CLOSE}\nDanach Linde");
     assert_cleaned(row("user", "u1", json!(text)), "Linde", "Danach Linde");
