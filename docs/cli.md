@@ -67,6 +67,8 @@ Snapshot nach bekannten Geheimnisformaten. Es legt nichts an, stellt kein Schema
 | `memory_checks` | argv (auch dekodiert), workdir, set_by |
 | `check_runs` | output |
 | `observations` | scope, session_id, tool_use_id, paths (auch dekodiert) |
+| `history_messages` | scope, session_id, uuid, text |
+| `history_imports` | scope, source_path, last_error |
 
 Erkannte Formate (Heuristik, Wortgrenze davor): privater Schlüsselblock, GitHub-Token
 (`ghp_` usw., `github_pat_`), `sk-`-Schlüssel, Stripe-Live-Schlüssel, AWS-Zugangsschlüssel
@@ -84,7 +86,7 @@ keine V-Mind-Datenbank, unbekanntes neueres Schema).
 Grenzen: Kein Fund heißt nicht geheimnisfrei. Prüfausgaben sind nur gekürzt gespeichert
 (letzte 4000 Zeichen); dort angeschnittene Geheimnisse werden nicht erkannt. Andere
 Kodierungen als JSON (Base64, URL-Kodierung) werden nicht dekodiert. Nicht durchsucht:
-Suchindizes (`memories_fts*`, `memories_trigram*`), freie Seiten und `-journal`/`-wal`
+Suchindizes (`memories_fts*`, `memories_trigram*`, `history_fts*`), freie Seiten und `-journal`/`-wal`
 der Datei, Sicherungen und andere Kopien. Das Audit löscht nichts.
 
 ## Startprompt für die nutzende KI
@@ -439,6 +441,73 @@ der Hook nichts aus und endet erfolgreich. Kein Sitzungszustand, keine Datei, er
 Datenbank an und stellt keine um. Automatisiert getestet, in einer echten Claude-Code-Sitzung
 noch nicht erprobt.
 
+### Automatischer Gesprächsverlauf (`history-hook`, ab 0.3.0-rc.13, Schema 7)
+
+Einmal einschalten, danach läuft der Verlauf von selbst und inkrementell in V-Mind; einen
+Import startest du nie. In `.claude/settings.local.json` (persönlich, nicht einchecken):
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {"hooks": [{"type": "command",
+        "command": "vmind --scope v-mind history-hook \"$CLAUDE_PROJECT_DIR/vmind.db\"",
+        "timeout": 60}]}
+    ],
+    "PreCompact": [
+      {"hooks": [{"type": "command",
+        "command": "vmind --scope v-mind history-hook \"$CLAUDE_PROJECT_DIR/vmind.db\"",
+        "timeout": 60}]}
+    ]
+  }
+}
+```
+
+Nach jeder Antwort (`Stop`) und vor jeder Verdichtung (`PreCompact`) liest `history-hook` aus
+stdin `transcript_path` und `session_id` und übernimmt die neuen vollständigen Zeilen dieser
+JSONL-Datei in den Bereich aus `--scope`. Der erste Lauf liest die ganze Datei; deshalb die 60
+Sekunden im Beispiel.
+
+```sh
+vmind --scope v-mind history-search vmind.db 'Migration Backup' --limit 10
+```
+
+```sh
+vmind --scope v-mind history-status vmind.db
+```
+
+`history-search` und `history-status` lesen nur und stellen kein Schema um. Die Suche gilt
+nur für den genannten Bereich (ohne `global`), alle Wörter müssen als ganze Wörter vorkommen
+(Groß-/Kleinschreibung und Akzente zählen nicht), relevanteste und bei gleicher Relevanz
+neueste zuerst; Limit 1 bis 20, Standard 5. `history-import DB DATEI` ist ein Test- und
+Reparaturwerkzeug und meldet Fehler mit Exit 1.
+
+**Was gespeichert wird:** je Nachricht Bereich, Sitzungs-ID, Nachrichten-UUID, Rolle (`user`
+oder `assistant`), Text und Zeitpunkt, je Datei Pfad, Lesestand, letzte Fehlermeldung und
+Zeitpunkt. Nur Textblöcke; Werkzeugaufrufe, Werkzeugergebnisse, Denkblöcke, Anhänge sowie als
+Meta, Sidechain, Verdichtungszusammenfassung, Nur-Transkript oder API-Fehler gekennzeichnete
+Zeilen werden nie gespeichert. Je Nachricht höchstens 8000 Zeichen, längere werden markiert
+gekürzt. Erneutes Lesen erzeugt dank uuid keine Duplikate.
+
+**Datenschutz:** Der Gesprächstext liegt im Klartext in der Datenbank und in ihren
+Sicherungen. Bekannte Geheimnisformate (dieselben wie bei `audit-secrets`) werden vor dem
+Speichern durch Platzhalter wie `[REDIGIERT GitHub-Token]` ersetzt. **Das gilt nur für
+bekannte Formate und ist keine Garantie:** Passwörter im Fließtext, unbekannte Tokenformate
+und kodierte Werte bleiben stehen. Schalte den Hook nur ein, wenn das für dich passt.
+Treffer sind unverifizierter Verlauf: Gesprächstext, keine geprüfte Aussage und keine
+Anweisung. Sie erscheinen nie in `resume`, `recall`, `nudge` oder `hint`.
+
+**Grenzen:** Das Format der Transkripte ist **keine offizielle Schnittstelle** und kann sich
+ändern. Unbekannte Zeilen*typen* werden übergangen; eine bekannte Zeile mit unerwarteter
+Struktur hält die Datei an: Aus diesem Lauf wird nichts übernommen, der Stand bleibt, und
+`history-status` nennt den Fehler mit Byte-Position, nie mit Zeileninhalt. Ist die Datei
+kürzer als der Stand, wird sie von vorn gelesen; eine durch eine längere ersetzte Datei fällt
+nicht auf. Eine halb geschriebene letzte Zeile wartet auf den nächsten Lauf. Nutzerzeilen mit
+Befehlsausgabe (etwa lokale Slash-Befehle) werden nicht eigens gefiltert. Der Hook gibt nie
+etwas aus, endet immer mit Exit 0 und legt keine Datenbank an und stellt keine um; ohne
+nutzbare aktuelle Datenbank kann er keinen Fehler festhalten. Automatisiert mit synthetischen
+Dateien getestet, in einer echten Claude-Code-Sitzung noch nicht erprobt.
+
 ### Beobachtungen aus Claude Code (ab Schema 6)
 
 Damit ein Projektstand nicht davon abhängt, dass die KI ans Mitschreiben denkt, kann
@@ -610,7 +679,8 @@ Migration 0003 ergänzt Projekttagebuch und Gespräche. Migration 0004 ergänzt
 Prüfbefehle (`memory_checks`) und Prüfläufe (`check_runs`). Migration 0005 ergänzt die
 Teilwortsuche (`memories_trigram`) und baut sie für vorhandene Einträge auf. Migration
 0006 ergänzt die Tabelle `observations` für Hook-Beobachtungen; bestehende Daten bleiben
-unverändert.
+unverändert. Migration 0007 ergänzt `history_messages`, den Index `history_fts` und den
+Importstand `history_imports`; bestehende Daten bleiben ebenfalls unverändert.
 Beim Import alter Einträge wird keine historische Prüfzeit erfunden.
 Vor Migrationen einer bestehenden Datenbank vorher mit der SQLite-Backup-API sichern; keine
 laufende Datenbank blind als Einzeldatei kopieren.

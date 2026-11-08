@@ -103,6 +103,16 @@ fn inspect(conn: &Connection) -> Result<DoctorReport> {
     if version >= 6 {
         required.extend(["observations", "observations_scope_session"]);
     }
+    if version >= 7 {
+        required.extend([
+            "history_messages",
+            "history_imports",
+            "history_fts",
+            "history_fts_insert",
+            "history_fts_delete",
+            "history_fts_update",
+        ]);
+    }
     let mut missing_objects = Vec::new();
     for name in required {
         let exists: bool = tx.query_row(

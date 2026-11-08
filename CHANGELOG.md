@@ -1,23 +1,34 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.12 (on `main`)
+## Unreleased: candidate 0.3.0-rc.13 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.12` (`vmind --version`, MCP
+Not released yet. The source now reports version `0.3.0-rc.13` (`vmind --version`, MCP
 server info); there is no tag, no published download and no installation of it. The
-earlier candidates `0.3.0-rc.1` to `0.3.0-rc.11` did not yet contain all changes below
+earlier candidates `0.3.0-rc.1` to `0.3.0-rc.12` did not yet contain all changes below
 (rc.1 lacked #40, #42, #43; rc.2 lacked #44; rc.3 lacked #46; rc.4 lacked #47; rc.5 lacked
 #48; rc.6 lacked #53; rc.7 lacked #54; rc.8 lacked the stale-task and open-hint warnings;
 rc.9 lacked the journal search; rc.10 lacked retrieval with all terms of long queries;
-rc.11 lacked the `nudge` hook).
+rc.11 lacked the `nudge` hook; rc.12 lacked the automatic conversation history).
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
-The next version requires a database migration from schema 5 to 6;
+The next version requires a database migration to schema 7 (from 5 via 6, or from 6);
 the automatic verified backup from #10 runs first (see "Upgrading" below). Release
 acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (German).
 
 ### Added
 
+- **Automatic conversation history (schema 7):** after being switched on once via Claude
+  Code's Stop and PreCompact hooks, `vmind history-hook DB` imports new transcript lines
+  incrementally; no import is ever started by hand. Only user and assistant text is stored;
+  tool calls and results, thinking and meta or sidechain lines are not. Known secret formats
+  are replaced before storing (known formats only, no guarantee), messages are cut to 8000
+  characters, repeats are removed by message UUID. An unexpected line structure stops the
+  file visibly in `vmind history-status DB`. `vmind history-search DB TEXT [--limit N]` and
+  JSONL/MCP `history_search` read one scope only and mark hits as unverified history; they
+  never appear in `resume`, `recall`, `nudge` or `hint`. `vmind history-import DB FILE` is
+  a test and repair tool. The transcript format is not an official interface. Tested with
+  synthetic transcripts only, not yet in a real Claude Code session.
 - `vmind doctor DB`: read-only check of schema version, integrity, foreign keys and
   required tables; never creates or upgrades a database. (#10)
 - `vmind backup DB TARGET`: consistent SQLite backup that never overwrites an existing
@@ -163,12 +174,12 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
 
 1. Stop all clients that use the database (MCP server, `serve`, hooks, scripts).
 2. Install the new binary. The first command that opens the database normally (for
-   example `stats`, `resume` or `add`) migrates schema 5 → 6 and first writes a verified
+   example `stats`, `resume` or `add`) migrates to schema 7 and first writes a verified
    backup next to the file (or in `VMIND_BACKUP_DIR`); without a verified backup there is
-   no migration. `doctor` and `report` only read and never migrate; the `observe` hook
-   refuses an old schema instead of upgrading it.
-3. Confirm with `vmind doctor vmind.db` that `schema_version` is 6 and the database is
-   healthy. Older binaries refuse a schema 6 database.
+   no migration. `doctor` and `report` only read and never migrate; the `observe` and
+   `history-hook` hooks refuse an old schema instead of upgrading it.
+3. Confirm with `vmind doctor vmind.db` that `schema_version` is 7 and the database is
+   healthy. Older binaries refuse a schema 7 database.
 4. Restart MCP clients so they use the new binary.
 
 ## 0.2.0 – 2026-11-01

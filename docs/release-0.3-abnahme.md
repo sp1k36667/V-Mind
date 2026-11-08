@@ -134,7 +134,7 @@ Spalte „Wer“: **N** = Nutzer (eigener Rechner, Konten, Neustarts), **C** = C
 | # | Schritt | Erwartung | Wer |
 | --- | --- | --- | --- |
 | 2.1 | Neues Benutzerkonto oder leeres `HOME`, `PATH` ohne `cargo`/`sqlite3`; Archiv entpacken | `vmind --version` meldet `vmind 0.3.0-rc.1` (bzw. die endgültige Version); SHA-256 des Archivs protokolliert | N (Konto) oder C (isoliertes `HOME`) |
-| 2.2 | `vmind init test.db`, dann `vmind doctor test.db` | Schema 6, Zustand ok; Datei hat unter Unix Rechte 0600; unter Windows gelten die Ordnerrechte | C |
+| 2.2 | `vmind init test.db`, dann `vmind doctor test.db` | Schema 7, Zustand ok; Datei hat unter Unix Rechte 0600; unter Windows gelten die Ordnerrechte | C |
 | 2.3 | `vmind start-prompt` und `vmind start-prompt en` | deutscher bzw. englischer Text; `vmind start-prompt fr` scheitert mit klarer Meldung | C |
 | 2.4 | Kurzer Ablauf mit synthetischem Eintrag: `add`, passende `validate`-Freigabe, `recall`, `log`, `resume`, `report`, jeweils als eigener Prozess | Einträge bleiben über Prozesse erhalten | C |
 | 2.5 | `audit-secrets test.db` | Exit 0, Hinweiszeile, keine Funde | C |

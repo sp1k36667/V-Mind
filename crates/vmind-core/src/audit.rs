@@ -150,6 +150,22 @@ const SOURCES: &[Source] = &[
         fields: &["scope", "session_id", "tool_use_id", "paths"],
         json: &["paths"],
     },
+    Source {
+        table: "history_messages",
+        min_schema: 7,
+        id: "id",
+        parent: Parent::None,
+        fields: &["scope", "session_id", "uuid", "text"],
+        json: &[],
+    },
+    Source {
+        table: "history_imports",
+        min_schema: 7,
+        id: "id",
+        parent: Parent::None,
+        fields: &["scope", "source_path", "last_error"],
+        json: &[],
+    },
 ];
 
 fn table_exists(conn: &Connection, table: &str) -> Result<bool> {

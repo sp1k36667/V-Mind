@@ -1,6 +1,7 @@
 mod audit_cmd;
 mod check_cmd;
 mod hint;
+mod history;
 mod mcp;
 mod nudge;
 mod observe;
@@ -56,6 +57,13 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
                                  nur lesend, speichert nichts)
   nudge DB                      (Claude-Code-Hook UserPromptSubmit: kurze Erinnerung und Zahlen zum
                                  offenen Stand, nur lesend, speichert nichts)
+  history-hook DB                (Claude-Code-Hook Stop/PreCompact: Gesprächsverlauf inkrementell
+                                 übernehmen; keine Ausgabe, Fehler im Importstand)
+  history-import DB DATEI       (Test und Reparatur: JSONL-Datei inkrementell übernehmen)
+  history-status DB             (nur lesen: Importstand mit Fehlern)
+  history-search DB SUCHTEXT [--limit N]
+                                (unverifizierter Verlauf nur dieses Bereichs, nur lesend;
+                                 alle Wörter müssen vorkommen; N 1 bis 20, sonst 5)
   sessions DB
   session-new DB TITEL
   messages DB GESPRÄCH_ID [NACH_ID]
@@ -412,6 +420,16 @@ fn run() -> Result<()> {
         [cmd, db] if cmd == "observe" => observe::run(db, &scope)?,
         [cmd, db] if cmd == "hint" => hint::run(db, &scope)?,
         [cmd, db] if cmd == "nudge" => nudge::run(db, &scope)?,
+        [cmd, db] if cmd == "history-hook" => history::hook(db, &scope),
+        [cmd, db, file] if cmd == "history-import" => history::import(db, &scope, file, json_mode)?,
+        [cmd, db] if cmd == "history-status" => history::status(db, &scope, json_mode)?,
+        [cmd, db, query] if cmd == "history-search" => {
+            history::search(db, &scope, query, 5, json_mode)?
+        }
+        [cmd, db, query, flag, limit] if cmd == "history-search" && flag == "--limit" => {
+            let limit = search_limit(limit)?;
+            history::search(db, &scope, query, limit, json_mode)?
+        }
         [cmd, db] if cmd == "report" => {
             let report = report::build(&MemoryStore::open_read_only(db)?, &scope)?;
             let text = report::markdown(&report);
