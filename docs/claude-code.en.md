@@ -190,7 +190,9 @@ allows 60 seconds. Search with `history_search` (MCP/JSONL) or
 
 **What is stored:** per message the scope, session ID, message UUID, role (`user` or
 `assistant`), text and timestamp, plus the transcript path and read position per file. Text
-blocks only: tool calls, tool results, thinking blocks, attachments and lines marked meta,
+blocks and user messages sent during a running turn only (`queued_command` attachments with
+`commandMode: prompt`, `origin.kind: human`, without `isMeta`): task notifications, tool
+calls, tool results, thinking blocks, other attachments and lines marked meta,
 sidechain, compact summary, transcript-only or API error are never stored. Messages are cut
 to 8000 characters.
 

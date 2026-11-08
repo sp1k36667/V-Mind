@@ -484,7 +484,9 @@ Reparaturwerkzeug und meldet Fehler mit Exit 1.
 
 **Was gespeichert wird:** je Nachricht Bereich, Sitzungs-ID, Nachrichten-UUID, Rolle (`user`
 oder `assistant`), Text und Zeitpunkt, je Datei Pfad, Lesestand, letzte Fehlermeldung und
-Zeitpunkt. Nur Textblöcke; Werkzeugaufrufe, Werkzeugergebnisse, Denkblöcke, Anhänge sowie als
+Zeitpunkt. Nur Textblöcke und während eines laufenden Turns gesendete Nutzernachrichten
+(Anhang `queued_command` mit `commandMode: prompt`, `origin.kind: human`, ohne `isMeta`);
+Aufgaben-Benachrichtigungen, Werkzeugaufrufe, Werkzeugergebnisse, Denkblöcke, andere Anhänge sowie als
 Meta, Sidechain, Verdichtungszusammenfassung, Nur-Transkript oder API-Fehler gekennzeichnete
 Zeilen werden nie gespeichert. Je Nachricht höchstens 8000 Zeichen, längere werden markiert
 gekürzt. Erneutes Lesen erzeugt dank uuid keine Duplikate.

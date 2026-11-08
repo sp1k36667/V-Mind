@@ -119,7 +119,7 @@ fn message_text(content: &Value) -> std::result::Result<String, &'static str> {
             }
             Ok(parts.join("\n"))
         }
-        _ => Err("message.content ist weder Text noch Blockliste"),
+        _ => Err("Inhalt ist weder Text noch Blockliste"),
     }
 }
 
@@ -146,16 +146,38 @@ fn stored_text(raw: &str) -> String {
     cut
 }
 
+/// Während eines Turns gesendete Nutzernachricht. Unterschieden wird nur an den Feldern
+/// `commandMode`, `origin.kind` und `isMeta`: Benachrichtigungen, Nachrichten anderer
+/// Absender und sonstige Anhänge bleiben draußen, auch bei unbekannten Werten.
+fn queued_user_text(row: &Value) -> std::result::Result<Option<String>, &'static str> {
+    let attachment = &row["attachment"];
+    if attachment["type"].as_str() != Some("queued_command")
+        || attachment["commandMode"].as_str() != Some("prompt")
+        || attachment["origin"]["kind"].as_str() != Some("human")
+    {
+        return Ok(None);
+    }
+    match attachment.get("isMeta") {
+        None | Some(Value::Bool(false)) => message_text(&attachment["prompt"]).map(Some),
+        Some(Value::Bool(true)) => Ok(None),
+        Some(_) => Err("Kennzeichen ist kein Wahrheitswert"),
+    }
+}
+
 /// `Ok(None)` für Zeilen ohne übernehmbaren Text; `Err` für eine unbekannte Struktur.
 fn parse_row(row: &Value, fallback: &str) -> std::result::Result<Option<Message>, &'static str> {
     if !row.is_object() {
         return Err("Zeile ist kein JSON-Objekt");
     }
-    let role = match row["type"].as_str() {
+    let (role, queued) = match row["type"].as_str() {
         None => return Err("Zeile ohne Typ"),
-        Some("user") => "user",
-        Some("assistant") => "assistant",
-        // Andere Zeilentypen (Anhänge, Metadaten, Abrechnung …) enthalten kein Gespräch.
+        Some("user") => ("user", None),
+        Some("assistant") => ("assistant", None),
+        Some("attachment") => match queued_user_text(row)? {
+            Some(text) => ("user", Some(text)),
+            None => return Ok(None),
+        },
+        // Andere Zeilentypen (Metadaten, Abrechnung …) enthalten kein Gespräch.
         Some(_) => return Ok(None),
     };
     for flag in SKIP_FLAGS {
@@ -180,11 +202,16 @@ fn parse_row(row: &Value, fallback: &str) -> std::result::Result<Option<Message>
     if !bounded_id(session_id, MAX_ID_CHARS) {
         return Err("Sitzungskennung ungültig");
     }
-    let message = &row["message"];
-    if message["role"].as_str() != Some(role) {
-        return Err("message.role passt nicht zum Zeilentyp");
-    }
-    let text = message_text(&message["content"])?;
+    let text = match queued {
+        Some(text) => text,
+        None => {
+            let message = &row["message"];
+            if message["role"].as_str() != Some(role) {
+                return Err("message.role passt nicht zum Zeilentyp");
+            }
+            message_text(&message["content"])?
+        }
+    };
     if text.trim().is_empty() {
         return Ok(None);
     }

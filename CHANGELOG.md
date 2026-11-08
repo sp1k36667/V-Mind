@@ -20,7 +20,7 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
 
 - **Automatic conversation history (schema 7):** after being switched on once via Claude
   Code's Stop and PreCompact hooks, `vmind history-hook DB` imports new transcript lines
-  incrementally; no import is ever started by hand. Only user and assistant text is stored;
+  incrementally; no import is ever started by hand. Only user and assistant text is stored, including user messages queued during a turn;
   tool calls and results, thinking and meta or sidechain lines are not. Known secret formats
   are replaced before storing (known formats only, no guarantee), messages are cut to 8000
   characters, repeats are removed by message UUID. An unexpected line structure stops the

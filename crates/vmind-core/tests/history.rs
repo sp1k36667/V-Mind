@@ -514,3 +514,89 @@ fn doctor_reports_a_missing_history_index() {
     assert!(!report.healthy);
     assert_eq!(report.missing_objects, ["history_fts_insert"]);
 }
+
+fn queued(uuid: &str, mode: &str, kind: &str, prompt: Value) -> Value {
+    json!({"type":"attachment","uuid":uuid,"sessionId":"sitzung-1","isSidechain":false,
+        "timestamp":"2026-01-01T00:00:00.000Z",
+        "attachment":{"type":"queued_command","commandMode":mode,
+            "origin":{"kind":kind},"prompt":prompt}})
+}
+
+#[test]
+fn queued_user_commands_are_imported_once_as_user_messages() {
+    let t = Temp::new();
+    let store = t.store();
+    let token = format!("gh{}_{}", "p", "a1B2".repeat(9));
+    write(
+        &t.file(),
+        &[
+            queued("q1", "prompt", "human", json!("Zwischenfrage Kolibri")),
+            queued("q2", "prompt", "human", json!(format!("Kolibri {token}"))),
+        ],
+    );
+    assert_eq!(import(&store, &t.file()).added, 2);
+    assert_eq!(import(&store, &t.file()).added, 0);
+    let other = t.0.join("kopie.jsonl");
+    fs::copy(t.file(), &other).unwrap();
+    assert_eq!(import(&store, &other).added, 0, "gleiche uuid im Bereich");
+    let hits = store.history_search("p", "Kolibri", 20).unwrap();
+    assert_eq!(hits.len(), 2);
+    assert!(hits.iter().all(|h| h.role == "user"));
+    let found = texts(&store, "p", "Kolibri");
+    assert!(found.iter().any(|f| f == "Zwischenfrage Kolibri"));
+    assert!(found.iter().all(|f| !f.contains(&token)));
+    assert_eq!(messages(&store), 2);
+}
+
+#[test]
+fn queued_notifications_and_other_attachments_are_not_user_text() {
+    let t = Temp::new();
+    let store = t.store();
+    let mut meta = queued("n3", "prompt", "human", json!("Meldung Fremdtext"));
+    meta["attachment"]["isMeta"] = json!(true);
+    let mut sidechain = queued("n4", "prompt", "human", json!("Meldung Fremdtext"));
+    sidechain["isSidechain"] = json!(true);
+    let mut without_origin = queued("n6", "prompt", "human", json!("Meldung Fremdtext"));
+    without_origin["attachment"]
+        .as_object_mut()
+        .unwrap()
+        .remove("origin");
+    write(
+        &t.file(),
+        &[
+            queued(
+                "n1",
+                "task-notification",
+                "task-notification",
+                json!("<task-notification>Meldung Fremdtext</task-notification>"),
+            ),
+            queued("n2", "prompt", "peer", json!("Meldung Fremdtext")),
+            meta,
+            sidechain,
+            queued(
+                "n5",
+                "task-notification",
+                "human",
+                json!("Meldung Fremdtext"),
+            ),
+            without_origin,
+            json!({"type":"attachment","uuid":"n7","sessionId":"s","timestamp":"t",
+                "attachment":{"type":"file","prompt":"Meldung Fremdtext"}}),
+            json!({"type":"attachment","attachment":"Meldung Fremdtext"}),
+        ],
+    );
+    let report = import(&store, &t.file());
+    assert_eq!(report.error, None);
+    assert_eq!(report.added, 0);
+    assert!(texts(&store, "p", "Fremdtext").is_empty());
+}
+
+#[test]
+fn a_human_queued_command_with_unexpected_structure_is_reported() {
+    let t = Temp::new();
+    let store = t.store();
+    write(&t.file(), &[queued("q1", "prompt", "human", json!(7))]);
+    let report = import(&store, &t.file());
+    assert!(report.error.is_some());
+    assert_eq!(report.offset, 0);
+}
