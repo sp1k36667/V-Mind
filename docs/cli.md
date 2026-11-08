@@ -496,6 +496,9 @@ Textausgabe steht vor jedem ungeprüften Treffer „UNGEPRÜFT – nur Hinweis�
 `--validated-only` (JSONL/MCP `validated_only: true`) liefert genau das bisherige Verhalten.
 Validiert wird dadurch nichts; dafür bleiben `validate` und Prüfbefehle zuständig.
 
+Ab 0.3.0-rc.11 nutzt der Abruf alle Begriffe einer Anfrage statt nur der ersten 24; die
+Anfrage darf weiterhin höchstens 2000 Zeichen lang sein.
+
 Für länger laufende Clients:
 
 ```sh

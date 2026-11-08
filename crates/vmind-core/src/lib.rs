@@ -141,7 +141,8 @@ fn nonblank(value: &str) -> Result<()> {
     }
 }
 
-/// Suchbegriffe ohne Stoppwörter, klein geschrieben, ohne Dubletten, höchstens 24.
+/// Suchbegriffe ohne Stoppwörter, klein geschrieben, ohne Dubletten. Ihre Zahl begrenzt nur
+/// die Zeichengrenze der Anfrage in `recall`.
 fn search_terms(query: &str) -> Vec<String> {
     let stop = [
         "der", "die", "das", "ein", "eine", "einer", "einem", "einen", "und", "oder", "ist",
@@ -156,9 +157,6 @@ fn search_terms(query: &str) -> Vec<String> {
         let term = term.to_lowercase();
         if !stop.contains(&term.as_str()) && !terms.contains(&term) {
             terms.push(term);
-        }
-        if terms.len() == 24 {
-            break;
         }
     }
     terms
