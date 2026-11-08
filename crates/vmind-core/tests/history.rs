@@ -246,7 +246,6 @@ fn assert_rejected(bad: &str) {
 #[test]
 fn unknown_structure_is_recorded_and_the_file_does_not_advance() {
     for bad in [
-        "kein json INHALT",
         "[1,2]",
         r#"{"kein_typ":"INHALT"}"#,
         r#"{"type":"user","uuid":"x","sessionId":"s","timestamp":"t"}"#,
@@ -266,7 +265,7 @@ fn unknown_structure_is_recorded_and_the_file_does_not_advance() {
 fn a_successful_import_clears_a_previous_error() {
     let t = Temp::new();
     let store = t.store();
-    fs::write(t.file(), "kein json\n").unwrap();
+    fs::write(t.file(), "[1,2]\n").unwrap();
     assert!(import(&store, &t.file()).error.is_some());
     write(&t.file(), &[row("user", "u1", json!("wieder gut"))]);
     let report = import(&store, &t.file());
@@ -762,4 +761,186 @@ fn mentioning_system_reminder_without_a_tag_stays_unchanged() {
     write(&t.file(), &[row("user", "u1", json!(text))]);
     assert_eq!(import(&store, &t.file()).added, 1);
     assert_eq!(texts(&store, "p", "bedeutet"), [text]);
+}
+
+/// Steht nur in synthetischen beschädigten Zeilen und darf nirgends gespeichert werden.
+const CORRUPT_WORD: &str = "DEFEKTINHALT";
+
+fn corrupt_line() -> String {
+    format!("{{\"type\":\"user\",\"text\":\"{CORRUPT_WORD}\n")
+}
+
+/// Gültig, beschädigt, gültig; liefert die Byte-Position der beschädigten Zeile.
+fn write_with_corrupt_line(path: &Path) -> u64 {
+    let first = line(&row("user", "u1", json!("vor Schaden")));
+    fs::write(
+        path,
+        format!(
+            "{first}{}{}",
+            corrupt_line(),
+            line(&row("user", "u2", json!("nach Schaden")))
+        ),
+    )
+    .unwrap();
+    first.len() as u64
+}
+
+#[test]
+fn corrupt_line_is_skipped_and_reported_with_both_valid_lines_imported() {
+    let t = Temp::new();
+    let store = t.store();
+    let position = write_with_corrupt_line(&t.file());
+    let report = import(&store, &t.file());
+    assert_eq!(report.error, None);
+    assert_eq!(report.added, 2);
+    assert_eq!(report.offset, fs::metadata(t.file()).unwrap().len());
+    assert_eq!(report.corrupt_lines, 1);
+    let status = store.history_status("p").unwrap();
+    assert_eq!(status.messages, 2);
+    assert_eq!(status.failed, 0, "eine Warnung ist kein Fehler");
+    let source = &status.sources[0];
+    assert_eq!(source.last_error, None);
+    assert_eq!(source.corrupt_lines, 1);
+    let warning = source.warning.as_deref().expect("Warnung gespeichert");
+    assert!(warning.contains(&format!("Byte {position}")), "{warning}");
+}
+
+#[test]
+fn repeated_import_without_new_data_keeps_count_offset_and_warning() {
+    let t = Temp::new();
+    let store = t.store();
+    write_with_corrupt_line(&t.file());
+    let first = import(&store, &t.file());
+    let before = store.history_status("p").unwrap().sources.remove(0);
+    let second = import(&store, &t.file());
+    assert_eq!(second.added, 0);
+    assert_eq!(second.offset, first.offset);
+    assert_eq!(second.corrupt_lines, 1);
+    assert_eq!(second.warning, first.warning);
+    let after = store.history_status("p").unwrap().sources.remove(0);
+    assert_eq!(after.corrupt_lines, 1);
+    assert_eq!(after.byte_offset, before.byte_offset);
+    assert_eq!(after.warning, before.warning);
+}
+
+#[test]
+fn appending_after_a_corrupt_line_imports_and_counts_only_new_damage() {
+    let t = Temp::new();
+    let store = t.store();
+    write_with_corrupt_line(&t.file());
+    let first = import(&store, &t.file());
+    append(&t.file(), &line(&row("user", "u3", json!("angehängt"))));
+    let second = import(&store, &t.file());
+    assert_eq!(second.added, 1);
+    assert_eq!(second.corrupt_lines, 1);
+    assert_eq!(second.warning, first.warning);
+    append(&t.file(), &corrupt_line());
+    let third = import(&store, &t.file());
+    assert_eq!(third.corrupt_lines, 2);
+    let warning = third.warning.expect("Warnung");
+    assert!(
+        warning.contains(&format!("Byte {}", second.offset)),
+        "letzte Position: {warning}"
+    );
+}
+
+#[test]
+fn a_replaced_shorter_file_does_not_count_old_damage_again() {
+    let t = Temp::new();
+    let store = t.store();
+    write_with_corrupt_line(&t.file());
+    assert_eq!(import(&store, &t.file()).corrupt_lines, 1);
+    fs::write(t.file(), corrupt_line()).unwrap();
+    let report = import(&store, &t.file());
+    assert!(report.restarted);
+    assert_eq!(report.corrupt_lines, 1, "neu gelesen, nicht addiert");
+    fs::write(t.file(), "").unwrap();
+    let report = import(&store, &t.file());
+    assert!(report.restarted);
+    assert_eq!(report.corrupt_lines, 0);
+    assert_eq!(report.warning, None);
+}
+
+#[test]
+fn a_later_error_keeps_the_warning_and_recovery_keeps_it_too() {
+    let t = Temp::new();
+    let store = t.store();
+    write_with_corrupt_line(&t.file());
+    let warning = import(&store, &t.file()).warning;
+    append(&t.file(), "[1,2]\n");
+    let stopped = import(&store, &t.file());
+    assert!(stopped.error.is_some());
+    assert_eq!(stopped.corrupt_lines, 1);
+    assert_eq!(stopped.warning, warning);
+    let status = store.history_status("p").unwrap();
+    assert_eq!(status.failed, 1);
+    assert_eq!(status.sources[0].corrupt_lines, 1);
+    assert!(status.sources[0].last_error.is_some());
+    let full = fs::read(t.file()).unwrap();
+    fs::write(t.file(), &full[..full.len() - "[1,2]\n".len()]).unwrap();
+    append(&t.file(), &line(&row("user", "u4", json!("repariert"))));
+    let recovered = import(&store, &t.file());
+    assert_eq!(recovered.error, None);
+    assert_eq!(recovered.warning, warning);
+    assert_eq!(store.history_status("p").unwrap().failed, 0);
+}
+
+#[test]
+fn corrupt_line_found_before_a_stop_is_counted_once_after_the_retry() {
+    let t = Temp::new();
+    let store = t.store();
+    fs::write(t.file(), format!("{}[1,2]\n", corrupt_line())).unwrap();
+    for _ in 0..2 {
+        let report = import(&store, &t.file());
+        assert!(report.error.is_some());
+        assert_eq!(report.corrupt_lines, 0, "Stopp übernimmt nichts");
+        assert_eq!(report.offset, 0);
+    }
+    fs::write(t.file(), format!("{}{{}}\n", corrupt_line())).unwrap();
+    assert!(import(&store, &t.file()).error.is_some(), "Zeile ohne Typ");
+    let good = line(&row("user", "u1", json!("gut")));
+    fs::write(t.file(), format!("{}{good}", corrupt_line())).unwrap();
+    assert_eq!(import(&store, &t.file()).corrupt_lines, 1);
+}
+
+#[test]
+fn incomplete_last_line_is_never_counted_as_corrupt() {
+    let t = Temp::new();
+    let store = t.store();
+    write(&t.file(), &[row("user", "u1", json!("fertig"))]);
+    let full = line(&row("user", "u2", json!("halb geschrieben")));
+    let (head, tail) = full.split_at(full.len() / 2);
+    append(&t.file(), head);
+    let first = import(&store, &t.file());
+    assert_eq!(first.corrupt_lines, 0);
+    assert_eq!(first.warning, None);
+    assert!(first.offset < fs::metadata(t.file()).unwrap().len());
+    append(&t.file(), tail);
+    let second = import(&store, &t.file());
+    assert_eq!(second.added, 1);
+    assert_eq!(second.corrupt_lines, 0);
+    assert_eq!(texts(&store, "p", "halb").len(), 1);
+}
+
+#[test]
+fn corrupt_line_content_never_reaches_the_database() {
+    let t = Temp::new();
+    let store = t.store();
+    write_with_corrupt_line(&t.file());
+    let report = import(&store, &t.file());
+    assert!(!report.warning.unwrap().contains(CORRUPT_WORD));
+    drop(store);
+    assert!(!db_contains(&t.db(), CORRUPT_WORD), "Rohdaten gespeichert");
+}
+
+#[test]
+fn invalid_utf8_counts_as_a_corrupt_line() {
+    let t = Temp::new();
+    let store = t.store();
+    let mut bytes = b"\xff\xfe\n".to_vec();
+    bytes.extend(line(&row("user", "u1", json!("danach"))).bytes());
+    fs::write(t.file(), bytes).unwrap();
+    let report = import(&store, &t.file());
+    assert_eq!(report.added, 1);
+    assert_eq!(report.corrupt_lines, 1);
 }

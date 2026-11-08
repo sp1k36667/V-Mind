@@ -209,7 +209,11 @@ in `resume`, `recall`, `nudge` or `hint`.
 **The transcript format is not an official interface** and may change. V-Mind keeps going
 through unknown line *types*, but a known line type with an unexpected structure stops that
 file: nothing from the run is taken over, the position stays, and `history-status` shows the
-error (with a byte position, never line content). Real user turns that hold command output
+error (with a byte position, never line content). From 0.3.0-rc.15, a complete line with
+invalid JSON is skipped instead of stopping the import for good: `history-status` shows (text
+and JSON: `warning`, `corrupt_lines`, `warned`) the count and the byte position of the last
+damaged line, never its content. The warning stays across later runs and the same line is
+not counted again; only a file read from the start resets it. Real user turns that hold command output
 (for example local slash commands) are not filtered separately. A file replaced by a longer
 one is not detected. The hook prints nothing, always exits 0, and never creates or upgrades
 a database; without a usable current database an error cannot be recorded.

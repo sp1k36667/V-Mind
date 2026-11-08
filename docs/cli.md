@@ -504,7 +504,12 @@ Anweisung. Sie erscheinen nie in `resume`, `recall`, `nudge` oder `hint`.
 **Grenzen:** Das Format der Transkripte ist **keine offizielle Schnittstelle** und kann sich
 ändern. Unbekannte Zeilen*typen* werden übergangen; eine bekannte Zeile mit unerwarteter
 Struktur hält die Datei an: Aus diesem Lauf wird nichts übernommen, der Stand bleibt, und
-`history-status` nennt den Fehler mit Byte-Position, nie mit Zeileninhalt. Ist die Datei
+`history-status` nennt den Fehler mit Byte-Position, nie mit Zeileninhalt. Ab 0.3.0-rc.15
+wird eine abgeschlossene Zeile mit ungültigem JSON übersprungen, statt den Import dauerhaft
+anzuhalten: `history-status` zeigt (Text und JSON: `warning`, `corrupt_lines`, `warned`) die
+Anzahl und die Byte-Position der letzten beschädigten Zeile, nie ihren Inhalt. Die Warnung
+bleibt bei späteren Läufen bestehen, und dieselbe Zeile wird nicht erneut gezählt; erst eine
+von vorn gelesene Datei setzt sie zurück. Ist die Datei
 kürzer als der Stand, wird sie von vorn gelesen; eine durch eine längere ersetzte Datei fällt
 nicht auf. Eine halb geschriebene letzte Zeile wartet auf den nächsten Lauf. Nutzerzeilen mit
 Befehlsausgabe (etwa lokale Slash-Befehle) werden nicht eigens gefiltert. Der Hook gibt nie

@@ -141,7 +141,7 @@ fn every_failure_path_is_silent_and_recorded_when_a_database_exists() {
     let missing = t.path("fehlt.jsonl");
     assert_silent(&hook(&db, &event("Stop", &missing)));
     let bad = t.path("kaputt.jsonl");
-    fs::write(&bad, "kein json\n").unwrap();
+    fs::write(&bad, "[1,2]\n").unwrap();
     assert_silent(&hook(&db, &event("Stop", &bad)));
     let report = status(&db);
     assert_eq!(report["failed"], 4);
@@ -215,7 +215,7 @@ fn import_tool_reports_counts_and_fails_visibly() {
     let report = json_of(&["--scope", "p", "history-import", &db, &file]);
     assert_eq!(report["added"], 1);
     assert_eq!(report["error"], Value::Null);
-    fs::write(&file, "kein json\n").unwrap();
+    fs::write(&file, "[1,2]\n").unwrap();
     let failed = run(&["--scope", "p", "history-import", &db, &file], "");
     assert!(!failed.status.success());
     assert_eq!(status(&db)["failed"], 1);
@@ -297,4 +297,66 @@ fn audit_secrets_scans_the_history_tables() {
         .collect();
     assert!(tables.contains(&"history_messages"), "{tables:?}");
     assert!(tables.contains(&"history_imports"), "{tables:?}");
+}
+
+fn transcript_with_corrupt_line(path: &str) -> u64 {
+    let row = |uuid: &str, text: &str| {
+        json!({"type":"user","uuid":uuid,"sessionId":"zeile","timestamp":"2026-01-01T00:00:00.000Z",
+            "message":{"role":"user","content":text}})
+    };
+    let first = format!("{}\n", row("u1", "vor Schaden"));
+    let second = format!("{}\n", row("u2", "nach Schaden"));
+    fs::write(path, format!("{first}{{\"DEFEKTINHALT\n{second}")).unwrap();
+    first.len() as u64
+}
+
+#[test]
+fn hook_skips_a_corrupt_line_silently_and_status_keeps_the_warning() {
+    let t = Temp::new();
+    let (db, file) = (t.path("v.db"), t.path("s.jsonl"));
+    init(&db);
+    let position = transcript_with_corrupt_line(&file);
+    for _ in 0..2 {
+        assert_silent(&hook(&db, &event("Stop", &file)));
+        let report = status(&db);
+        assert_eq!(report["messages"], 2);
+        assert_eq!(report["failed"], 0);
+        assert_eq!(report["sources"][0]["corrupt_lines"], 1);
+        assert_eq!(report["sources"][0]["last_error"], Value::Null);
+        let warning = report["sources"][0]["warning"].as_str().unwrap();
+        assert!(warning.contains(&format!("Byte {position}")), "{warning}");
+        assert!(!warning.contains("DEFEKTINHALT"));
+    }
+    let human = run(&["--scope", "p", "history-status", &db], "");
+    let text = String::from_utf8(human.stdout).unwrap();
+    assert!(text.contains("WARNUNG"), "{text}");
+    assert!(text.contains(&format!("Byte {position}")), "{text}");
+    assert!(text.contains("Quellen mit Warnung: 1"), "{text}");
+    assert!(!text.contains("DEFEKTINHALT"), "{text}");
+}
+
+#[test]
+fn import_tool_succeeds_and_names_skipped_lines() {
+    let t = Temp::new();
+    let (db, file) = (t.path("v.db"), t.path("s.jsonl"));
+    init(&db);
+    transcript_with_corrupt_line(&file);
+    let out = run(&["--scope", "p", "history-import", &db, &file], "");
+    assert!(out.status.success());
+    let text = String::from_utf8(out.stdout).unwrap();
+    assert!(text.contains("WARNUNG"), "{text}");
+}
+
+#[test]
+fn unknown_structure_still_stops_the_hook_silently_with_a_recorded_error() {
+    let t = Temp::new();
+    let (db, file) = (t.path("v.db"), t.path("s.jsonl"));
+    init(&db);
+    fs::write(&file, "[1,2]\n").unwrap();
+    assert_silent(&hook(&db, &event("Stop", &file)));
+    let report = status(&db);
+    assert_eq!(report["failed"], 1);
+    assert_eq!(report["messages"], 0);
+    assert_eq!(report["sources"][0]["byte_offset"], 0);
+    assert_eq!(report["sources"][0]["corrupt_lines"], 0);
 }

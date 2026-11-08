@@ -1,6 +1,7 @@
 //! Automatisch übernommener Gesprächsverlauf einer KI, zunächst aus den JSONL-Dateien von
 //! Claude Code. Dieses Format ist keine offizielle Schnittstelle: Eine unbekannte Struktur
-//! wird als Fehler im Importstand festgehalten, statt still übersprungen zu werden.
+//! wird als Fehler im Importstand festgehalten, statt still übersprungen zu werden. Nur eine
+//! abgeschlossene Zeile mit ungültigem JSON wird übersprungen und als Warnung gezählt.
 //!
 //! Übernommen wird nur der Text von Nutzer- und Assistentennachrichten; Werkzeugaufrufe,
 //! Werkzeugergebnisse, Denkblöcke sowie Meta- und Sidechain-Zeilen nie. Bekannte
@@ -29,6 +30,10 @@ const MAX_ID_CHARS: usize = 200;
 const MAX_TIMESTAMP_CHARS: usize = 64;
 const MAX_PATH_CHARS: usize = 4096;
 const MAX_ERROR_CHARS: usize = 1000;
+/// Eine Warnung steht in `last_error`, damit kein neues Schema nötig ist: nur die Warnung, nur
+/// ein Fehler oder beides mit Trennzeichen. Nach außen sind beide getrennte Felder.
+const WARNING_PREFIX: &str = "Warnung: ";
+const ERROR_SEPARATOR: &str = " | Fehler: ";
 const MAX_LISTED_SOURCES: i64 = 100;
 const MAX_QUERY_CHARS: usize = 2000;
 /// Zeilen mit einem dieser Felder auf `true` sind kein eigentliches Gespräch.
@@ -49,6 +54,9 @@ pub struct HistoryImport {
     /// Die Datei war kürzer als der gespeicherte Stand und wurde von vorn gelesen.
     pub restarted: bool,
     pub error: Option<String>,
+    /// Bisher übersprungene beschädigte Zeilen dieser Quelle.
+    pub corrupt_lines: u64,
+    pub warning: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -69,6 +77,8 @@ pub struct HistorySource {
     pub source_path: String,
     pub byte_offset: i64,
     pub last_error: Option<String>,
+    pub corrupt_lines: u64,
+    pub warning: Option<String>,
     pub updated_at: String,
 }
 
@@ -77,6 +87,8 @@ pub struct HistoryStatus {
     pub scope: String,
     pub messages: i64,
     pub failed: i64,
+    /// Quellen mit übersprungenen beschädigten Zeilen.
+    pub warned: i64,
     /// Neueste zuerst, höchstens 100.
     pub sources: Vec<HistorySource>,
 }
@@ -89,10 +101,89 @@ struct Message {
     created_at: String,
 }
 
+/// In diesem Lauf übersprungene Zeilen; enthält bewusst keine Zeileninhalte.
+struct CorruptLines {
+    count: u64,
+    last_byte: u64,
+}
+
 struct Batch {
     messages: Vec<Message>,
     end: u64,
     restarted: bool,
+    corrupt: Option<CorruptLines>,
+}
+
+/// Inhalt von `last_error`, aufgeteilt in Warnung und Fehler.
+#[derive(Default)]
+struct ImportNote {
+    corrupt_lines: u64,
+    warning: Option<String>,
+    error: Option<String>,
+}
+
+impl ImportNote {
+    fn parse(stored: Option<&str>) -> Self {
+        let Some(text) = stored else {
+            return Self::default();
+        };
+        let (head, error) = text
+            .split_once(ERROR_SEPARATOR)
+            .map_or((text, None), |(head, error)| (head, Some(error)));
+        let warning = head.strip_prefix(WARNING_PREFIX);
+        let count = warning.and_then(|w| w.split(' ').next()?.parse().ok());
+        match count {
+            Some(corrupt_lines) => Self {
+                corrupt_lines,
+                warning: warning.map(str::to_owned),
+                error: error.map(str::to_owned),
+            },
+            None => Self {
+                error: Some(text.to_owned()),
+                ..Self::default()
+            },
+        }
+    }
+
+    /// Wert für `last_error`.
+    fn stored(&self) -> Option<String> {
+        match (&self.warning, &self.error) {
+            (None, None) => None,
+            (None, Some(error)) => Some(error.clone()),
+            (Some(warning), None) => Some(format!("{WARNING_PREFIX}{warning}")),
+            (Some(warning), Some(error)) => {
+                Some(format!("{WARNING_PREFIX}{warning}{ERROR_SEPARATOR}{error}"))
+            }
+        }
+    }
+
+    /// Stand nach einem erfolgreichen Lauf. Ohne neue Schäden bleibt die Warnung unverändert;
+    /// eine von vorn gelesene Datei ersetzt sie, damit nichts doppelt gezählt wird.
+    fn after_batch(self, batch: &Batch) -> Self {
+        let (previous, warning) = if batch.restarted {
+            (0, None)
+        } else {
+            (self.corrupt_lines, self.warning)
+        };
+        match &batch.corrupt {
+            None => Self {
+                corrupt_lines: previous,
+                warning,
+                error: None,
+            },
+            Some(corrupt) => {
+                let total = previous.saturating_add(corrupt.count);
+                Self {
+                    corrupt_lines: total,
+                    warning: Some(format!(
+                        "{total} beschädigte Zeile(n) übersprungen, letzte ab Byte {}",
+                        corrupt.last_byte
+                    )),
+                    error: None,
+                }
+            }
+        }
+    }
 }
 
 fn bounded_id(value: &str, max: usize) -> bool {
@@ -267,7 +358,8 @@ fn io_message(what: &str, error: &io::Error) -> String {
     format!("{what}: {}", error.kind())
 }
 
-/// Liest alle vollständigen Zeilen ab dem Stand. Fehlermeldungen enthalten nie Zeileninhalte.
+/// Liest alle vollständigen Zeilen ab dem Stand; abgeschlossene Zeilen mit ungültigem JSON
+/// werden nur gezählt. Fehlermeldungen und Warnungen enthalten nie Zeileninhalte.
 fn read_new_lines(path: &Path, stored: u64, fallback: &str) -> std::result::Result<Batch, String> {
     // Vor dem Öffnen prüfen: Das Öffnen einer FIFO würde den Hook blockieren.
     let meta = std::fs::metadata(path).map_err(|e| io_message("Datei nicht lesbar", &e))?;
@@ -281,6 +373,7 @@ fn read_new_lines(path: &Path, stored: u64, fallback: &str) -> std::result::Resu
         .map_err(|e| io_message("Datei nicht lesbar", &e))?;
     let mut reader = BufReader::new(file);
     let mut messages = Vec::new();
+    let mut corrupt: Option<CorruptLines> = None;
     let mut end = start;
     let mut line = Vec::new();
     loop {
@@ -299,11 +392,19 @@ fn read_new_lines(path: &Path, stored: u64, fallback: &str) -> std::result::Resu
             break;
         }
         if !line.trim_ascii().is_empty() {
-            let unknown = |why: &str| format!("Unbekannte Struktur ab Byte {end}: {why}");
-            let value: Value =
-                serde_json::from_slice(&line).map_err(|_| unknown("kein gültiges JSON"))?;
-            if let Some(message) = parse_row(&value, fallback).map_err(unknown)? {
-                messages.push(message);
+            match serde_json::from_slice::<Value>(&line) {
+                Ok(value) => {
+                    let unknown = |why: &str| format!("Unbekannte Struktur ab Byte {end}: {why}");
+                    if let Some(message) = parse_row(&value, fallback).map_err(unknown)? {
+                        messages.push(message);
+                    }
+                }
+                Err(_) => {
+                    corrupt = Some(CorruptLines {
+                        count: corrupt.map_or(0, |c| c.count) + 1,
+                        last_byte: end,
+                    });
+                }
             }
         }
         end += read as u64;
@@ -312,6 +413,7 @@ fn read_new_lines(path: &Path, stored: u64, fallback: &str) -> std::result::Resu
         messages,
         end,
         restarted,
+        corrupt,
     })
 }
 
@@ -332,23 +434,40 @@ impl MemoryStore {
         Ok(offset.unwrap_or(0).max(0) as u64)
     }
 
-    /// Hält einen Importfehler fest, ohne den gelesenen Stand zu verändern.
+    fn history_note(&self, scope: &str, source: &str) -> Result<ImportNote> {
+        let stored: Option<Option<String>> = self
+            .conn
+            .query_row(
+                "SELECT last_error FROM history_imports WHERE scope=?1 AND source_path=?2",
+                params![scope, source],
+                |r| r.get(0),
+            )
+            .optional()?;
+        Ok(ImportNote::parse(stored.flatten().as_deref()))
+    }
+
+    /// Hält einen Importfehler fest, ohne den gelesenen Stand oder eine Warnung zu verändern.
     pub fn record_history_error(&self, scope: &str, source: &str, message: &str) -> Result<()> {
         check_scope(scope)?;
         let source = clipped(source, MAX_PATH_CHARS);
         let message = clipped(message, MAX_ERROR_CHARS);
-        retry_busy(&self.conn, || {
-            self.conn.execute(
-                "INSERT INTO history_imports(scope, source_path, last_error) VALUES(?1, ?2, ?3)
-                 ON CONFLICT(scope, source_path) DO UPDATE SET last_error=excluded.last_error,
-                 updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')",
-                params![scope, source, message],
-            )
+        let tx = retry_busy(&self.conn, || {
+            Transaction::new_unchecked(&self.conn, TransactionBehavior::Immediate)
         })?;
-        Ok(())
+        let note = ImportNote {
+            error: Some(message),
+            ..self.history_note(scope, &source)?
+        };
+        tx.execute(
+            "INSERT INTO history_imports(scope, source_path, last_error) VALUES(?1, ?2, ?3)
+             ON CONFLICT(scope, source_path) DO UPDATE SET last_error=excluded.last_error,
+             updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')",
+            params![scope, source, note.stored()],
+        )?;
+        tx.commit()
     }
 
-    /// Schreibt Nachrichten und Stand atomar. Hat ein paralleler Lauf den Stand inzwischen
+    /// Schreibt Nachrichten, Stand und Warnung atomar. Hat ein paralleler Lauf den Stand inzwischen
     /// geändert, gilt dessen Ergebnis und `None` kommt zurück; die uuid verhindert Duplikate.
     fn commit_history(
         &self,
@@ -356,13 +475,14 @@ impl MemoryStore {
         source: &str,
         expected: u64,
         batch: &Batch,
-    ) -> Result<Option<usize>> {
+    ) -> Result<Option<(usize, ImportNote)>> {
         let tx = retry_busy(&self.conn, || {
             Transaction::new_unchecked(&self.conn, TransactionBehavior::Immediate)
         })?;
         if self.history_offset(scope, source)? != expected {
             return Ok(None);
         }
+        let note = self.history_note(scope, source)?.after_batch(batch);
         let mut added = 0;
         {
             let mut insert = tx.prepare_cached(
@@ -382,13 +502,13 @@ impl MemoryStore {
         }
         tx.execute(
             "INSERT INTO history_imports(scope, source_path, byte_offset, last_error)
-             VALUES(?1, ?2, ?3, NULL)
+             VALUES(?1, ?2, ?3, ?4)
              ON CONFLICT(scope, source_path) DO UPDATE SET byte_offset=excluded.byte_offset,
-             last_error=NULL, updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')",
-            params![scope, source, batch.end as i64],
+             last_error=excluded.last_error, updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')",
+            params![scope, source, batch.end as i64, note.stored()],
         )?;
         tx.commit()?;
-        Ok(Some(added))
+        Ok(Some((added, note)))
     }
 
     /// Übernimmt neue Zeilen ab dem gespeicherten Stand. Inhaltliche und Dateifehler landen im
@@ -405,23 +525,35 @@ impl MemoryStore {
             return Err(invalid("Quellpfad zu lang"));
         }
         let stored = self.history_offset(scope, &source)?;
-        let report = |added, offset, restarted, error| HistoryImport {
+        let report = |added, offset, restarted, error, note: ImportNote| HistoryImport {
             source: source.clone(),
             added,
             offset,
             restarted,
             error,
+            corrupt_lines: note.corrupt_lines,
+            warning: note.warning,
         };
         let batch = match read_new_lines(path, stored, fallback_session) {
             Ok(batch) => batch,
             Err(message) => {
                 self.record_history_error(scope, &source, &message)?;
-                return Ok(report(0, stored, false, Some(message)));
+                let note = self.history_note(scope, &source)?;
+                return Ok(report(0, stored, false, Some(message), note));
             }
         };
         match self.commit_history(scope, &source, stored, &batch) {
-            Ok(Some(added)) => Ok(report(added, batch.end, batch.restarted, None)),
-            Ok(None) => Ok(report(0, self.history_offset(scope, &source)?, false, None)),
+            Ok(Some((added, note))) => Ok(report(added, batch.end, batch.restarted, None, note)),
+            Ok(None) => {
+                let offset = self.history_offset(scope, &source)?;
+                Ok(report(
+                    0,
+                    offset,
+                    false,
+                    None,
+                    self.history_note(scope, &source)?,
+                ))
+            }
             Err(error) => {
                 if !is_busy(&error) {
                     let message = "Datenbankfehler beim Speichern; nichts übernommen";
@@ -483,11 +615,17 @@ impl MemoryStore {
     pub fn history_status(&self, scope: &str) -> Result<HistoryStatus> {
         check_scope(scope)?;
         self.read_snapshot(|store| {
-            let (messages, failed) = store.conn.query_row(
+            let (messages, failed, warned) = store.conn.query_row(
                 "SELECT (SELECT count(*) FROM history_messages WHERE scope=?1),
-                 (SELECT count(*) FROM history_imports WHERE scope=?1 AND last_error IS NOT NULL)",
-                [scope],
-                |r| Ok((r.get(0)?, r.get(1)?)),
+                 (SELECT count(*) FROM history_imports WHERE scope=?1 AND last_error IS NOT NULL
+                  AND (last_error NOT LIKE ?2 OR last_error LIKE ?3)),
+                 (SELECT count(*) FROM history_imports WHERE scope=?1 AND last_error LIKE ?2)",
+                params![
+                    scope,
+                    format!("{WARNING_PREFIX}%"),
+                    format!("%{ERROR_SEPARATOR}%")
+                ],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
             )?;
             let mut stmt = store.conn.prepare(
                 "SELECT source_path, byte_offset, last_error, updated_at FROM history_imports
@@ -495,10 +633,13 @@ impl MemoryStore {
             )?;
             let sources = stmt
                 .query_map(params![scope, MAX_LISTED_SOURCES], |r| {
+                    let note = ImportNote::parse(r.get::<_, Option<String>>(2)?.as_deref());
                     Ok(HistorySource {
                         source_path: r.get(0)?,
                         byte_offset: r.get(1)?,
-                        last_error: r.get(2)?,
+                        last_error: note.error,
+                        corrupt_lines: note.corrupt_lines,
+                        warning: note.warning,
                         updated_at: r.get(3)?,
                     })
                 })?
@@ -507,6 +648,7 @@ impl MemoryStore {
                 scope: scope.to_owned(),
                 messages,
                 failed,
+                warned,
                 sources,
             })
         })

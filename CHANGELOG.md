@@ -1,15 +1,16 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.14 (on `main`)
+## Unreleased: candidate 0.3.0-rc.15 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.14` (`vmind --version`, MCP
+Not released yet. The source now reports version `0.3.0-rc.15` (`vmind --version`, MCP
 server info); there is no tag, no published download and no installation of it. The
-earlier candidates `0.3.0-rc.1` to `0.3.0-rc.13` did not yet contain all changes below
+earlier candidates `0.3.0-rc.1` to `0.3.0-rc.14` did not yet contain all changes below
 (rc.1 lacked #40, #42, #43; rc.2 lacked #44; rc.3 lacked #46; rc.4 lacked #47; rc.5 lacked
 #48; rc.6 lacked #53; rc.7 lacked #54; rc.8 lacked the stale-task and open-hint warnings;
 rc.9 lacked the journal search; rc.10 lacked retrieval with all terms of long queries;
 rc.11 lacked the `nudge` hook; rc.12 lacked the automatic conversation history; rc.13
-stored `<system-reminder>` blocks as part of imported user text).
+stored `<system-reminder>` blocks as part of imported user text; rc.14 stopped a history
+import permanently at a complete line with invalid JSON).
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
@@ -19,6 +20,13 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
 
 ### Fixed
 
+- **Damaged history lines no longer stop the import for good:** a complete,
+  newline-terminated line with invalid JSON is skipped. The count and the byte position of the
+  last damaged line are stored with the valid messages and the position in one transaction,
+  never the line content, and appear in `history-status` (text and JSON). The warning stays
+  across later runs without new data and the same line is not counted twice. An incomplete
+  last line still waits; valid JSON with an unknown structure still stops the file; the line
+  size limit is unchanged. No schema change.
 - **Conversation history no longer takes over system reminders:** `<system-reminder>` blocks
   inserted into imported user text (including `queued_command` messages) are removed before
   redaction, storing and indexing; a message with nothing left is not stored and the import
