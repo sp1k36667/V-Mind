@@ -4,12 +4,14 @@
 //!
 //! Übernommen wird nur der Text von Nutzer- und Assistentennachrichten; Werkzeugaufrufe,
 //! Werkzeugergebnisse, Denkblöcke sowie Meta- und Sidechain-Zeilen nie. Bekannte
-//! Geheimnisformate werden vor dem Speichern ersetzt. Verlauf ist kein Prüfnachweis.
+//! Geheimnisformate werden vor dem Speichern ersetzt. Vom System in Nutzertext eingefügte
+//! `<system-reminder>`-Blöcke werden vorher entfernt. Verlauf ist kein Prüfnachweis.
 use crate::{MemoryStore, invalid, is_busy, retry_busy, search_terms, secrets};
 use rusqlite::{OptionalExtension, Result, Transaction, TransactionBehavior, params};
 use serde::Serialize;
 use serde_json::Value;
 use std::{
+    borrow::Cow,
     fs::File,
     io::{self, BufRead, BufReader, Read, Seek, SeekFrom},
     path::Path,
@@ -18,6 +20,8 @@ use std::{
 /// Längere Nachrichten werden abgeschnitten und markiert.
 const MAX_TEXT_CHARS: usize = 8000;
 const CUT_MARK: &str = " [gekürzt]";
+const SYSTEM_BLOCK_OPEN: &str = "<system-reminder>";
+const SYSTEM_BLOCK_CLOSE: &str = "</system-reminder>";
 /// Schutz vor unbegrenztem Speicherbedarf; echte Zeilen mit großen Anhängen bleiben darunter.
 const MAX_LINE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_SCOPE_CHARS: usize = 128;
@@ -135,6 +139,36 @@ fn required_id<'a>(
         .ok_or(missing)
 }
 
+/// Entfernt vom System eingefügte Blöcke aus Nutzertext und trimmt dann den Rand. Text ohne
+/// Tag bleibt exakt erhalten. Unvollständige Blöcke hinterlassen keine Teilinhalte: Ohne Ende
+/// fällt alles ab dem öffnenden Tag weg, ohne Anfang alles seit dem letzten Block bis zum Ende.
+fn without_system_blocks(text: &str) -> Cow<'_, str> {
+    if !text.contains(SYSTEM_BLOCK_OPEN) && !text.contains(SYSTEM_BLOCK_CLOSE) {
+        return Cow::Borrowed(text);
+    }
+    let mut kept = String::new();
+    let mut text_start = 0;
+    let mut depth = 0usize;
+    for (at, _) in text.match_indices('<') {
+        let rest = &text[at..];
+        if rest.starts_with(SYSTEM_BLOCK_OPEN) {
+            if depth == 0 {
+                kept.push_str(&text[text_start..at]);
+            }
+            depth += 1;
+        } else if rest.starts_with(SYSTEM_BLOCK_CLOSE) {
+            depth = depth.saturating_sub(1);
+            if depth == 0 {
+                text_start = at + SYSTEM_BLOCK_CLOSE.len();
+            }
+        }
+    }
+    if depth == 0 {
+        kept.push_str(&text[text_start..]);
+    }
+    Cow::Owned(kept.trim().to_owned())
+}
+
 /// Erst redigieren, dann kürzen: Ein angeschnittenes Geheimnis wäre nicht mehr erkennbar.
 fn stored_text(raw: &str) -> String {
     let clean = secrets::redact(raw);
@@ -211,6 +245,11 @@ fn parse_row(row: &Value, fallback: &str) -> std::result::Result<Option<Message>
             }
             message_text(&message["content"])?
         }
+    };
+    let text = if role == "user" {
+        without_system_blocks(&text)
+    } else {
+        Cow::Borrowed(text.as_str())
     };
     if text.trim().is_empty() {
         return Ok(None);

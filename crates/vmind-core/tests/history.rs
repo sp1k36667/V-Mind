@@ -600,3 +600,166 @@ fn a_human_queued_command_with_unexpected_structure_is_reported() {
     assert!(report.error.is_some());
     assert_eq!(report.offset, 0);
 }
+
+const OPEN: &str = "<system-reminder>";
+const CLOSE: &str = "</system-reminder>";
+/// Steht nur innerhalb synthetischer Systemblöcke und darf nirgends gespeichert werden.
+const BLOCK_WORD: &str = "BLOCKINHALT";
+
+fn block() -> String {
+    format!("{OPEN}\n{BLOCK_WORD} vom System\n{CLOSE}")
+}
+
+fn db_contains(path: &Path, needle: &str) -> bool {
+    fs::read(path)
+        .unwrap()
+        .windows(needle.len())
+        .any(|w| w == needle.as_bytes())
+}
+
+/// Importiert eine Zeile und prüft gespeicherten Text, Suche und Datenbank-Bytes.
+fn assert_cleaned(source: Value, query: &str, expected: &str) {
+    let t = Temp::new();
+    let store = t.store();
+    write(&t.file(), &[source]);
+    let report = import(&store, &t.file());
+    assert_eq!(report.error, None);
+    assert_eq!(report.added, 1);
+    assert_eq!(texts(&store, "p", query), [expected]);
+    assert!(
+        texts(&store, "p", BLOCK_WORD).is_empty(),
+        "Suche findet ihn"
+    );
+    drop(store);
+    assert!(!db_contains(&t.db(), BLOCK_WORD), "steht in der Datenbank");
+}
+
+/// Ohne verbleibenden Text: keine Nachricht, kein Fehler, und der Stand schreitet fort.
+fn assert_dropped(source: Value) {
+    let t = Temp::new();
+    let store = t.store();
+    write(
+        &t.file(),
+        &[source, row("user", "nachher", json!("Folgezeile bleibt"))],
+    );
+    let report = import(&store, &t.file());
+    assert_eq!(report.error, None);
+    assert_eq!(report.added, 1);
+    assert_eq!(report.offset, fs::metadata(t.file()).unwrap().len());
+    assert_eq!(messages(&store), 1);
+    assert_eq!(texts(&store, "p", "Folgezeile"), ["Folgezeile bleibt"]);
+    assert!(texts(&store, "p", BLOCK_WORD).is_empty());
+    drop(store);
+    assert!(!db_contains(&t.db(), BLOCK_WORD), "steht in der Datenbank");
+}
+
+#[test]
+fn leading_system_block_is_removed_and_user_text_kept() {
+    let text = format!("{}\n\n  Echte Frage\n  zur Lampe  \n", block());
+    assert_cleaned(
+        row("user", "u1", json!(text)),
+        "Lampe",
+        "Echte Frage\n  zur Lampe",
+    );
+}
+
+#[test]
+fn leading_system_block_is_removed_from_text_block_lists() {
+    let content = json!([
+        {"type":"text","text":block()},
+        {"type":"text","text":"Frage aus Liste"}
+    ]);
+    assert_cleaned(row("user", "u1", content), "Liste", "Frage aus Liste");
+}
+
+#[test]
+fn message_with_only_a_system_block_is_not_stored_and_the_import_goes_on() {
+    assert_dropped(row("user", "u1", json!(format!(" \n{}\n ", block()))));
+}
+
+#[test]
+fn several_system_blocks_are_all_removed() {
+    let text = format!("{0}Eins{0}Zwei Tulpe{0}", block());
+    assert_cleaned(row("user", "u1", json!(text)), "Tulpe", "EinsZwei Tulpe");
+}
+
+#[test]
+fn system_block_inside_the_text_leaves_both_sides_unchanged() {
+    let text = format!("Vorher  Rose\n{}\nNachher", block());
+    assert_cleaned(
+        row("user", "u1", json!(text)),
+        "Rose",
+        "Vorher  Rose\n\nNachher",
+    );
+}
+
+#[test]
+fn opening_tag_without_end_drops_everything_from_the_tag_on() {
+    let text = format!("Davor Birke {OPEN}{BLOCK_WORD} ohne Ende");
+    assert_cleaned(row("user", "u1", json!(text)), "Birke", "Davor Birke");
+}
+
+#[test]
+fn opening_tag_without_end_after_a_complete_block_keeps_the_text_between() {
+    let text = format!("{}Mitte Eiche {OPEN}{BLOCK_WORD}", block());
+    assert_cleaned(row("user", "u1", json!(text)), "Eiche", "Mitte Eiche");
+}
+
+#[test]
+fn nested_system_tags_do_not_end_the_outer_block() {
+    let text = format!("Davor Birke {OPEN}außen {} {BLOCK_WORD}", block());
+    assert_cleaned(row("user", "u1", json!(text)), "Birke", "Davor Birke");
+
+    let text = format!(
+        "Davor Birke {OPEN}außen {} {BLOCK_WORD}{CLOSE} danach",
+        block()
+    );
+    assert_cleaned(
+        row("user", "u2", json!(text)),
+        "Birke",
+        "Davor Birke  danach",
+    );
+}
+
+#[test]
+fn closing_tag_without_start_drops_the_text_before_it() {
+    let text = format!("{BLOCK_WORD} Rest{CLOSE}\nDanach Linde");
+    assert_cleaned(row("user", "u1", json!(text)), "Linde", "Danach Linde");
+}
+
+#[test]
+fn lone_broken_tags_leave_no_message() {
+    assert_dropped(row("user", "u1", json!(format!("{OPEN}{BLOCK_WORD}"))));
+    assert_dropped(row("user", "u1", json!(format!("{BLOCK_WORD}{CLOSE}"))));
+}
+
+#[test]
+fn queued_commands_are_cleaned_like_user_messages() {
+    let text = format!("{}\nZwischenfrage Ahorn", block());
+    assert_cleaned(
+        queued("q1", "prompt", "human", json!(text)),
+        "Ahorn",
+        "Zwischenfrage Ahorn",
+    );
+    assert_dropped(queued("q2", "prompt", "human", json!(block())));
+}
+
+#[test]
+fn assistant_text_keeps_system_block_tags_unchanged() {
+    let t = Temp::new();
+    let store = t.store();
+    let text = format!("Antwort Fichte {OPEN}zitiert{CLOSE} Ende {OPEN}offen");
+    write(&t.file(), &[row("assistant", "a1", json!(text))]);
+    assert_eq!(import(&store, &t.file()).added, 1);
+    assert_eq!(texts(&store, "p", "Fichte"), [text]);
+}
+
+#[test]
+fn mentioning_system_reminder_without_a_tag_stays_unchanged() {
+    let text = "  Was bedeutet system-reminder oder /system-reminder> hier?  ";
+    let t = Temp::new();
+    let store = t.store();
+    write(&t.file(), &[row("user", "u1", json!(text))]);
+    assert_eq!(import(&store, &t.file()).added, 1);
+    assert_eq!(texts(&store, "p", "bedeutet"), [text]);
+}
