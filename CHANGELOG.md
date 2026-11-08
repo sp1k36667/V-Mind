@@ -1,13 +1,14 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.11 (on `main`)
+## Unreleased: candidate 0.3.0-rc.12 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.11` (`vmind --version`, MCP
+Not released yet. The source now reports version `0.3.0-rc.12` (`vmind --version`, MCP
 server info); there is no tag, no published download and no installation of it. The
-earlier candidates `0.3.0-rc.1` to `0.3.0-rc.10` did not yet contain all changes below
+earlier candidates `0.3.0-rc.1` to `0.3.0-rc.11` did not yet contain all changes below
 (rc.1 lacked #40, #42, #43; rc.2 lacked #44; rc.3 lacked #46; rc.4 lacked #47; rc.5 lacked
 #48; rc.6 lacked #53; rc.7 lacked #54; rc.8 lacked the stale-task and open-hint warnings;
-rc.9 lacked the journal search; rc.10 lacked retrieval with all terms of long queries).
+rc.9 lacked the journal search; rc.10 lacked retrieval with all terms of long queries;
+rc.11 lacked the `nudge` hook).
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
@@ -102,6 +103,14 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
   checked before the database is opened. Linear scan without an index that stops after
   `limit` matches. The start instructions describe what a good journal entry contains and
   the retrieval order `resume` → `journal_search` → `recall` → `get`/`show`.
+- `vmind nudge DB`: opt-in Claude Code hook for `UserPromptSubmit`. Adds one short line of
+  context: a fixed reminder to use `journal_search` and `recall`, plus counts of tasks in
+  progress or blocked ("mindestens" when the snapshot limit is reached), possibly stale
+  tasks, repairs without a proposal, unverified entries, and a note when the stored next
+  step is older than the newest task. Fixed words and numbers only: the prompt text is
+  neither used, stored nor printed, and no stored text appears. Read-only; every failure
+  path exits silently with status 0. Covered by automated tests, not yet tried in a real
+  Claude Code session.
 
 ### Changed
 

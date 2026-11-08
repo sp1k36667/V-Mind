@@ -3,7 +3,8 @@ use crate::{MemoryStore, invalid, nonblank, retry_busy};
 use rusqlite::{OptionalExtension, Result, params};
 use serde::Serialize;
 
-const RESUME_OPEN_TASKS: usize = 20;
+/// Höchstzahl unerledigter Aufgaben im Fortsetzungsstand.
+pub const RESUME_OPEN_TASKS: usize = 20;
 const RESUME_DONE_TASKS: usize = 5;
 const RESUME_DECISIONS: usize = 5;
 const RESUME_RECENT_EVENTS: usize = 5;

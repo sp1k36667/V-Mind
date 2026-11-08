@@ -407,6 +407,38 @@ erfolgreich; `timeout` 5 im Beispiel begrenzt den ganzen Hook zusätzlich auf Se
 Code; er blockiert nie ein Werkzeug und legt keine
 Datenbank an. In einer echten Claude-Code-Sitzung ist er noch nicht erprobt.
 
+### Anstupser für Claude Code (`nudge`, ab 0.3.0-rc.12)
+
+Ein `UserPromptSubmit`-Hook kann bei jeder Eingabe in einer kurzen Zeile an die Suche im
+Projekttagebuch und im Wissen erinnern:
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {"hooks": [{"type": "command",
+        "command": "vmind --scope v-mind nudge \"$CLAUDE_PROJECT_DIR/vmind.db\"",
+        "timeout": 5}]}
+    ]
+  }
+}
+```
+
+`nudge` gibt genau eine Zeile (höchstens etwa 300 Zeichen) als `additionalContext` zurück: die
+feste Erinnerung an `journal_search` und `recall` sowie, nur wenn zutreffend, die Zahl der
+Aufgaben in Arbeit oder blockiert, davon möglicherweise veraltete, Reparaturen ohne Vorschlag,
+ungeprüfte Einträge und den Hinweis „nächster Schritt möglicherweise überholt“, wenn nach dem
+gespeicherten nächsten Schritt noch eine Aufgabe gemeldet wurde. Gezählt wird, was der
+`resume`-Snapshot zeigt; erreicht er seine Grenze von 20 unerledigten Aufgaben, steht
+„mindestens“ davor. **Nur lesend, nur feste Wörter und Zahlen:** Von der Hook-Meldung wird
+allein `hook_event_name` geprüft; der Prompt-Text wird weder verwendet noch gespeichert noch
+ausgegeben, Aufgabentexte und andere gespeicherte Inhalte erscheinen nicht. Die Erinnerung
+steht immer da, wenn die Datenbank lesbar ist. Bei ungültiger Eingabe, anderen Ereignissen,
+fehlender oder älterer Datenbank und wenn die Datenbank länger als 0,5 s gesperrt ist, gibt
+der Hook nichts aus und endet erfolgreich. Kein Sitzungszustand, keine Datei, er legt keine
+Datenbank an und stellt keine um. Automatisiert getestet, in einer echten Claude-Code-Sitzung
+noch nicht erprobt.
+
 ### Beobachtungen aus Claude Code (ab Schema 6)
 
 Damit ein Projektstand nicht davon abhängt, dass die KI ans Mitschreiben denkt, kann

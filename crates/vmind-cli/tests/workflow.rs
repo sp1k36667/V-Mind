@@ -1376,3 +1376,149 @@ fn journal_search_never_upgrades_or_backs_up_an_older_database() {
         .collect();
     assert_eq!(files, ["v5.db"], "keine Sicherung und keine Zusatzdateien");
 }
+fn nudge(db: &str, scope: &str, input: &str) -> (bool, String) {
+    use std::io::Write;
+    let mut child = Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(["--scope", scope, "nudge", db])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    // Ein Hook darf auch bei vorzeitig geschlossener Eingabe nicht scheitern.
+    let _ = child.stdin.take().unwrap().write_all(input.as_bytes());
+    let out = child.wait_with_output().unwrap();
+    (out.status.success(), String::from_utf8(out.stdout).unwrap())
+}
+fn prompt_event() -> String {
+    serde_json::json!({"session_id":"s1","hook_event_name":"UserPromptSubmit","cwd":"/projekt",
+        "prompt":"GEHEIMER-PROMPT"})
+    .to_string()
+}
+fn assert_nudge_silent(db: &str, input: &str) {
+    let (ok, out) = nudge(db, "p", input);
+    assert!(ok, "Hook muss erfolgreich enden: {input}");
+    assert!(out.is_empty(), "keine Ausgabe erwartet bei {input}: {out}");
+}
+#[test]
+fn nudge_hook_returns_counts_only_without_prompt_or_stored_text_and_without_writing() {
+    let temp = Temp::new();
+    let path = temp.0.join("nudge.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    cli(&[
+        "--scope",
+        "p",
+        "log",
+        db,
+        "next_step",
+        "GEHEIMER-SCHRITT",
+        "GEHEIME-QUELLE",
+    ]);
+    cli(&[
+        "--scope",
+        "p",
+        "task",
+        db,
+        "geheimer-schluessel",
+        "in_progress",
+        "GEHEIME-AUFGABE",
+        "GEHEIME-QUELLE",
+    ]);
+    cli(&[
+        "--scope",
+        "p",
+        "add",
+        db,
+        "error_solution",
+        "GEHEIMES-PROBLEM",
+        "GEHEIME-LOESUNG",
+        "GEHEIME-QUELLE",
+    ]);
+    let before = std::fs::read(&path).unwrap();
+
+    let (ok, out) = nudge(db, "p", &prompt_event());
+
+    assert!(ok);
+    assert_eq!(out.trim_end().lines().count(), 1, "eine Zeile: {out}");
+    assert!(!out.contains("GEHEIM"), "kein Inhalt in der Ausgabe: {out}");
+    assert!(!out.contains("geheimer-schluessel"), "{out}");
+    let answer: Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(
+        answer["hookSpecificOutput"]["hookEventName"],
+        "UserPromptSubmit"
+    );
+    let context = answer["hookSpecificOutput"]["additionalContext"]
+        .as_str()
+        .unwrap();
+    assert!(context.starts_with("V-Mind: Vor der Arbeit journal_search"));
+    assert!(context.contains("in Arbeit oder blockiert: 1"), "{context}");
+    assert!(context.contains("ungeprüfte Einträge: 1"), "{context}");
+    assert!(context.contains("überholt"), "{context}");
+    assert!(context.chars().count() <= 300, "{context}");
+    assert_eq!(
+        std::fs::read(&path).unwrap(),
+        before,
+        "Datenbank unverändert"
+    );
+}
+#[test]
+fn nudge_hook_shows_the_reminder_for_a_database_without_open_work() {
+    let temp = Temp::new();
+    let path = temp.0.join("leer.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+
+    let (ok, out) = nudge(db, "p", &prompt_event());
+
+    assert!(ok);
+    let answer: Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(
+        answer["hookSpecificOutput"]["additionalContext"],
+        "V-Mind: Vor der Arbeit journal_search zum Thema und recall für Wissen nutzen."
+    );
+}
+#[test]
+fn nudge_hook_stays_silent_and_successful_on_every_failure_path() {
+    let temp = Temp::new();
+    let path = temp.0.join("still.db");
+    let db = path.to_str().unwrap();
+    cli(&["init", db]);
+    let before = std::fs::read(&path).unwrap();
+    assert_nudge_silent(db, "");
+    assert_nudge_silent(db, "kein json");
+    assert_nudge_silent(db, r#"{"prompt":"ohne Ereignis"}"#);
+    assert_nudge_silent(db, r#"{"hook_event_name":"PostToolUse","prompt":"x"}"#);
+    assert_eq!(std::fs::read(&path).unwrap(), before, "Datei unverändert");
+    let missing = temp.0.join("fehlt.db");
+    assert_nudge_silent(missing.to_str().unwrap(), &prompt_event());
+    assert!(!missing.exists(), "Hook legt keine Datenbank an");
+}
+#[test]
+fn nudge_hook_never_upgrades_or_backs_up_an_older_database() {
+    let temp = Temp::new();
+    let path = temp.0.join("v5.db");
+    {
+        let c = rusqlite::Connection::open(&path).unwrap();
+        for sql in [
+            include_str!("../../../migrations/0001_memory.sql"),
+            include_str!("../../../migrations/0002_retrieval.sql"),
+            include_str!("../../../migrations/0003_project_context.sql"),
+            include_str!("../../../migrations/0004_checks.sql"),
+            include_str!("../../../migrations/0005_partial_search.sql"),
+        ] {
+            c.execute_batch(sql).unwrap();
+        }
+        c.pragma_update(None, "user_version", 5).unwrap();
+    }
+    let before = std::fs::read(&path).unwrap();
+
+    assert_nudge_silent(path.to_str().unwrap(), &prompt_event());
+
+    assert_eq!(std::fs::read(&path).unwrap(), before, "Datei unverändert");
+    let files: Vec<String> = std::fs::read_dir(&temp.0)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    assert_eq!(files, ["v5.db"], "keine Sicherung und keine Zusatzdateien");
+}
