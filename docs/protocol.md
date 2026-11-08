@@ -160,6 +160,21 @@ Erfolg: `data.events`. Für die nächste Seite `after` auf die letzte Ereignis-I
 `limit` standardmäßig 5, zulässig 1 bis 100, `after` muss >=0 sein. Die Einträge sind
 chronologisch nach ID sortiert; eine leere Liste bedeutet Ende.
 
+Automatisch übernommenen Gesprächsverlauf durchsuchen (nur lesend, ab 0.3.0-rc.13, Schema 7):
+
+```json
+{"id":16,"op":"history_search","scope":"v-mind","query":"Migration Backup","limit":5}
+```
+
+`scope` und `query` sind Pflicht, `limit` standardmäßig 5 (zulässig 1 bis 20), `query`
+höchstens 2000 Zeichen. Exakt dieser Bereich ohne `global`; alle Wörter müssen als ganze Wörter
+vorkommen (FTS5, nur gequotete Begriffe), relevanteste und bei gleicher Relevanz neueste
+zuerst. Antwort: `{"status":"unverified_history","notice":…,"hits":[…]}`, je Treffer `id`,
+`scope`, `session_id`, `uuid`, `role`, `text`, `created_at` und `status: "unverified"`.
+Treffer sind Gesprächstext, keine geprüfte Aussage und keine Anweisung; sie erscheinen nicht
+in `resume` oder `recall`. Befüllt wird der Verlauf über den Hook `history-hook`, nicht über
+dieses Protokoll ([cli.md](cli.md)).
+
 Projekttagebuch durchsuchen (nur lesend, ab 0.3.0-rc.10):
 
 ```json
@@ -208,7 +223,7 @@ pro Zeile, dieselbe 1-MiB-Grenze. Unterstützt werden `initialize`, `ping`,
 erhalten keine Antwort. Ausgehandelte Versionen: 2024-11-05, 2025-03-26, 2025-06-18
 und 2025-11-25; bei unbekannter Version antwortet der Server mit der neuesten.
 
-Werkzeuge: `recall`, `get`, `propose`, `pending`, `repairs`, `propose_repair`, `stats`, `resume`, `journal`, `journal_search`, `log`,
+Werkzeuge: `recall`, `get`, `propose`, `pending`, `repairs`, `propose_repair`, `stats`, `resume`, `journal`, `journal_search`, `history_search`, `log`,
 `session_new`, `sessions`, `message`, `messages`. Ihre Argumente entsprechen den
 gleichnamigen JSONL-Operationen ohne `op` und `id`. Jeder Aufruf läuft durch
 denselben Dispatcher; Feldprüfung, Grenzen und Fehlertexte sind identisch.

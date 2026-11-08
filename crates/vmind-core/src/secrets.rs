@@ -73,109 +73,134 @@ fn starts<'a>(text: &'a str, prefix: &'a str) -> impl Iterator<Item = usize> + '
         .filter(move |&i| boundary_before(bytes, i))
 }
 
+/// Byte-Bereich eines Fundes im Text.
+type Span = (usize, usize);
+
 /// Präfix gefolgt von mindestens `min` zulässigen Zeichen, darunter Buchstaben und Ziffern.
-fn prefixed(text: &str, prefixes: &[&str], min: usize, allowed: fn(u8) -> bool) -> bool {
+fn prefixed(text: &str, prefixes: &[&str], min: usize, allowed: fn(u8) -> bool) -> Vec<Span> {
     let bytes = text.as_bytes();
-    prefixes.iter().any(|prefix| {
-        starts(text, prefix).any(|i| {
+    let mut spans = Vec::new();
+    for prefix in prefixes {
+        for i in starts(text, prefix) {
             let body = i + prefix.len();
             let len = run(bytes, body, allowed);
-            len >= min && mixed(&bytes[body..body + len])
+            if len >= min && mixed(&bytes[body..body + len]) {
+                spans.push((i, body + len));
+            }
+        }
+    }
+    spans
+}
+
+/// Vom Kopf bis zum passenden Ende; ohne Ende bis zum Textende.
+fn private_key(text: &str) -> Vec<Span> {
+    const END: &str = "-----END ";
+    const DASHES: &str = "-----";
+    text.match_indices("-----BEGIN ")
+        .filter_map(|(i, _)| {
+            let rest = &text[i..];
+            let header = rest.find('\n').map_or(rest, |end| &rest[..end]);
+            if !header.contains("PRIVATE KEY-----") {
+                return None;
+            }
+            let end = rest.find(END).and_then(|at| {
+                let body = at + END.len();
+                rest[body..].find(DASHES).map(|d| body + d + DASHES.len())
+            });
+            Some((i, end.map_or(text.len(), |e| i + e)))
         })
-    })
+        .collect()
 }
 
-fn private_key(text: &str) -> bool {
-    text.match_indices("-----BEGIN ").any(|(i, _)| {
-        let rest = &text[i..];
-        let header = rest.find('\n').map_or(rest, |end| &rest[..end]);
-        header.contains("PRIVATE KEY-----")
-    })
-}
-
-fn aws(text: &str) -> bool {
+fn aws(text: &str) -> Vec<Span> {
     let bytes = text.as_bytes();
-    ["AKIA", "ASIA"].iter().any(|prefix| {
-        starts(text, prefix).any(|i| {
+    let mut spans = Vec::new();
+    for prefix in ["AKIA", "ASIA"] {
+        for i in starts(text, prefix) {
             let body = i + prefix.len();
             let len = run(bytes, body, |c| {
                 c.is_ascii_uppercase() || c.is_ascii_digit()
             });
-            len == 16 && bytes.get(body + len).is_none_or(|&c| !is_word(c))
-        })
-    })
-}
-
-fn slack(text: &str) -> bool {
-    ["xoxa-", "xoxb-", "xoxp-", "xoxr-", "xoxs-"]
-        .iter()
-        .any(|p| prefixed(text, &[p], 10, |c| is_alnum(c) || c == b'-'))
-}
-
-fn jwt(text: &str) -> bool {
-    let bytes = text.as_bytes();
-    starts(text, "eyJ").any(|i| {
-        let mut pos = i;
-        for part in 0..3 {
-            let len = run(bytes, pos, is_dash_word);
-            if len < 10 || (part == 1 && !bytes[pos..].starts_with(b"eyJ")) {
-                return false;
-            }
-            pos += len;
-            if part < 2 {
-                if bytes.get(pos) != Some(&b'.') {
-                    return false;
-                }
-                pos += 1;
+            if len == 16 && bytes.get(body + len).is_none_or(|&c| !is_word(c)) {
+                spans.push((i, body + len));
             }
         }
-        true
-    })
+    }
+    spans
+}
+
+fn slack(text: &str) -> Vec<Span> {
+    ["xoxa-", "xoxb-", "xoxp-", "xoxr-", "xoxs-"]
+        .iter()
+        .flat_map(|p| prefixed(text, &[p], 10, |c| is_alnum(c) || c == b'-'))
+        .collect()
+}
+
+fn jwt(text: &str) -> Vec<Span> {
+    let bytes = text.as_bytes();
+    starts(text, "eyJ")
+        .filter_map(|i| {
+            let mut pos = i;
+            for part in 0..3 {
+                let len = run(bytes, pos, is_dash_word);
+                if len < 10 || (part == 1 && !bytes[pos..].starts_with(b"eyJ")) {
+                    return None;
+                }
+                pos += len;
+                if part < 2 {
+                    if bytes.get(pos) != Some(&b'.') {
+                        return None;
+                    }
+                    pos += 1;
+                }
+            }
+            Some((i, pos))
+        })
+        .collect()
 }
 
 /// `schema://NUTZER:PASSWORT@` mit echtem Passwort; Platzhalter wie `***`, `<passwort>`,
-/// `{passwort}` und `$VARIABLE` zählen nicht.
-fn url_credentials(text: &str) -> bool {
+/// `{passwort}` und `$VARIABLE` zählen nicht. Die Fundstelle umfasst Nutzer und Passwort,
+/// weil manche Dienste das Token als Nutzernamen erwarten.
+fn url_credentials(text: &str) -> Vec<Span> {
     let bytes = text.as_bytes();
-    text.match_indices("://").any(|(i, _)| {
-        let scheme = bytes[..i]
-            .iter()
-            .rev()
-            .take_while(|&&c| is_alnum(c) || b"+.-".contains(&c))
-            .count();
-        if scheme == 0 {
-            return false;
-        }
-        let rest = &text[i + 3..];
-        let end = rest
-            .find(|c: char| c == '/' || c == '?' || c == '#' || c.is_whitespace())
-            .unwrap_or(rest.len());
-        let Some((userinfo, _host)) = rest[..end].rsplit_once('@') else {
-            return false;
-        };
-        let Some((user, password)) = userinfo.split_once(':') else {
-            return false;
-        };
-        !user.is_empty()
-            && !password.is_empty()
-            && !password.chars().all(|c| c == '*')
-            && !password.starts_with(['<', '{', '$', '%'])
-    })
+    text.match_indices("://")
+        .filter_map(|(i, _)| {
+            let scheme = bytes[..i]
+                .iter()
+                .rev()
+                .take_while(|&&c| is_alnum(c) || b"+.-".contains(&c))
+                .count();
+            if scheme == 0 {
+                return None;
+            }
+            let start = i + 3;
+            let rest = &text[start..];
+            let end = rest
+                .find(|c: char| c == '/' || c == '?' || c == '#' || c.is_whitespace())
+                .unwrap_or(rest.len());
+            let (userinfo, _host) = rest[..end].rsplit_once('@')?;
+            let (user, password) = userinfo.split_once(':')?;
+            (!user.is_empty()
+                && !password.is_empty()
+                && !password.chars().all(|c| c == '*')
+                && !password.starts_with(['<', '{', '$', '%']))
+            .then_some((start, start + userinfo.len()))
+        })
+        .collect()
 }
 
-/// Alle erkannten Fundarten eines Textes, sortiert und ohne Dubletten.
-pub fn detect(text: &str) -> Vec<SecretKind> {
-    let checks: [(SecretKind, bool); 9] = [
+fn findings(text: &str) -> [(SecretKind, Vec<Span>); 9] {
+    let mut github = prefixed(
+        text,
+        &["ghp_", "gho_", "ghu_", "ghs_", "ghr_"],
+        36,
+        is_alnum,
+    );
+    github.extend(prefixed(text, &["github_pat_"], 50, is_word));
+    [
         (SecretKind::PrivateKey, private_key(text)),
-        (
-            SecretKind::GithubToken,
-            prefixed(
-                text,
-                &["ghp_", "gho_", "ghu_", "ghs_", "ghr_"],
-                36,
-                is_alnum,
-            ) || prefixed(text, &["github_pat_"], 50, is_word),
-        ),
+        (SecretKind::GithubToken, github),
         (
             SecretKind::SkApiKey,
             prefixed(text, &["sk-"], 20, is_dash_word),
@@ -192,11 +217,41 @@ pub fn detect(text: &str) -> Vec<SecretKind> {
         ),
         (SecretKind::Jwt, jwt(text)),
         (SecretKind::UrlCredentials, url_credentials(text)),
-    ];
-    checks
+    ]
+}
+
+/// Alle erkannten Fundarten eines Textes, sortiert und ohne Dubletten.
+pub fn detect(text: &str) -> Vec<SecretKind> {
+    findings(text)
         .into_iter()
-        .filter_map(|(kind, found)| found.then_some(kind))
+        .filter_map(|(kind, spans)| (!spans.is_empty()).then_some(kind))
         .collect()
+}
+
+/// Ersetzt alle Fundstellen bekannter Formate durch Platzhalter mit der Fundart. Keine
+/// Garantie: Unbekannte Formate bleiben stehen. Der Platzhalter enthält keinen Doppelpunkt,
+/// damit er in einer URL nicht selbst als Zugangsdaten gilt.
+pub fn redact(text: &str) -> String {
+    let mut spans: Vec<(Span, SecretKind)> = findings(text)
+        .into_iter()
+        .flat_map(|(kind, spans)| spans.into_iter().map(move |span| (span, kind)))
+        .collect();
+    spans.sort();
+    let mut out = String::with_capacity(text.len());
+    let mut pos = 0;
+    for ((start, end), kind) in spans {
+        if end <= pos {
+            continue;
+        }
+        if start >= pos {
+            out.push_str(&text[pos..start]);
+            out.push_str(&format!("[REDIGIERT {}]", kind.label()));
+        }
+        // Überlappung: Der bisherige Platzhalter deckt auch diesen Fund ab.
+        pos = end;
+    }
+    out.push_str(&text[pos..]);
+    out
 }
 
 #[cfg(test)]
@@ -280,6 +335,51 @@ mod tests {
     fn prefix_inside_a_word_is_not_a_match() {
         let value = format!("xgh{}_{}", "p", "a1B2".repeat(9));
         assert!(detect(&value).is_empty());
+    }
+
+    #[test]
+    fn redact_removes_each_sample_and_keeps_the_surroundings() {
+        for (kind, value) in samples::all() {
+            let text = format!("vorher {value} nachher");
+            let clean = redact(&text);
+            assert!(!clean.contains(&value), "{}", kind.label());
+            assert!(detect(&clean).is_empty(), "{clean}");
+            assert!(clean.starts_with("vorher "), "{clean}");
+            assert!(clean.contains(kind.label()), "{clean}");
+        }
+    }
+
+    #[test]
+    fn redact_removes_a_whole_private_key_block_and_the_rest_without_end_marker() {
+        let block = format!(
+            "a -----BEGIN {0}PRIVATE KEY-----\nGEHEIM\n-----END {0}PRIVATE KEY----- b",
+            "RSA "
+        );
+        assert_eq!(redact(&block), "a [REDIGIERT Privater Schlüssel] b");
+        let open = format!("a -----BEGIN {}PRIVATE KEY-----\nGEHEIM", "RSA ");
+        assert_eq!(redact(&open), "a [REDIGIERT Privater Schlüssel]");
+    }
+
+    #[test]
+    fn redact_handles_several_and_overlapping_findings_and_leaves_plain_text() {
+        let (token, jwt_value) = {
+            let all = samples::all();
+            let find = |wanted| {
+                all.iter()
+                    .find(|(k, _)| *k == wanted)
+                    .map(|(_, v)| v.clone())
+                    .unwrap()
+            };
+            (find(SecretKind::GithubToken), find(SecretKind::Jwt))
+        };
+        let clean = redact(&format!("{token} und ä {token}"));
+        assert_eq!(clean.matches("[REDIGIERT").count(), 2);
+        assert!(clean.contains(" und ä "));
+        let nested = redact(&format!("https://{token}:{jwt_value}@host.example/x"));
+        assert_eq!(nested.matches("[REDIGIERT").count(), 1, "{nested}");
+        assert!(nested.ends_with("@host.example/x"), "{nested}");
+        assert!(detect(&nested).is_empty(), "{nested}");
+        assert_eq!(redact("nichts Geheimes äöü"), "nichts Geheimes äöü");
     }
 
     #[test]

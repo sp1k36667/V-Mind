@@ -72,6 +72,13 @@ enum Operation {
         #[serde(default = "five")]
         limit: usize,
     },
+    /// Unverifizierter Gesprächsverlauf; nur lesend, exakt dieser Bereich.
+    HistorySearch {
+        scope: String,
+        query: String,
+        #[serde(default = "five")]
+        limit: usize,
+    },
     Log {
         scope: String,
         kind: String,
@@ -167,6 +174,11 @@ pub fn dispatch(store: &MemoryStore, mut value: Value) -> Value {
                 query,
                 limit,
             } => json!({"events":store.journal_search(&scope,&query,limit)?}),
+            Operation::HistorySearch {
+                scope,
+                query,
+                limit,
+            } => crate::history::hits_json(&store.history_search(&scope, &query, limit)?),
             Operation::Log {
                 scope,
                 kind,
@@ -192,7 +204,7 @@ pub fn dispatch(store: &MemoryStore, mut value: Value) -> Value {
                 limit,
             } => json!({"messages":store.messages(&conversation_id,after,limit)?}),
             Operation::Describe => json!({"protocol":"vmind-jsonl", "version":1,
-                "operations":["describe", "recall", "get", "propose", "pending", "repairs", "propose_repair", "stats", "resume", "journal", "journal_search", "log", "session_new", "sessions", "message", "messages"],
+                "operations":["describe", "recall", "get", "propose", "pending", "repairs", "propose_repair", "stats", "resume", "journal", "journal_search", "history_search", "log", "session_new", "sessions", "message", "messages"],
                 "default_scope":"global", "recall_includes_global":true,
                 "proposals_require_external_validation":true,
                 "validation":"CLI validate or CLI check/revalidate; no validation or check execution in this protocol"}),

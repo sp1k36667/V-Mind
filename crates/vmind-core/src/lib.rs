@@ -2,7 +2,9 @@ mod audit;
 pub use audit::{AuditFinding, AuditReport, ScannedTable, audit_secrets};
 mod check_evidence;
 mod checks;
+mod history;
 pub use check_evidence::{CheckEvidence, CheckState, CheckVerdict};
+pub use history::{HistoryHit, HistoryImport, HistorySource, HistoryStatus};
 mod maintenance;
 pub use maintenance::{
     BackupReport, DoctorReport, JournalModeReport, backup_database, inspect_database,
@@ -22,7 +24,7 @@ pub use project::{
 pub use repairs::{OpenRepairs, Repair};
 pub use secrets::SecretKind;
 
-const SCHEMA_VERSION: i64 = 6;
+const SCHEMA_VERSION: i64 = 7;
 
 // Persistentes, modellunabhängiges Gedächtnis mit nachvollziehbarer Validierung.
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Result, params};
@@ -368,6 +370,10 @@ impl MemoryStore {
         }
         if version == 5 {
             tx.execute_batch(include_str!("../../../migrations/0006_observations.sql"))?;
+            version = 6;
+        }
+        if version == 6 {
+            tx.execute_batch(include_str!("../../../migrations/0007_history.sql"))?;
         }
         tx.pragma_update(None, "user_version", SCHEMA_VERSION)?;
         tx.commit()?;

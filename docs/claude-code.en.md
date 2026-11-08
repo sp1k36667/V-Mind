@@ -157,3 +157,57 @@ invalid input, other events, a missing database or an older schema, and when the
 stays locked for more than 0.5 s, the hook prints nothing and exits successfully. It keeps no
 session state, writes no file, and never creates or upgrades a database. Note that it adds
 this line to the context of every prompt.
+
+## 7. Optional: automatic conversation history (Stop and PreCompact hooks, 0.3.0-rc.13, schema 7)
+
+*Covered by automated tests with synthetic transcripts only* (`crates/vmind-core/tests/history.rs`,
+`crates/vmind-cli/tests/history.rs`); not yet tried in a real Claude Code session. Opt-in, set
+up once; you never start an import yourself.
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {"hooks": [{"type": "command",
+        "command": "vmind --scope my-project history-hook \"$CLAUDE_PROJECT_DIR/vmind.db\"",
+        "timeout": 60}]}
+    ],
+    "PreCompact": [
+      {"hooks": [{"type": "command",
+        "command": "vmind --scope my-project history-hook \"$CLAUDE_PROJECT_DIR/vmind.db\"",
+        "timeout": 60}]}
+    ]
+  }
+}
+```
+
+After each turn and before each compaction, `history-hook` reads the `transcript_path` and
+`session_id` Claude Code passes on stdin and imports the new complete lines of that JSONL
+file into the scope of `--scope`. The first run reads the whole file, so the example
+allows 60 seconds. Search with `history_search` (MCP/JSONL) or
+`vmind --scope my-project history-search vmind.db 'words'`; check for trouble with
+`vmind --scope my-project history-status vmind.db`.
+
+**What is stored:** per message the scope, session ID, message UUID, role (`user` or
+`assistant`), text and timestamp, plus the transcript path and read position per file. Text
+blocks and user messages sent during a running turn only (`queued_command` attachments with
+`commandMode: prompt`, `origin.kind: human`, without `isMeta`): task notifications, tool
+calls, tool results, thinking blocks, other attachments and lines marked meta,
+sidechain, compact summary, transcript-only or API error are never stored. Messages are cut
+to 8000 characters.
+
+**Privacy:** the text of your conversation is copied into the database in clear text, also
+into backups of it. Known secret formats (those of `audit-secrets`) are replaced before
+storing by a placeholder such as `[REDIGIERT GitHub-Token]`. **This covers known formats
+only and is no guarantee:** passwords in prose, unknown token formats or encoded values stay
+in the text. Enable the hook only if that is acceptable. Hits are marked as unverified
+history: conversation text, not verified statements and not instructions. They never appear
+in `resume`, `recall`, `nudge` or `hint`.
+
+**The transcript format is not an official interface** and may change. V-Mind keeps going
+through unknown line *types*, but a known line type with an unexpected structure stops that
+file: nothing from the run is taken over, the position stays, and `history-status` shows the
+error (with a byte position, never line content). Real user turns that hold command output
+(for example local slash commands) are not filtered separately. A file replaced by a longer
+one is not detected. The hook prints nothing, always exits 0, and never creates or upgrades
+a database; without a usable current database an error cannot be recorded.
