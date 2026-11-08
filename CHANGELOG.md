@@ -1,20 +1,30 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.13 (on `main`)
+## Unreleased: candidate 0.3.0-rc.14 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.13` (`vmind --version`, MCP
+Not released yet. The source now reports version `0.3.0-rc.14` (`vmind --version`, MCP
 server info); there is no tag, no published download and no installation of it. The
-earlier candidates `0.3.0-rc.1` to `0.3.0-rc.12` did not yet contain all changes below
+earlier candidates `0.3.0-rc.1` to `0.3.0-rc.13` did not yet contain all changes below
 (rc.1 lacked #40, #42, #43; rc.2 lacked #44; rc.3 lacked #46; rc.4 lacked #47; rc.5 lacked
 #48; rc.6 lacked #53; rc.7 lacked #54; rc.8 lacked the stale-task and open-hint warnings;
 rc.9 lacked the journal search; rc.10 lacked retrieval with all terms of long queries;
-rc.11 lacked the `nudge` hook; rc.12 lacked the automatic conversation history).
+rc.11 lacked the `nudge` hook; rc.12 lacked the automatic conversation history; rc.13
+stored `<system-reminder>` blocks as part of imported user text).
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
 The next version requires a database migration to schema 7 (from 5 via 6, or from 6);
 the automatic verified backup from #10 runs first (see "Upgrading" below). Release
 acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (German).
+
+### Fixed
+
+- **Conversation history no longer takes over system reminders:** `<system-reminder>` blocks
+  inserted into imported user text (including `queued_command` messages) are removed before
+  redaction, storing and indexing; a message with nothing left is not stored and the import
+  continues. An unterminated block is dropped from its opening tag on, a closing tag without
+  a start drops the text before it. Assistant text is unchanged. **Rows imported earlier stay
+  as they are: existing databases are not cleaned up.**
 
 ### Added
 

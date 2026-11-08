@@ -193,7 +193,9 @@ allows 60 seconds. Search with `history_search` (MCP/JSONL) or
 blocks and user messages sent during a running turn only (`queued_command` attachments with
 `commandMode: prompt`, `origin.kind: human`, without `isMeta`): task notifications, tool
 calls, tool results, thinking blocks, other attachments and lines marked meta,
-sidechain, compact summary, transcript-only or API error are never stored. Messages are cut
+sidechain, compact summary, transcript-only or API error are never stored. From 0.3.0-rc.14,
+`<system-reminder>` blocks are removed from user text before storing (unterminated blocks
+leave no partial content); rows imported earlier are not cleaned up. Messages are cut
 to 8000 characters.
 
 **Privacy:** the text of your conversation is copied into the database in clear text, also

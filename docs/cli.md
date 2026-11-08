@@ -489,7 +489,9 @@ Zeitpunkt. Nur Textblöcke und während eines laufenden Turns gesendete Nutzerna
 Aufgaben-Benachrichtigungen, Werkzeugaufrufe, Werkzeugergebnisse, Denkblöcke, andere Anhänge sowie als
 Meta, Sidechain, Verdichtungszusammenfassung, Nur-Transkript oder API-Fehler gekennzeichnete
 Zeilen werden nie gespeichert. Je Nachricht höchstens 8000 Zeichen, längere werden markiert
-gekürzt. Erneutes Lesen erzeugt dank uuid keine Duplikate.
+gekürzt. Erneutes Lesen erzeugt dank uuid keine Duplikate. Ab 0.3.0-rc.14 werden
+`<system-reminder>`-Blöcke vor dem Speichern aus Nutzertext entfernt (unvollständige Blöcke
+hinterlassen keine Teilinhalte); bereits importierte Zeilen werden nicht bereinigt.
 
 **Datenschutz:** Der Gesprächstext liegt im Klartext in der Datenbank und in ihren
 Sicherungen. Bekannte Geheimnisformate (dieselben wie bei `audit-secrets`) werden vor dem
