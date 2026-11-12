@@ -1,5 +1,5 @@
-//! Automatisch übernommener Gesprächsverlauf einer KI, zunächst aus den JSONL-Dateien von
-//! Claude Code. Dieses Format ist keine offizielle Schnittstelle: Eine unbekannte Struktur
+//! Automatisch übernommener Gesprächsverlauf einer KI aus den JSONL-Dateien von Claude Code
+//! und, nur per ausdrücklichem Import, von Codex (`history/codex.rs`). Dieses Format ist keine offizielle Schnittstelle: Eine unbekannte Struktur
 //! wird als Fehler im Importstand festgehalten, statt still übersprungen zu werden. Nur eine
 //! abgeschlossene Zeile mit ungültigem JSON wird übersprungen und als Warnung gezählt.
 //!
@@ -7,6 +7,11 @@
 //! Werkzeugergebnisse, Denkblöcke sowie Meta- und Sidechain-Zeilen nie. Bekannte
 //! Geheimnisformate werden vor dem Speichern ersetzt. Vom System in Nutzertext eingefügte
 //! `<system-reminder>`-Blöcke werden vorher entfernt. Verlauf ist kein Prüfnachweis.
+mod codex;
+mod note;
+
+use note::ImportNote;
+
 use crate::{MemoryStore, invalid, is_busy, retry_busy, search_terms, secrets};
 use rusqlite::{OptionalExtension, Result, Transaction, TransactionBehavior, params};
 use serde::Serialize;
@@ -45,9 +50,41 @@ const SKIP_FLAGS: [&str; 5] = [
     "isApiErrorMessage",
 ];
 
+const CLAUDE_CODE: &str = "claude-code";
+const CODEX: &str = "codex";
+/// Kein echtes Modell: So kennzeichnet Claude Code selbst erzeugte Zeilen.
+const SYNTHETIC_MODEL: &str = "<synthetic>";
+
+/// Herkunft eines Verlaufs. Bildet zugleich den Namensraum für Nachrichten und Importstand.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HistoryTool {
+    ClaudeCode,
+    Codex,
+}
+
+impl HistoryTool {
+    pub fn parse(name: &str) -> Result<Self> {
+        match name {
+            CLAUDE_CODE => Ok(Self::ClaudeCode),
+            CODEX => Ok(Self::Codex),
+            _ => Err(invalid(
+                "Unbekanntes Werkzeug: erlaubt sind claude-code und codex",
+            )),
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::ClaudeCode => CLAUDE_CODE,
+            Self::Codex => CODEX,
+        }
+    }
+}
+
 /// Ergebnis eines Importlaufs. `error` ist gesetzt, wenn die Datei nicht fortgeschrieben wurde.
 #[derive(Debug, Serialize)]
 pub struct HistoryImport {
+    pub tool: String,
     pub source: String,
     pub added: usize,
     pub offset: u64,
@@ -57,12 +94,17 @@ pub struct HistoryImport {
     /// Bisher übersprungene beschädigte Zeilen dieser Quelle.
     pub corrupt_lines: u64,
     pub warning: Option<String>,
+    /// Bisher übersprungene Nachrichten ohne `item.id` und ohne `ordinal` (nur Codex).
+    pub unkeyed_lines: u64,
 }
 
 #[derive(Debug, Serialize)]
 pub struct HistoryHit {
     pub id: i64,
     pub scope: String,
+    pub tool: String,
+    /// Nur bei belegter Zuordnung gesetzt.
+    pub model: Option<String>,
     pub session_id: String,
     pub uuid: String,
     pub role: String,
@@ -74,11 +116,13 @@ pub struct HistoryHit {
 
 #[derive(Debug, Serialize)]
 pub struct HistorySource {
+    pub tool: String,
     pub source_path: String,
     pub byte_offset: i64,
     pub last_error: Option<String>,
     pub corrupt_lines: u64,
     pub warning: Option<String>,
+    pub unkeyed_lines: u64,
     pub updated_at: String,
 }
 
@@ -87,7 +131,7 @@ pub struct HistoryStatus {
     pub scope: String,
     pub messages: i64,
     pub failed: i64,
-    /// Quellen mit übersprungenen beschädigten Zeilen.
+    /// Quellen mit übersprungenen beschädigten Zeilen oder Nachrichten ohne Kennung.
     pub warned: i64,
     /// Neueste zuerst, höchstens 100.
     pub sources: Vec<HistorySource>,
@@ -99,6 +143,40 @@ struct Message {
     role: &'static str,
     text: String,
     created_at: String,
+    model: Option<String>,
+    /// Nur während des Lesens: Schlüssel für die Modellzuordnung.
+    turn_id: Option<String>,
+}
+
+enum LineOutcome {
+    Skip,
+    Message(Message),
+    /// Nachricht ohne verwertbare Kennung; wird nur gezählt.
+    Unkeyed,
+}
+
+/// Zeilendeutung je Werkzeug; das Lesen der Datei und das Speichern sind gemeinsam.
+enum Adapter<'a> {
+    Claude(&'a str),
+    Codex(codex::Cursor),
+}
+
+impl Adapter<'_> {
+    fn parse(&mut self, row: &Value) -> std::result::Result<LineOutcome, &'static str> {
+        match self {
+            Self::Claude(fallback) => Ok(match parse_row(row, fallback)? {
+                Some(message) => LineOutcome::Message(message),
+                None => LineOutcome::Skip,
+            }),
+            Self::Codex(cursor) => cursor.parse(row),
+        }
+    }
+
+    fn restart(&mut self) {
+        if let Self::Codex(cursor) = self {
+            *cursor = codex::Cursor::default();
+        }
+    }
 }
 
 /// In diesem Lauf übersprungene Zeilen; enthält bewusst keine Zeileninhalte.
@@ -112,78 +190,18 @@ struct Batch {
     end: u64,
     restarted: bool,
     corrupt: Option<CorruptLines>,
+    unkeyed: u64,
+    cursor: Option<codex::Cursor>,
 }
 
-/// Inhalt von `last_error`, aufgeteilt in Warnung und Fehler.
+/// Gespeicherter Stand einer Quelle.
 #[derive(Default)]
-struct ImportNote {
-    corrupt_lines: u64,
-    warning: Option<String>,
-    error: Option<String>,
-}
-
-impl ImportNote {
-    fn parse(stored: Option<&str>) -> Self {
-        let Some(text) = stored else {
-            return Self::default();
-        };
-        let (head, error) = text
-            .split_once(ERROR_SEPARATOR)
-            .map_or((text, None), |(head, error)| (head, Some(error)));
-        let warning = head.strip_prefix(WARNING_PREFIX);
-        let count = warning.and_then(|w| w.split(' ').next()?.parse().ok());
-        match count {
-            Some(corrupt_lines) => Self {
-                corrupt_lines,
-                warning: warning.map(str::to_owned),
-                error: error.map(str::to_owned),
-            },
-            None => Self {
-                error: Some(text.to_owned()),
-                ..Self::default()
-            },
-        }
-    }
-
-    /// Wert für `last_error`.
-    fn stored(&self) -> Option<String> {
-        match (&self.warning, &self.error) {
-            (None, None) => None,
-            (None, Some(error)) => Some(error.clone()),
-            (Some(warning), None) => Some(format!("{WARNING_PREFIX}{warning}")),
-            (Some(warning), Some(error)) => {
-                Some(format!("{WARNING_PREFIX}{warning}{ERROR_SEPARATOR}{error}"))
-            }
-        }
-    }
-
-    /// Stand nach einem erfolgreichen Lauf. Ohne neue Schäden bleibt die Warnung unverändert;
-    /// eine von vorn gelesene Datei ersetzt sie, damit nichts doppelt gezählt wird.
-    fn after_batch(self, batch: &Batch) -> Self {
-        let (previous, warning) = if batch.restarted {
-            (0, None)
-        } else {
-            (self.corrupt_lines, self.warning)
-        };
-        match &batch.corrupt {
-            None => Self {
-                corrupt_lines: previous,
-                warning,
-                error: None,
-            },
-            Some(corrupt) => {
-                let total = previous.saturating_add(corrupt.count);
-                Self {
-                    corrupt_lines: total,
-                    warning: Some(format!(
-                        "{total} beschädigte Zeile(n) übersprungen, letzte ab Byte {}",
-                        corrupt.last_byte
-                    )),
-                    error: None,
-                }
-            }
-        }
-    }
+struct Progress {
+    offset: u64,
+    unkeyed: u64,
+    session: Option<String>,
+    turn: Option<String>,
+    model: Option<String>,
 }
 
 fn bounded_id(value: &str, max: usize) -> bool {
@@ -289,6 +307,18 @@ fn queued_user_text(row: &Value) -> std::result::Result<Option<String>, &'static
     }
 }
 
+/// Modell einer Assistentenzeile, wenn es dort gültig steht. Sonst `None`: Das Feld ist nur
+/// Zusatzwissen und darf den bestehenden Import nie anhalten.
+fn claude_model(row: &Value, role: &str) -> Option<String> {
+    if role != "assistant" {
+        return None;
+    }
+    row["message"]["model"]
+        .as_str()
+        .filter(|m| *m != SYNTHETIC_MODEL && bounded_id(m, MAX_ID_CHARS))
+        .map(str::to_owned)
+}
+
 /// `Ok(None)` für Zeilen ohne übernehmbaren Text; `Err` für eine unbekannte Struktur.
 fn parse_row(row: &Value, fallback: &str) -> std::result::Result<Option<Message>, &'static str> {
     if !row.is_object() {
@@ -351,6 +381,8 @@ fn parse_row(row: &Value, fallback: &str) -> std::result::Result<Option<Message>
         role,
         text: stored_text(&text),
         created_at: created_at.to_owned(),
+        model: claude_model(row, role),
+        turn_id: None,
     }))
 }
 
@@ -360,7 +392,11 @@ fn io_message(what: &str, error: &io::Error) -> String {
 
 /// Liest alle vollständigen Zeilen ab dem Stand; abgeschlossene Zeilen mit ungültigem JSON
 /// werden nur gezählt. Fehlermeldungen und Warnungen enthalten nie Zeileninhalte.
-fn read_new_lines(path: &Path, stored: u64, fallback: &str) -> std::result::Result<Batch, String> {
+fn read_new_lines(
+    path: &Path,
+    stored: u64,
+    mut adapter: Adapter<'_>,
+) -> std::result::Result<Batch, String> {
     // Vor dem Öffnen prüfen: Das Öffnen einer FIFO würde den Hook blockieren.
     let meta = std::fs::metadata(path).map_err(|e| io_message("Datei nicht lesbar", &e))?;
     if !meta.is_file() {
@@ -368,12 +404,16 @@ fn read_new_lines(path: &Path, stored: u64, fallback: &str) -> std::result::Resu
     }
     let restarted = meta.len() < stored;
     let start = if restarted { 0 } else { stored };
+    if restarted {
+        adapter.restart();
+    }
     let mut file = File::open(path).map_err(|e| io_message("Datei nicht lesbar", &e))?;
     file.seek(SeekFrom::Start(start))
         .map_err(|e| io_message("Datei nicht lesbar", &e))?;
     let mut reader = BufReader::new(file);
     let mut messages = Vec::new();
     let mut corrupt: Option<CorruptLines> = None;
+    let mut unkeyed = 0;
     let mut end = start;
     let mut line = Vec::new();
     loop {
@@ -395,8 +435,10 @@ fn read_new_lines(path: &Path, stored: u64, fallback: &str) -> std::result::Resu
             match serde_json::from_slice::<Value>(&line) {
                 Ok(value) => {
                     let unknown = |why: &str| format!("Unbekannte Struktur ab Byte {end}: {why}");
-                    if let Some(message) = parse_row(&value, fallback).map_err(unknown)? {
-                        messages.push(message);
+                    match adapter.parse(&value).map_err(unknown)? {
+                        LineOutcome::Skip => {}
+                        LineOutcome::Message(message) => messages.push(message),
+                        LineOutcome::Unkeyed => unkeyed += 1,
                     }
                 }
                 Err(_) => {
@@ -409,11 +451,20 @@ fn read_new_lines(path: &Path, stored: u64, fallback: &str) -> std::result::Resu
         }
         end += read as u64;
     }
+    let cursor = match adapter {
+        Adapter::Claude(_) => None,
+        Adapter::Codex(cursor) => {
+            cursor.assign_models(&mut messages);
+            Some(cursor)
+        }
+    };
     Ok(Batch {
         messages,
         end,
         restarted,
         corrupt,
+        unkeyed,
+        cursor,
     })
 }
 
@@ -422,32 +473,53 @@ fn clipped(text: &str, max: usize) -> String {
 }
 
 impl MemoryStore {
-    fn history_offset(&self, scope: &str, source: &str) -> Result<u64> {
-        let offset: Option<i64> = self
+    fn history_progress(&self, tool: HistoryTool, scope: &str, source: &str) -> Result<Progress> {
+        let progress = self
             .conn
             .query_row(
-                "SELECT byte_offset FROM history_imports WHERE scope=?1 AND source_path=?2",
-                params![scope, source],
-                |r| r.get(0),
+                "SELECT byte_offset, unkeyed_lines, session_id, last_turn_id, last_model
+                 FROM history_imports WHERE scope=?1 AND tool=?2 AND source_path=?3",
+                params![scope, tool.as_str(), source],
+                |r| {
+                    Ok(Progress {
+                        offset: r.get::<_, i64>(0)?.max(0) as u64,
+                        unkeyed: r.get::<_, i64>(1)?.max(0) as u64,
+                        session: r.get(2)?,
+                        turn: r.get(3)?,
+                        model: r.get(4)?,
+                    })
+                },
             )
             .optional()?;
-        Ok(offset.unwrap_or(0).max(0) as u64)
+        Ok(progress.unwrap_or_default())
     }
 
-    fn history_note(&self, scope: &str, source: &str) -> Result<ImportNote> {
+    fn history_note(&self, tool: HistoryTool, scope: &str, source: &str) -> Result<ImportNote> {
         let stored: Option<Option<String>> = self
             .conn
             .query_row(
-                "SELECT last_error FROM history_imports WHERE scope=?1 AND source_path=?2",
-                params![scope, source],
+                "SELECT last_error FROM history_imports
+                 WHERE scope=?1 AND tool=?2 AND source_path=?3",
+                params![scope, tool.as_str(), source],
                 |r| r.get(0),
             )
             .optional()?;
         Ok(ImportNote::parse(stored.flatten().as_deref()))
     }
 
-    /// Hält einen Importfehler fest, ohne den gelesenen Stand oder eine Warnung zu verändern.
+    /// Hält einen Importfehler des Claude-Code-Verlaufs fest (Hook), ohne Stand oder Warnung
+    /// zu verändern.
     pub fn record_history_error(&self, scope: &str, source: &str, message: &str) -> Result<()> {
+        self.record_tool_error(HistoryTool::ClaudeCode, scope, source, message)
+    }
+
+    fn record_tool_error(
+        &self,
+        tool: HistoryTool,
+        scope: &str,
+        source: &str,
+        message: &str,
+    ) -> Result<()> {
         check_scope(scope)?;
         let source = clipped(source, MAX_PATH_CHARS);
         let message = clipped(message, MAX_ERROR_CHARS);
@@ -456,13 +528,14 @@ impl MemoryStore {
         })?;
         let note = ImportNote {
             error: Some(message),
-            ..self.history_note(scope, &source)?
+            ..self.history_note(tool, scope, &source)?
         };
         tx.execute(
-            "INSERT INTO history_imports(scope, source_path, last_error) VALUES(?1, ?2, ?3)
-             ON CONFLICT(scope, source_path) DO UPDATE SET last_error=excluded.last_error,
+            "INSERT INTO history_imports(scope, tool, source_path, last_error)
+             VALUES(?1, ?2, ?3, ?4)
+             ON CONFLICT(scope, tool, source_path) DO UPDATE SET last_error=excluded.last_error,
              updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')",
-            params![scope, source, note.stored()],
+            params![scope, tool.as_str(), source, note.stored()],
         )?;
         tx.commit()
     }
@@ -471,27 +544,37 @@ impl MemoryStore {
     /// geändert, gilt dessen Ergebnis und `None` kommt zurück; die uuid verhindert Duplikate.
     fn commit_history(
         &self,
+        tool: HistoryTool,
         scope: &str,
         source: &str,
         expected: u64,
         batch: &Batch,
-    ) -> Result<Option<(usize, ImportNote)>> {
+    ) -> Result<Option<(usize, ImportNote, u64)>> {
         let tx = retry_busy(&self.conn, || {
             Transaction::new_unchecked(&self.conn, TransactionBehavior::Immediate)
         })?;
-        if self.history_offset(scope, source)? != expected {
+        let current = self.history_progress(tool, scope, source)?;
+        if current.offset != expected {
             return Ok(None);
         }
-        let note = self.history_note(scope, source)?.after_batch(batch);
+        let note = self.history_note(tool, scope, source)?.after_batch(batch);
+        let unkeyed = if batch.restarted {
+            batch.unkeyed
+        } else {
+            current.unkeyed.saturating_add(batch.unkeyed)
+        };
         let mut added = 0;
         {
             let mut insert = tx.prepare_cached(
-                "INSERT INTO history_messages(scope, session_id, uuid, role, text, created_at)
-                 VALUES(?1, ?2, ?3, ?4, ?5, ?6) ON CONFLICT(scope, uuid) DO NOTHING",
+                "INSERT INTO history_messages(scope, tool, model, session_id, uuid, role, text,
+                 created_at) VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+                 ON CONFLICT(scope, tool, uuid) DO NOTHING",
             )?;
             for m in &batch.messages {
                 added += insert.execute(params![
                     scope,
+                    tool.as_str(),
+                    m.model,
                     m.session_id,
                     m.uuid,
                     m.role,
@@ -500,32 +583,75 @@ impl MemoryStore {
                 ])?;
             }
         }
+        let (session, (turn, model)) = match &batch.cursor {
+            Some(cursor) => (cursor.session(), cursor.last_turn()),
+            None => (None, (None, None)),
+        };
         tx.execute(
-            "INSERT INTO history_imports(scope, source_path, byte_offset, last_error)
-             VALUES(?1, ?2, ?3, ?4)
-             ON CONFLICT(scope, source_path) DO UPDATE SET byte_offset=excluded.byte_offset,
-             last_error=excluded.last_error, updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')",
-            params![scope, source, batch.end as i64, note.stored()],
+            "INSERT INTO history_imports(scope, tool, source_path, byte_offset, last_error,
+             unkeyed_lines, session_id, last_turn_id, last_model)
+             VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+             ON CONFLICT(scope, tool, source_path) DO UPDATE SET byte_offset=excluded.byte_offset,
+             last_error=excluded.last_error, unkeyed_lines=excluded.unkeyed_lines,
+             session_id=excluded.session_id, last_turn_id=excluded.last_turn_id,
+             last_model=excluded.last_model, updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')",
+            params![
+                scope,
+                tool.as_str(),
+                source,
+                batch.end as i64,
+                note.stored(),
+                unkeyed as i64,
+                session,
+                turn,
+                model
+            ],
         )?;
         tx.commit()?;
-        Ok(Some((added, note)))
+        Ok(Some((added, note, unkeyed)))
     }
 
-    /// Übernimmt neue Zeilen ab dem gespeicherten Stand. Inhaltliche und Dateifehler landen im
-    /// Importstand und in `HistoryImport::error`; dann bleibt alles unverändert.
+    /// Übernimmt neue Zeilen eines Claude-Code-Transkripts ab dem gespeicherten Stand.
+    /// Inhaltliche und Dateifehler landen im Importstand und in `HistoryImport::error`; dann
+    /// bleibt alles unverändert.
     pub fn import_history_file(
         &self,
         scope: &str,
         path: &Path,
         fallback_session: &str,
     ) -> Result<HistoryImport> {
+        self.import_source(HistoryTool::ClaudeCode, scope, path, |_| {
+            Adapter::Claude(fallback_session)
+        })
+    }
+
+    /// Wie `import_history_file`, aber für genau eine unkomprimierte Rollout-Datei von Codex.
+    /// Die Sitzung stammt aus `session_meta`; ein Lauf ab Byte-Stand nutzt die gespeicherte.
+    pub fn import_codex_history_file(&self, scope: &str, path: &Path) -> Result<HistoryImport> {
+        self.import_source(HistoryTool::Codex, scope, path, |progress| {
+            Adapter::Codex(codex::Cursor::resume(
+                progress.session.clone(),
+                progress.turn.clone(),
+                progress.model.clone(),
+            ))
+        })
+    }
+
+    fn import_source<'a>(
+        &self,
+        tool: HistoryTool,
+        scope: &str,
+        path: &Path,
+        adapter: impl FnOnce(&Progress) -> Adapter<'a>,
+    ) -> Result<HistoryImport> {
         check_scope(scope)?;
         let source = path.to_string_lossy().into_owned();
         if source.chars().count() > MAX_PATH_CHARS {
             return Err(invalid("Quellpfad zu lang"));
         }
-        let stored = self.history_offset(scope, &source)?;
-        let report = |added, offset, restarted, error, note: ImportNote| HistoryImport {
+        let stored = self.history_progress(tool, scope, &source)?;
+        let report = |added, offset, restarted, error, note: ImportNote, unkeyed| HistoryImport {
+            tool: tool.as_str().to_owned(),
             source: source.clone(),
             added,
             offset,
@@ -533,45 +659,67 @@ impl MemoryStore {
             error,
             corrupt_lines: note.corrupt_lines,
             warning: note.warning,
+            unkeyed_lines: unkeyed,
         };
-        let batch = match read_new_lines(path, stored, fallback_session) {
+        let batch = match read_new_lines(path, stored.offset, adapter(&stored)) {
             Ok(batch) => batch,
             Err(message) => {
-                self.record_history_error(scope, &source, &message)?;
-                let note = self.history_note(scope, &source)?;
-                return Ok(report(0, stored, false, Some(message), note));
+                self.record_tool_error(tool, scope, &source, &message)?;
+                let note = self.history_note(tool, scope, &source)?;
+                return Ok(report(
+                    0,
+                    stored.offset,
+                    false,
+                    Some(message),
+                    note,
+                    stored.unkeyed,
+                ));
             }
         };
-        match self.commit_history(scope, &source, stored, &batch) {
-            Ok(Some((added, note))) => Ok(report(added, batch.end, batch.restarted, None, note)),
+        match self.commit_history(tool, scope, &source, stored.offset, &batch) {
+            Ok(Some((added, note, unkeyed))) => Ok(report(
+                added,
+                batch.end,
+                batch.restarted,
+                None,
+                note,
+                unkeyed,
+            )),
             Ok(None) => {
-                let offset = self.history_offset(scope, &source)?;
-                Ok(report(
-                    0,
-                    offset,
-                    false,
-                    None,
-                    self.history_note(scope, &source)?,
-                ))
+                let now = self.history_progress(tool, scope, &source)?;
+                let note = self.history_note(tool, scope, &source)?;
+                Ok(report(0, now.offset, false, None, note, now.unkeyed))
             }
             Err(error) => {
                 if !is_busy(&error) {
                     let message = "Datenbankfehler beim Speichern; nichts übernommen";
                     // Der ursprüngliche Fehler zählt, auch wenn dieser Eintrag scheitert.
-                    let _ = self.record_history_error(scope, &source, message);
+                    let _ = self.record_tool_error(tool, scope, &source, message);
                 }
                 Err(error)
             }
         }
     }
 
-    /// Volltextsuche nur im genannten Bereich: Alle Wörter müssen vorkommen; relevanteste
-    /// zuerst, bei gleicher Relevanz die neuesten.
+    /// Volltextsuche nur im genannten Bereich über alle Werkzeuge; siehe
+    /// `history_search_filtered`.
     pub fn history_search(
         &self,
         scope: &str,
         query: &str,
         limit: usize,
+    ) -> Result<Vec<HistoryHit>> {
+        self.history_search_filtered(scope, query, limit, None)
+    }
+
+    /// Volltextsuche nur im genannten Bereich, optional nur für ein Werkzeug: Alle Wörter
+    /// müssen vorkommen; relevanteste zuerst, bei gleicher Relevanz die neuesten.
+    pub fn history_search_filtered(
+        &self,
+        scope: &str,
+        query: &str,
+        limit: usize,
+        tool: Option<HistoryTool>,
     ) -> Result<Vec<HistoryHit>> {
         check_scope(scope)?;
         if query.chars().count() > MAX_QUERY_CHARS {
@@ -591,20 +739,24 @@ impl MemoryStore {
             .collect::<Vec<_>>()
             .join(" AND ");
         let mut stmt = self.conn.prepare(
-            "SELECT h.id, h.scope, h.session_id, h.uuid, h.role, h.text, h.created_at
+            "SELECT h.id, h.scope, h.tool, h.model, h.session_id, h.uuid, h.role, h.text,
+             h.created_at
              FROM history_fts JOIN history_messages h ON h.id=history_fts.rowid
-             WHERE history_fts MATCH ?1 AND h.scope=?2
+             WHERE history_fts MATCH ?1 AND h.scope=?2 AND (?4 IS NULL OR h.tool=?4)
              ORDER BY bm25(history_fts), h.created_at DESC, h.id DESC LIMIT ?3",
         )?;
-        stmt.query_map(params![expression, scope, limit as i64], |r| {
+        let tool = tool.map(HistoryTool::as_str);
+        stmt.query_map(params![expression, scope, limit as i64, tool], |r| {
             Ok(HistoryHit {
                 id: r.get(0)?,
                 scope: r.get(1)?,
-                session_id: r.get(2)?,
-                uuid: r.get(3)?,
-                role: r.get(4)?,
-                text: r.get(5)?,
-                created_at: r.get(6)?,
+                tool: r.get(2)?,
+                model: r.get(3)?,
+                session_id: r.get(4)?,
+                uuid: r.get(5)?,
+                role: r.get(6)?,
+                text: r.get(7)?,
+                created_at: r.get(8)?,
                 status: "unverified",
             })
         })?
@@ -619,7 +771,8 @@ impl MemoryStore {
                 "SELECT (SELECT count(*) FROM history_messages WHERE scope=?1),
                  (SELECT count(*) FROM history_imports WHERE scope=?1 AND last_error IS NOT NULL
                   AND (last_error NOT LIKE ?2 OR last_error LIKE ?3)),
-                 (SELECT count(*) FROM history_imports WHERE scope=?1 AND last_error LIKE ?2)",
+                 (SELECT count(*) FROM history_imports WHERE scope=?1
+                  AND (last_error LIKE ?2 OR unkeyed_lines>0))",
                 params![
                     scope,
                     format!("{WARNING_PREFIX}%"),
@@ -628,19 +781,21 @@ impl MemoryStore {
                 |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
             )?;
             let mut stmt = store.conn.prepare(
-                "SELECT source_path, byte_offset, last_error, updated_at FROM history_imports
-                 WHERE scope=?1 ORDER BY updated_at DESC, id DESC LIMIT ?2",
+                "SELECT tool, source_path, byte_offset, last_error, unkeyed_lines, updated_at
+                 FROM history_imports WHERE scope=?1 ORDER BY updated_at DESC, id DESC LIMIT ?2",
             )?;
             let sources = stmt
                 .query_map(params![scope, MAX_LISTED_SOURCES], |r| {
-                    let note = ImportNote::parse(r.get::<_, Option<String>>(2)?.as_deref());
+                    let note = ImportNote::parse(r.get::<_, Option<String>>(3)?.as_deref());
                     Ok(HistorySource {
-                        source_path: r.get(0)?,
-                        byte_offset: r.get(1)?,
+                        tool: r.get(0)?,
+                        source_path: r.get(1)?,
+                        byte_offset: r.get(2)?,
                         last_error: note.error,
                         corrupt_lines: note.corrupt_lines,
                         warning: note.warning,
-                        updated_at: r.get(3)?,
+                        unkeyed_lines: r.get::<_, i64>(4)?.max(0) as u64,
+                        updated_at: r.get(5)?,
                     })
                 })?
                 .collect::<Result<Vec<_>>>()?;

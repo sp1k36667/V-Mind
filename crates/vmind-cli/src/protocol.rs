@@ -2,7 +2,7 @@
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io::{self, BufRead, Read, Write};
-use vmind_core::MemoryStore;
+use vmind_core::{HistoryTool, MemoryStore};
 
 fn global() -> String {
     "global".into()
@@ -78,6 +78,9 @@ enum Operation {
         query: String,
         #[serde(default = "five")]
         limit: usize,
+        /// Optional nur dieses Werkzeug: `claude-code` oder `codex`.
+        #[serde(default)]
+        tool: Option<String>,
     },
     Log {
         scope: String,
@@ -178,7 +181,13 @@ pub fn dispatch(store: &MemoryStore, mut value: Value) -> Value {
                 scope,
                 query,
                 limit,
-            } => crate::history::hits_json(&store.history_search(&scope, &query, limit)?),
+                tool,
+            } => {
+                let tool = tool.as_deref().map(HistoryTool::parse).transpose()?;
+                crate::history::hits_json(
+                    &store.history_search_filtered(&scope, &query, limit, tool)?,
+                )
+            }
             Operation::Log {
                 scope,
                 kind,

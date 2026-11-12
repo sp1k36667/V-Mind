@@ -360,3 +360,162 @@ fn unknown_structure_still_stops_the_hook_silently_with_a_recorded_error() {
     assert_eq!(report["sources"][0]["byte_offset"], 0);
     assert_eq!(report["sources"][0]["corrupt_lines"], 0);
 }
+
+const CODEX_SESSION: &str = "00000000-0000-7000-8000-0000000000cc";
+
+fn codex_rollout(path: &str, text: &str) {
+    let rows = [
+        json!({"timestamp":"2026-01-02T03:04:05.000Z","type":"session_meta",
+            "payload":{"id":CODEX_SESSION}}),
+        json!({"timestamp":"2026-01-02T03:04:05.000Z","type":"turn_context",
+            "payload":{"turn_id":"t1","model":"modell-beispiel"}}),
+        json!({"timestamp":"2026-01-02T03:04:06.000Z","ordinal":2,"type":"event_msg",
+            "payload":{"type":"item_completed","turn_id":"t1","item":{"type":"AgentMessage",
+                "id":"a1","phase":"final_answer","content":[{"type":"Text","text":text}]}}}),
+    ];
+    fs::write(
+        path,
+        rows.iter().map(|r| format!("{r}\n")).collect::<String>(),
+    )
+    .unwrap();
+}
+
+/// Wie `run`, aber ohne geerbten Standardbereich aus der Umgebung.
+fn run_without_scope_env(args: &[&str]) -> Output {
+    Command::new(env!("CARGO_BIN_EXE_vmind"))
+        .args(args)
+        .env_remove("VMIND_SCOPE")
+        .output()
+        .unwrap()
+}
+
+#[test]
+fn codex_import_needs_an_explicit_scope_and_a_known_tool() {
+    let t = Temp::new();
+    let (db, file) = (t.path("v.db"), t.path("rollout.jsonl"));
+    init(&db);
+    codex_rollout(&file, "Seestern");
+    let without = run_without_scope_env(&["history-import", &db, &file, "--tool", "codex"]);
+    assert!(!without.status.success());
+    assert!(String::from_utf8_lossy(&without.stderr).contains("--scope"));
+    let unknown = run(
+        &[
+            "--scope",
+            "p",
+            "history-import",
+            &db,
+            &file,
+            "--tool",
+            "hermes",
+        ],
+        "",
+    );
+    assert!(!unknown.status.success());
+    assert_eq!(status(&db)["sources"].as_array().unwrap().len(), 0);
+    let report = json_of(&[
+        "--scope",
+        "p",
+        "history-import",
+        &db,
+        &file,
+        "--tool",
+        "codex",
+    ]);
+    assert_eq!(report["added"], 1);
+    assert_eq!(report["tool"], "codex");
+    assert_eq!(status(&db)["sources"][0]["tool"], "codex");
+}
+
+#[test]
+fn hits_show_tool_and_model_and_can_be_filtered_everywhere() {
+    let t = Temp::new();
+    let (db, codex, claude) = (t.path("v.db"), t.path("r.jsonl"), t.path("c.jsonl"));
+    init(&db);
+    codex_rollout(&codex, "Seepferdchen aus Codex");
+    transcript(&claude, "Seepferdchen aus Claude");
+    json_of(&[
+        "--scope",
+        "p",
+        "history-import",
+        &db,
+        &codex,
+        "--tool",
+        "codex",
+    ]);
+    json_of(&["--scope", "p", "history-import", &db, &claude]);
+
+    let all = json_of(&["--scope", "p", "history-search", &db, "seepferdchen"]);
+    assert_eq!(all["hits"].as_array().unwrap().len(), 2);
+    let only = json_of(&[
+        "--scope",
+        "p",
+        "history-search",
+        &db,
+        "seepferdchen",
+        "--tool",
+        "codex",
+        "--limit",
+        "3",
+    ]);
+    let hits = only["hits"].as_array().unwrap();
+    assert_eq!(hits.len(), 1);
+    assert_eq!(hits[0]["tool"], "codex");
+    assert_eq!(hits[0]["model"], "modell-beispiel");
+    let human = run(
+        &[
+            "--scope",
+            "p",
+            "history-search",
+            &db,
+            "seepferdchen",
+            "--tool",
+            "claude-code",
+        ],
+        "",
+    );
+    let text = String::from_utf8(human.stdout).unwrap();
+    assert!(text.contains("claude-code"), "{text}");
+    assert!(!text.contains("aus Codex"), "{text}");
+    let bad = run(
+        &[
+            "--scope",
+            "p",
+            "history-search",
+            &db,
+            "x",
+            "--tool",
+            "hermes",
+        ],
+        "",
+    );
+    assert!(!bad.status.success());
+
+    let jsonl = run(
+        &["serve", &db],
+        &format!(
+            "{}\n{}\n",
+            json!({"id":1,"op":"history_search","scope":"p","query":"seepferdchen","tool":"codex"}),
+            json!({"id":2,"op":"history_search","scope":"p","query":"x","tool":"hermes"}),
+        ),
+    );
+    let lines: Vec<Value> = String::from_utf8(jsonl.stdout)
+        .unwrap()
+        .lines()
+        .map(|l| serde_json::from_str(l).unwrap())
+        .collect();
+    let hits = lines[0]["data"]["hits"].as_array().unwrap();
+    assert_eq!(hits.len(), 1);
+    assert_eq!(hits[0]["tool"], "codex");
+    assert_eq!(lines[1]["ok"], false);
+
+    let call = json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
+        "name":"history_search","arguments":{"query":"seepferdchen","tool":"claude-code"}}});
+    let mcp = run(&["--scope", "p", "mcp", &db], &format!("{call}\n"));
+    let line: Value = serde_json::from_slice(&mcp.stdout).unwrap();
+    let payload: Value =
+        serde_json::from_str(line["result"]["content"][0]["text"].as_str().unwrap()).unwrap();
+    let hits = payload["hits"].as_array().unwrap();
+    assert_eq!(hits.len(), 1);
+    assert_eq!(hits[0]["tool"], "claude-code");
+    assert_eq!(hits[0]["model"], Value::Null);
+}
