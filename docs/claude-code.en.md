@@ -223,5 +223,20 @@ a database; without a usable current database an error cannot be recorded.
 Codex rollouts are not imported by this hook. From 0.3.0-rc.16, one uncompressed Codex
 `.jsonl` file can be imported by hand with an explicit scope:
 `vmind --scope my-project history-import vmind.db FILE --tool codex` (details in
-[cli.md](cli.md), German). Automatic Codex import is a later step. The Claude Code import and
-this hook are unchanged; its messages and import positions are kept apart from Codex ones.
+[cli.md](cli.md), German). The Claude Code import and this hook are unchanged; its messages
+and import positions are kept apart from Codex ones.
+
+From 0.3.0-rc.17, `vmind history-watch` imports Codex rollouts automatically, but only as
+configured in `$XDG_CONFIG_HOME/vmind/history.json` (or `~/.config/vmind/history.json`, or
+`--config PATH`): an existing database, the session root (default `~/.codex/sessions`), a
+window in days (default 7) and a list of working directory → scope. Without that file nothing
+is read. The scope comes from `cwd` in each file's `session_meta`, by the longest
+component-wise prefix (`/a/project-extra` is not part of `/a/project`); ambiguous entries are
+rejected and there is no `global` fallback, so unmatched files are only counted. Only regular,
+uncompressed `rollout-*.jsonl` files in the dated folders of the window are read; symbolic
+links are never followed and `.jsonl.zst` is ignored. A failing source is reported and the
+others continue; a concurrent second run is skipped (OS file lock, nothing left behind after a
+crash). `vmind history-watch-units` prints a systemd user service and timer but installs and
+enables nothing; enabling it by hand (`systemctl --user enable --now
+vmind-history-watch.timer`) is described in [cli.md](cli.md). Tested with synthetic session
+trees only.

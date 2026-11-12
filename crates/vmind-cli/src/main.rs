@@ -2,6 +2,7 @@ mod audit_cmd;
 mod check_cmd;
 mod hint;
 mod history;
+mod history_watch;
 mod mcp;
 mod nudge;
 mod observe;
@@ -63,6 +64,10 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
                                 (genau eine unkomprimierte JSONL-Datei inkrementell
                                  übernehmen; Standard claude-code, codex nur mit --scope)
   history-status DB             (nur lesen: Importstand mit Fehlern)
+  history-watch [--config PFAD] (Codex-Verlauf laut Konfiguration einmal übernehmen; ohne
+                                 Konfiguration wird nichts gelesen; Bereich aus der Konfiguration)
+  history-watch-units [--config PFAD] [--interval MINUTEN] [--output ORDNER] [--vmind PFAD]
+                                (systemd-User-Service und -Timer als Text; installiert nichts)
   history-search DB SUCHTEXT [--limit N] [--tool claude-code|codex]
                                 (unverifizierter Verlauf nur dieses Bereichs, nur lesend;
                                  alle Wörter müssen vorkommen; N 1 bis 20, sonst 5)
@@ -426,6 +431,10 @@ fn run() -> Result<()> {
         [cmd, db, file, options @ ..] if cmd == "history-import" => {
             let tool = history::import_tool(options, explicit_scope.is_some())?;
             history::import(db, &scope, file, tool, json_mode)?
+        }
+        [cmd, options @ ..] if cmd == "history-watch" => history_watch::run(options, json_mode)?,
+        [cmd, options @ ..] if cmd == "history-watch-units" => {
+            history_watch::units(options, json_mode)?
         }
         [cmd, db] if cmd == "history-status" => history::status(db, &scope, json_mode)?,
         [cmd, db, query, options @ ..] if cmd == "history-search" => {

@@ -1,23 +1,47 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.16 (on `main`)
+## Unreleased: candidate 0.3.0-rc.17 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.16` (`vmind --version`, MCP
+Not released yet. The source now reports version `0.3.0-rc.17` (`vmind --version`, MCP
 server info); there is no tag, no published download and no installation of it. The
-earlier candidates `0.3.0-rc.1` to `0.3.0-rc.15` did not yet contain all changes below
+earlier candidates `0.3.0-rc.1` to `0.3.0-rc.16` did not yet contain all changes below
 (rc.1 lacked #40, #42, #43; rc.2 lacked #44; rc.3 lacked #46; rc.4 lacked #47; rc.5 lacked
 #48; rc.6 lacked #53; rc.7 lacked #54; rc.8 lacked the stale-task and open-hint warnings;
 rc.9 lacked the journal search; rc.10 lacked retrieval with all terms of long queries;
 rc.11 lacked the `nudge` hook; rc.12 lacked the automatic conversation history; rc.13
 stored `<system-reminder>` blocks as part of imported user text; rc.14 stopped a history
 import permanently at a complete line with invalid JSON; rc.15 lacked the Codex import and
-the origin of history messages).
+the origin of history messages; rc.16 lacked the configured automatic Codex import).
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
 The next version requires a database migration to schema 8 (from 5, 6 or 7, step by step);
 the automatic verified backup from #10 runs first (see "Upgrading" below). Release
 acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (German).
+
+### Added in rc.17
+
+- **Configured automatic Codex import (`history-watch`):** `vmind history-watch [--config
+  PATH]` runs once over the Codex sessions as configured in `$XDG_CONFIG_HOME/vmind/history.json`
+  (otherwise `~/.config/vmind/history.json`; JSON, no new dependency): an existing database,
+  the session root (default `~/.codex/sessions`), a window in days (default 7) and a list
+  `cwd` → scope. Without a configuration file no source is read and the run ends with
+  `not_configured` (exit 0). Each file's scope comes from `cwd` in its first line
+  (`session_meta`), matched component-wise by the longest prefix (`/a/project-extra` does not
+  belong to `/a/project`); equal paths with different scopes are rejected as ambiguous, and
+  there is no `global` fallback: unmatched files are only counted. Only the dated folders
+  `YYYY/MM/DD` from today − N to today + 1 (UTC) are scanned, and only regular, uncompressed
+  `rollout-*.jsonl` files inside the root; symbolic links are never followed (files, day,
+  month or year folders), a linked root is rejected, `.jsonl.zst` is ignored. Import uses the
+  incremental rc.16 Codex import; an error in one source is reported (summary and
+  `history-status`) and the others continue. A run holds an OS file lock (`flock`) on the
+  configuration file; a second concurrent run is skipped with `locked` and exit 0, and
+  nothing is left behind after a crash. Summary: sources, imported, new messages, skipped,
+  unassigned, failed, ignored. `vmind history-watch-units [--config PATH] [--interval
+  MINUTES] [--output DIR] [--vmind PATH]` prints (or writes, never overwriting) a systemd user
+  service and timer; it installs and enables nothing. No schema change. Tested with
+  synthetic session trees and synthetic unit files only; not tested with real Codex sessions
+  or a real systemd.
 
 ### Added in rc.16
 
