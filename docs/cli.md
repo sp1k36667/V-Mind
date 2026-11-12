@@ -67,8 +67,8 @@ Snapshot nach bekannten Geheimnisformaten. Es legt nichts an, stellt kein Schema
 | `memory_checks` | argv (auch dekodiert), workdir, set_by |
 | `check_runs` | output |
 | `observations` | scope, session_id, tool_use_id, paths (auch dekodiert) |
-| `history_messages` | scope, session_id, uuid, text |
-| `history_imports` | scope, source_path, last_error |
+| `history_messages` | scope, session_id, uuid, text, model (ab Schema 8) |
+| `history_imports` | scope, source_path, last_error, session_id, last_turn_id, last_model (ab Schema 8) |
 
 Erkannte Formate (Heuristik, Wortgrenze davor): privater Schlüsselblock, GitHub-Token
 (`ghp_` usw., `github_pat_`), `sk-`-Schlüssel, Stripe-Live-Schlüssel, AWS-Zugangsschlüssel
@@ -479,8 +479,51 @@ vmind --scope v-mind history-status vmind.db
 `history-search` und `history-status` lesen nur und stellen kein Schema um. Die Suche gilt
 nur für den genannten Bereich (ohne `global`), alle Wörter müssen als ganze Wörter vorkommen
 (Groß-/Kleinschreibung und Akzente zählen nicht), relevanteste und bei gleicher Relevanz
-neueste zuerst; Limit 1 bis 20, Standard 5. `history-import DB DATEI` ist ein Test- und
-Reparaturwerkzeug und meldet Fehler mit Exit 1.
+neueste zuerst; Limit 1 bis 20, Standard 5. Ab 0.3.0-rc.16 (Schema 8) nennt jeder Treffer
+`tool` (`claude-code` oder `codex`) und `model` (sonst `null`); `--tool NAME` schränkt die
+Suche auf ein Werkzeug ein, ohne Angabe bleibt sie wie bisher. `history-import DB DATEI` ist
+ein Test- und Reparaturwerkzeug und meldet Fehler mit Exit 1; ohne `--tool` gilt
+`claude-code`.
+
+#### Codex-Verlauf ausdrücklich importieren (ab 0.3.0-rc.16)
+
+```sh
+vmind --scope v-mind history-import vmind.db ~/.codex/sessions/2026/11/08/rollout-….jsonl --tool codex
+```
+
+Liest genau eine unkomprimierte Rollout-Datei von Codex inkrementell ab dem gespeicherten
+Stand. Der Bereich muss ausdrücklich angegeben werden (`--scope` oder `VMIND_SCOPE`), sonst
+bricht der Befehl vor dem Öffnen der Datenbank ab. **Nicht enthalten:** keine Suche in
+`~/.codex`, keine Zuordnung von Arbeitsordnern zu Bereichen, kein Hook und kein Timer; ein
+automatischer Codex-Import ist ein späterer Schritt. `.jsonl.zst`-Dateien werden nicht gelesen.
+
+Übernommen wird nur `event_msg` mit `item_completed`:
+
+- `UserMessage` nur mit nichtleerer `client_id`, Text aus Blöcken vom Typ `text` (Bilder und
+  andere Blöcke nie). Belegte Kontexthüllen (`<app-context>` und
+  `<in-app-browser-context …>`, auch mit Attributen im öffnenden Tag) werden samt allen
+  Teilinhalten entfernt; Verschachtelung wird je Tagname gezählt, erst der passende äußere
+  Abschluss beendet den Block. Bleibt eine Hülle offen oder ist ihr Tag unvollständig, fällt
+  der Text ab diesem Tag weg, der Text davor bleibt. Andere Tags, ähnlich benannte Tags,
+  schließende Tags ohne Anfang und normaler Text bleiben stehen. Es gibt keinen pauschalen
+  Filter auf führendes `<`.
+- `AgentMessage` nur synchron (ohne `delivery` oder `sync`) und mit Phase `final_answer`,
+  Text aus Blöcken vom Typ `Text` (Großschreibung).
+- Übersprungen werden Zwischentexte (`commentary`), asynchrone Nachrichten,
+  `response_item` (doppelte Darstellung), Werkzeuge, Reasoning, Kontext und Kompaktierung.
+
+Die Sitzung stammt aus `session_meta`; fehlt sie vor der ersten Nachricht oder wechselt sie,
+hält die Datei an. Schlüssel ist `codex:SITZUNG:item:ID`; nur wenn `item.id` fehlt, gilt
+getrennt davon `codex:SITZUNG:ordinal:N`. Nachrichten ohne beides werden übersprungen und in
+`unkeyed_lines` gezählt (Warnung in `history-status`, nie mit Rohtext). Gleiche Texte mit
+verschiedenen IDs bleiben getrennt. Das Modell steht nur dann an einer Nachricht, wenn ein
+`turn_context` mit demselben `turn_id` genau ein Modell nennt (auch über Läufe hinweg für den
+zuletzt gelesenen Turn); sonst `null`. Unbekannte Struktur in einer relevanten Zeile hält die
+Datei wie beim Claude-Import an, beschädigte vollständige Zeilen werden gezählt und
+übersprungen. Nachrichten und Importstand sind je Werkzeug getrennt, auch bei gleichem Pfad.
+Für Claude Code steht das Modell nur, wenn die Assistentenzeile selbst ein gültiges
+`message.model` enthält (nicht `<synthetic>`); Nutzerzeilen haben `null`. Nur mit
+synthetischen Dateien getestet, nicht mit echten Codex-Verläufen.
 
 **Was gespeichert wird:** je Nachricht Bereich, Sitzungs-ID, Nachrichten-UUID, Rolle (`user`
 oder `assistant`), Text und Zeitpunkt, je Datei Pfad, Lesestand, letzte Fehlermeldung und
@@ -689,7 +732,10 @@ Prüfbefehle (`memory_checks`) und Prüfläufe (`check_runs`). Migration 0005 er
 Teilwortsuche (`memories_trigram`) und baut sie für vorhandene Einträge auf. Migration
 0006 ergänzt die Tabelle `observations` für Hook-Beobachtungen; bestehende Daten bleiben
 unverändert. Migration 0007 ergänzt `history_messages`, den Index `history_fts` und den
-Importstand `history_imports`; bestehende Daten bleiben ebenfalls unverändert.
+Importstand `history_imports`; bestehende Daten bleiben ebenfalls unverändert. Migration
+0008 baut beide Verlaufstabellen mit `tool` und `model` neu auf (Eindeutigkeit je Bereich und
+Werkzeug), behält IDs, Suchindex und Warnungen und kennzeichnet Bestandszeilen als
+`claude-code`.
 Beim Import alter Einträge wird keine historische Prüfzeit erfunden.
 Vor Migrationen einer bestehenden Datenbank vorher mit der SQLite-Backup-API sichern; keine
 laufende Datenbank blind als Einzeldatei kopieren.

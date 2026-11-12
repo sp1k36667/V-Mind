@@ -1,22 +1,48 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.15 (on `main`)
+## Unreleased: candidate 0.3.0-rc.16 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.15` (`vmind --version`, MCP
+Not released yet. The source now reports version `0.3.0-rc.16` (`vmind --version`, MCP
 server info); there is no tag, no published download and no installation of it. The
-earlier candidates `0.3.0-rc.1` to `0.3.0-rc.14` did not yet contain all changes below
+earlier candidates `0.3.0-rc.1` to `0.3.0-rc.15` did not yet contain all changes below
 (rc.1 lacked #40, #42, #43; rc.2 lacked #44; rc.3 lacked #46; rc.4 lacked #47; rc.5 lacked
 #48; rc.6 lacked #53; rc.7 lacked #54; rc.8 lacked the stale-task and open-hint warnings;
 rc.9 lacked the journal search; rc.10 lacked retrieval with all terms of long queries;
 rc.11 lacked the `nudge` hook; rc.12 lacked the automatic conversation history; rc.13
 stored `<system-reminder>` blocks as part of imported user text; rc.14 stopped a history
-import permanently at a complete line with invalid JSON).
+import permanently at a complete line with invalid JSON; rc.15 lacked the Codex import and
+the origin of history messages).
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
-The next version requires a database migration to schema 7 (from 5 via 6, or from 6);
+The next version requires a database migration to schema 8 (from 5, 6 or 7, step by step);
 the automatic verified backup from #10 runs first (see "Upgrading" below). Release
 acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (German).
+
+### Added in rc.16
+
+- **Codex history import and message origin (schema 8):** `vmind --scope NAME
+  history-import DB FILE --tool codex` imports exactly one uncompressed Codex rollout
+  `.jsonl` file incrementally; the scope must be given explicitly (`--scope` or
+  `VMIND_SCOPE`). Only `event_msg/item_completed` is read: `UserMessage` with a non-empty
+  `client_id` (text blocks only; the documented context envelopes `<app-context>` and
+  `<in-app-browser-context …>`, also with attributes, are removed with all nested content,
+  counting nesting per tag name; an unterminated envelope drops the text from its tag on;
+  other tags stay; no general filter on a leading `<`) and synchronous
+  `AgentMessage` with phase `final_answer` (`Text` blocks). Commentary, async messages,
+  `response_item`, tools, context and compaction are skipped. The session comes from
+  `session_meta`; the key is `item.id`, `ordinal` only as a separate fallback, and messages
+  with neither are skipped and counted (`unkeyed_lines`) without raw text. Each message stores
+  `tool` (`claude-code` or `codex`) and `model`; for Codex only when a `turn_context` with
+  the same `turn_id` names exactly one model, for Claude Code only from the assistant line
+  itself, otherwise `null`. Deduplication and the import position are separate per tool, also
+  for the same path. `history-search` (CLI `--tool`, JSONL/MCP `tool`) shows `tool` and
+  `model` and can filter; without a filter it behaves as before in the exact scope. The
+  default tool stays `claude-code`, so the existing Claude path and the `history-hook` are
+  unchanged. **Not included:** automatic Codex import (no scan of `~/.codex`, no mapping of
+  working directories to scopes, no hook, no timer) is an explicit follow-up step; `.jsonl.zst`
+  files are not read. Migration 0008 rebuilds both history tables, keeps ids, the search
+  index and warnings, and marks existing rows `claude-code`. Tested with synthetic files only.
 
 ### Fixed
 
@@ -192,12 +218,12 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
 
 1. Stop all clients that use the database (MCP server, `serve`, hooks, scripts).
 2. Install the new binary. The first command that opens the database normally (for
-   example `stats`, `resume` or `add`) migrates to schema 7 and first writes a verified
+   example `stats`, `resume` or `add`) migrates to schema 8 and first writes a verified
    backup next to the file (or in `VMIND_BACKUP_DIR`); without a verified backup there is
    no migration. `doctor` and `report` only read and never migrate; the `observe` and
    `history-hook` hooks refuse an old schema instead of upgrading it.
-3. Confirm with `vmind doctor vmind.db` that `schema_version` is 7 and the database is
-   healthy. Older binaries refuse a schema 7 database.
+3. Confirm with `vmind doctor vmind.db` that `schema_version` is 8 and the database is
+   healthy. Older binaries refuse a schema 8 database.
 4. Restart MCP clients so they use the new binary.
 
 ## 0.2.0 – 2026-11-01

@@ -185,7 +185,9 @@ After each turn and before each compaction, `history-hook` reads the `transcript
 `session_id` Claude Code passes on stdin and imports the new complete lines of that JSONL
 file into the scope of `--scope`. The first run reads the whole file, so the example
 allows 60 seconds. Search with `history_search` (MCP/JSONL) or
-`vmind --scope my-project history-search vmind.db 'words'`; check for trouble with
+`vmind --scope my-project history-search vmind.db 'words'`; from 0.3.0-rc.16 (schema 8) each
+hit names `tool` (`claude-code` or `codex`) and `model` (`null` unless the assistant line
+itself carries a valid `message.model`), and `--tool` (JSONL/MCP `tool`) filters by tool; check for trouble with
 `vmind --scope my-project history-status vmind.db`.
 
 **What is stored:** per message the scope, session ID, message UUID, role (`user` or
@@ -217,3 +219,9 @@ not counted again; only a file read from the start resets it. Real user turns th
 (for example local slash commands) are not filtered separately. A file replaced by a longer
 one is not detected. The hook prints nothing, always exits 0, and never creates or upgrades
 a database; without a usable current database an error cannot be recorded.
+
+Codex rollouts are not imported by this hook. From 0.3.0-rc.16, one uncompressed Codex
+`.jsonl` file can be imported by hand with an explicit scope:
+`vmind --scope my-project history-import vmind.db FILE --tool codex` (details in
+[cli.md](cli.md), German). Automatic Codex import is a later step. The Claude Code import and
+this hook are unchanged; its messages and import positions are kept apart from Codex ones.

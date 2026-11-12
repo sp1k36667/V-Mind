@@ -155,7 +155,7 @@ const SOURCES: &[Source] = &[
         min_schema: 7,
         id: "id",
         parent: Parent::None,
-        fields: &["scope", "session_id", "uuid", "text"],
+        fields: &["scope", "session_id", "uuid", "text", "model"],
         json: &[],
     },
     Source {
@@ -163,10 +163,27 @@ const SOURCES: &[Source] = &[
         min_schema: 7,
         id: "id",
         parent: Parent::None,
-        fields: &["scope", "source_path", "last_error"],
+        fields: &[
+            "scope",
+            "source_path",
+            "last_error",
+            "session_id",
+            "last_turn_id",
+            "last_model",
+        ],
         json: &[],
     },
 ];
+
+/// Felder, die erst eine spätere Migration ergänzt hat; ältere Schemas prüfen ohne sie.
+fn added_later(version: i64, table: &str, field: &str) -> bool {
+    match (table, field) {
+        ("memories", "scope") => version == 1,
+        ("history_messages", "model")
+        | ("history_imports", "session_id" | "last_turn_id" | "last_model") => version < 8,
+        _ => false,
+    }
+}
 
 fn table_exists(conn: &Connection, table: &str) -> Result<bool> {
     conn.query_row(
@@ -289,7 +306,7 @@ pub fn audit_secrets(path: impl AsRef<Path>) -> Result<AuditReport> {
         let expected = source
             .fields
             .iter()
-            .filter(|&&field| !(version == 1 && source.table == "memories" && field == "scope"))
+            .filter(|&&field| !added_later(version, source.table, field))
             .count();
         if fields.len() != expected {
             return Err(invalid(
