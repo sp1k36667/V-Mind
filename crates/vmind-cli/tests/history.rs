@@ -7,12 +7,16 @@ use std::{
     process::{Command, Output, Stdio},
 };
 
+static NEXT_TEMP: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 struct Temp(PathBuf);
 impl Temp {
     fn new() -> Self {
         let path = std::env::temp_dir().join(format!(
-            "vmind-cli-history-{}-{}",
+            "vmind-cli-history-{}-{}-{}",
             std::process::id(),
+            // Grobe Uhren (macOS) liefern bei parallelen Tests sonst denselben Namen.
+            NEXT_TEMP.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()

@@ -17,12 +17,16 @@ const SCHEMA: &str = "
     CREATE TABLE part(id TEXT PRIMARY KEY, message_id TEXT NOT NULL, session_id TEXT NOT NULL,
         time_created INTEGER NOT NULL, time_updated INTEGER NOT NULL, data TEXT NOT NULL);";
 
+static NEXT_TEMP: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 struct Temp(PathBuf);
 impl Temp {
     fn new() -> Self {
         let p = std::env::temp_dir().join(format!(
-            "vmind-opencode-{}-{}",
+            "vmind-opencode-{}-{}-{}",
             std::process::id(),
+            // Grobe Uhren (macOS) liefern bei parallelen Tests sonst denselben Namen.
+            NEXT_TEMP.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
