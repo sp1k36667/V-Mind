@@ -652,9 +652,6 @@ fn source_equal_to_target_is_rejected_without_any_write() {
         let link = t.0.join("verweis.db");
         std::os::unix::fs::symlink(t.db(), &link).unwrap();
         assert_rejected_without_writing(&store, &t.db(), &link);
-        let hard = t.0.join("hart.db");
-        fs::hard_link(t.db(), &hard).unwrap();
-        assert_rejected_without_writing(&store, &t.db(), &hard);
     }
     let status = store.history_status("p").unwrap();
     assert_eq!(
@@ -663,6 +660,51 @@ fn source_equal_to_target_is_rejected_without_any_write() {
         "kein Fehlereintrag"
     );
     assert!(vmind_core::check_opencode_source(&t.source(), &t.db()).is_ok());
+    assert!(
+        vmind_core::check_opencode_source(&t.source(), &t.0.join("neu.db")).is_ok(),
+        "fehlendes Ziel ist keine Kollision"
+    );
+}
+
+/// Auf allen Plattformen (NTFS kennt harte Links): anderer Pfad, dieselbe Datei.
+#[test]
+fn hard_link_to_target_is_rejected_without_any_write() {
+    let t = Temp::new();
+    example(&t.source());
+    let store = t.store();
+    import(&store, "p", &t.source(), None);
+    let hard = t.0.join("hart.db");
+    fs::hard_link(t.db(), &hard).unwrap();
+    assert_rejected_without_writing(&store, &t.db(), &hard);
+    assert!(sidecars(&hard).is_empty());
+    let status = store.history_status("p").unwrap();
+    assert_eq!(
+        (status.failed, status.messages),
+        (0, 4),
+        "kein Fehlereintrag"
+    );
+}
+
+/// Ist die Identität bei vorhandenem Ziel nicht feststellbar, wird abgebrochen.
+#[cfg(unix)]
+#[test]
+fn unknown_identity_fails_closed() {
+    use std::os::unix::fs::PermissionsExt;
+    let t = Temp::new();
+    example(&t.source());
+    let locked = t.0.join("gesperrt");
+    fs::create_dir(&locked).unwrap();
+    let target = locked.join("v.db");
+    fs::write(&target, b"x").unwrap();
+    fs::set_permissions(&locked, fs::Permissions::from_mode(0o000)).unwrap();
+    let readable = fs::metadata(&target).is_ok();
+    let result = vmind_core::check_opencode_source(&t.source(), &target);
+    fs::set_permissions(&locked, fs::Permissions::from_mode(0o700)).unwrap();
+    if readable {
+        return; // als root nicht nachstellbar
+    }
+    let error = result.unwrap_err().to_string();
+    assert!(error.contains("nicht prüfbar"), "{error}");
 }
 
 #[test]

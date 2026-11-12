@@ -31,9 +31,11 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
   percent-encoded), so SQLite creates no `-wal`/`-shm` and writes nothing; a non-empty `-wal`
   or any `-journal` next to the snapshot is refused before opening ("active WAL/journal file,
   please pass a consistent standalone snapshot, e.g. sqlite3 .backup"). The V-Mind database
-  itself as source (same canonical path, also via symlink; on Unix also a hard link) is
-  refused before the database is opened, so nothing is migrated, recorded or written; on
-  Windows paths compare case-insensitively and hard links are not detected (known limit).
+  itself as source (same canonical path, symlink or hard link; file identity via the
+  `same-file` crate: device/inode on Unix, volume serial/file index on Windows) is refused
+  before the database is opened, so nothing is migrated, recorded or written; if identity
+  cannot be determined for an existing database, the import also stops without writing.
+  New dependency `same-file` 1.0.6 (no own `unsafe`).
   Windows paths (`\\?\C:\…`, `\\?\UNC\…`) become `file:/C:/…` or `file:////server/…`.
   Required tables and columns are checked
   (`session.id/parent_id`, `message.id/session_id/time_created/data`,

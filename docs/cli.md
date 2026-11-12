@@ -552,12 +552,13 @@ Sicherheitsgrenzen:
 - Liegt neben der Quelle eine nicht leere `-wal`- oder eine `-journal`-Datei, bricht der
   Import vor dem Öffnen ab („Aktive WAL-Datei …; bitte konsistenten eigenständigen Snapshot
   übergeben“): `immutable` sähe deren Inhalt nicht.
-- Ist die Quelle die V-Mind-Datenbank selbst (gleicher kanonischer Pfad, auch über
-  symbolischen Link; unter Unix auch harter Link), bricht der Import ab, **bevor** die
-  Datenbank geöffnet wird: keine Migration, kein Importstand, kein Fehlereintrag, die Datei
-  bleibt byte-gleich. Unter Windows wird der Pfad ohne Groß-/Kleinschreibung verglichen; ein
-  harter Link wird dort nicht erkannt (keine stabile Dateikennung in Rust), das ist eine
-  bekannte Grenze.
+- Ist die Quelle die V-Mind-Datenbank selbst (gleicher kanonischer Pfad, symbolischer oder
+  harter Link; Dateiidentität über die Crate `same-file`: Unix Gerät und Inode, Windows
+  Volume-Seriennummer und Dateiindex), bricht der Import ab, **bevor** die Datenbank geöffnet
+  wird: keine Migration, kein Importstand, kein Fehlereintrag, die Datei bleibt byte-gleich.
+  Lässt sich die Identität bei vorhandener Datenbank nicht feststellen, bricht der Import
+  ebenso ohne Schreibzugriff ab. Unter Windows wird der Pfad zusätzlich ohne
+  Groß-/Kleinschreibung verglichen.
 - Unter Windows wird aus dem kanonischen Pfad (`\\?\C:\…`, `\\?\UNC\…`) eine URI
   `file:/C:/…` bzw. `file:////server/freigabe/…` mit `/` statt `\`.
 - Erwartet werden die Tabellen `session` (`id`, `parent_id`), `message` (`id`, `session_id`,

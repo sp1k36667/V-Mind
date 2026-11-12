@@ -109,19 +109,6 @@ fn reject_sidecars(paths: &[&Path]) -> Outcome<()> {
     Ok(())
 }
 
-#[cfg(unix)]
-fn same_inode(a: &fs::Metadata, b: &fs::Metadata) -> bool {
-    use std::os::unix::fs::MetadataExt;
-    a.dev() == b.dev() && a.ino() == b.ino()
-}
-
-/// Bekannte Grenze: Ohne instabile API gibt es auf anderen Systemen keine Dateikennung; ein
-/// harter Link auf die V-Mind-Datenbank wird dort nicht als dieselbe Datei erkannt.
-#[cfg(not(unix))]
-fn same_inode(_: &fs::Metadata, _: &fs::Metadata) -> bool {
-    false
-}
-
 /// Gleiche kanonische Pfade; unter Windows ohne Unterschied der Groß-/Kleinschreibung.
 fn same_canonical(a: &Path, b: &Path) -> bool {
     if cfg!(windows) {
@@ -131,21 +118,44 @@ fn same_canonical(a: &Path, b: &Path) -> bool {
     }
 }
 
-/// Ob der Snapshot dieselbe Datei wie die V-Mind-Datenbank ist: gleicher kanonischer Pfad
-/// (auch über symbolische Links) oder unter Unix gleicher Inode (harter Link). Liest nur
-/// Metadaten, öffnet keine der beiden Dateien.
-pub(super) fn is_same_file(snapshot: &Path, target: &Path) -> bool {
-    let (Ok(source), Ok(target_path)) = (fs::canonicalize(snapshot), fs::canonicalize(target))
-    else {
-        return false;
-    };
-    if same_canonical(&source, &target_path) {
-        return true;
+/// Reguläre Datei; `Ok(None)`, wenn es den Pfad nicht gibt.
+fn regular_file(path: &Path) -> std::io::Result<Option<bool>> {
+    match fs::metadata(path) {
+        Ok(meta) => Ok(Some(meta.is_file())),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(e),
     }
-    matches!(
-        (fs::metadata(&source), fs::metadata(&target_path)),
-        (Ok(a), Ok(b)) if same_inode(&a, &b)
-    )
+}
+
+/// Ob der Snapshot dieselbe Datei wie die V-Mind-Datenbank ist: gleicher kanonischer Pfad
+/// (auch über symbolische Links) oder dieselbe Datei laut `same-file` (Unix: Gerät und
+/// Inode; Windows: Volume-Seriennummer und Dateiindex über lesende Handles), also auch ein
+/// harter Link. Schreibt nichts. `Err`, wenn die Identität bei vorhandenem Ziel nicht
+/// feststellbar ist (fail closed). Nur reguläre Dateien werden geöffnet, damit eine FIFO
+/// nicht blockiert; eine andere Dateiart kann ohnehin nicht die Datenbankdatei sein.
+pub(super) fn is_same_file(snapshot: &Path, target: &Path) -> Outcome<bool> {
+    let unknown = |e: std::io::Error| {
+        format!(
+            "Identität von Quelle und V-Mind-Datenbank nicht prüfbar ({}); nichts geöffnet oder \
+             geschrieben",
+            e.kind()
+        )
+    };
+    let Some(target_is_file) = regular_file(target).map_err(unknown)? else {
+        return Ok(false);
+    };
+    let Some(source_is_file) = regular_file(snapshot).map_err(unknown)? else {
+        return Ok(false);
+    };
+    if !(target_is_file && source_is_file) {
+        return Ok(false);
+    }
+    let source = fs::canonicalize(snapshot).map_err(unknown)?;
+    let target_path = fs::canonicalize(target).map_err(unknown)?;
+    if same_canonical(&source, &target_path) {
+        return Ok(true);
+    }
+    same_file::is_same_file(&source, &target_path).map_err(unknown)
 }
 
 /// Kanonischer Pfad der Quelle nach allen Vorprüfungen.

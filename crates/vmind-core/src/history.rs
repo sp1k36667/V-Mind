@@ -481,16 +481,18 @@ fn read_new_lines(
 }
 
 /// Fehler, wenn der OpenCode-Snapshot dieselbe Datei wie die V-Mind-Datenbank ist (gleicher
-/// kanonischer Pfad, auch über symbolische Links; unter Unix auch harter Link). Liest nur
-/// Metadaten und öffnet keine der Dateien; daher vor dem Öffnen der Datenbank aufrufbar.
-/// Unter Windows wird ein harter Link nicht erkannt (keine stabile Dateikennung).
+/// kanonischer Pfad, symbolischer oder harter Link, auf allen Plattformen) oder wenn sich das
+/// bei vorhandener Datenbank nicht feststellen lässt (fail closed). Schreibt nichts und öffnet
+/// keine SQLite-Verbindung; daher vor dem Öffnen der Datenbank aufzurufen. Eine noch nicht
+/// vorhandene Datenbank ist keine Kollision.
 pub fn check_opencode_source(snapshot: &Path, database: &Path) -> Result<()> {
-    if opencode::is_same_file(snapshot, database) {
-        return Err(invalid(
+    match opencode::is_same_file(snapshot, database) {
+        Ok(false) => Ok(()),
+        Ok(true) => Err(invalid(
             "Quelle ist die V-Mind-Datenbank selbst; nichts geöffnet oder geschrieben",
-        ));
+        )),
+        Err(message) => Err(invalid(&message)),
     }
-    Ok(())
 }
 
 fn clipped(text: &str, max: usize) -> String {

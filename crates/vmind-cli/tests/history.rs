@@ -647,19 +647,19 @@ fn opencode_import_reads_a_snapshot_and_is_searchable_everywhere() {
     assert!(String::from_utf8_lossy(&blocked.stdout).contains("WAL"));
 }
 
-/// Symbolischer und harter Link auf die Datenbank; unter Windows nicht erkannt bzw. nicht
-/// ohne Sonderrechte anlegbar, daher nur unter Unix.
-#[cfg(unix)]
+/// Harter Link auf die Datenbank auf allen Plattformen; symbolischer Link nur unter Unix
+/// (unter Windows nur mit Sonderrechten anlegbar).
 fn link_aliases(t: &Temp, db: &str) -> Vec<String> {
-    let (link, hard) = (t.path("verweis.db"), t.path("hart.db"));
-    std::os::unix::fs::symlink(db, &link).unwrap();
+    let hard = t.path("hart.db");
     fs::hard_link(db, &hard).unwrap();
-    vec![link, hard]
-}
-
-#[cfg(not(unix))]
-fn link_aliases(_: &Temp, _: &str) -> Vec<String> {
-    Vec::new()
+    #[cfg(unix)]
+    {
+        let link = t.path("verweis.db");
+        std::os::unix::fs::symlink(db, &link).unwrap();
+        vec![hard, link]
+    }
+    #[cfg(not(unix))]
+    vec![hard]
 }
 
 /// Die eigene Datenbank als Quelle: Exit 1, Datei byte-gleich, keine Sidecars, kein
