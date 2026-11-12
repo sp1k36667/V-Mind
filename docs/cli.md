@@ -493,9 +493,10 @@ vmind --scope v-mind history-import vmind.db ~/.codex/sessions/2026/11/08/rollou
 
 Liest genau eine unkomprimierte Rollout-Datei von Codex inkrementell ab dem gespeicherten
 Stand. Der Bereich muss ausdrücklich angegeben werden (`--scope` oder `VMIND_SCOPE`), sonst
-bricht der Befehl vor dem Öffnen der Datenbank ab. **Nicht enthalten:** keine Suche in
-`~/.codex`, keine Zuordnung von Arbeitsordnern zu Bereichen, kein Hook und kein Timer; ein
-automatischer Codex-Import ist ein späterer Schritt. `.jsonl.zst`-Dateien werden nicht gelesen.
+bricht der Befehl vor dem Öffnen der Datenbank ab. `history-import` selbst sucht nicht in
+`~/.codex` und ordnet keine Arbeitsordner zu; das übernimmt ab 0.3.0-rc.17 der
+konfigurationsgesteuerte Lauf `history-watch` (nächster Abschnitt). `.jsonl.zst`-Dateien
+werden nicht gelesen.
 
 Übernommen wird nur `event_msg` mit `item_completed`:
 
@@ -524,6 +525,114 @@ Datei wie beim Claude-Import an, beschädigte vollständige Zeilen werden gezäh
 Für Claude Code steht das Modell nur, wenn die Assistentenzeile selbst ein gültiges
 `message.model` enthält (nicht `<synthetic>`); Nutzerzeilen haben `null`. Nur mit
 synthetischen Dateien getestet, nicht mit echten Codex-Verläufen.
+
+#### Codex-Verlauf automatisch per Konfiguration (`history-watch`, ab 0.3.0-rc.17)
+
+Ohne Konfigurationsdatei liest `history-watch` **keine** Quelle und meldet nur
+`not_configured` (Exit 0). Die Datei liegt unter `$XDG_CONFIG_HOME/vmind/history.json`, ohne
+`XDG_CONFIG_HOME` unter `~/.config/vmind/history.json`; `--config PFAD` überschreibt das.
+Beispiel (alle Pfade absolut, `~` wird nicht erweitert):
+
+```json
+{
+  "database": "/home/ich/Projekte/V-Mind/vmind.db",
+  "codex_sessions": "/home/ich/.codex/sessions",
+  "days": 7,
+  "scopes": [
+    {"cwd": "/home/ich/Projekte/V-Mind", "scope": "v-mind"},
+    {"cwd": "/home/ich/Projekte/V-Mind/docs-site", "scope": "v-mind-docs"}
+  ]
+}
+```
+
+- `database`: eine **vorhandene** Datenbank mit aktuellem Schema; nichts wird angelegt oder
+  umgestellt.
+- `codex_sessions`: optional, Standard `$HOME/.codex/sessions`.
+- `days`: optional, 1 bis 366, Standard 7.
+- `scopes`: 1 bis 1000 Zuordnungen Arbeitsordner → Bereich. Unbekannte Felder, relative
+  Pfade und Pfade mit `..` sind Konfigurationsfehler (Exit 1).
+
+```sh
+vmind history-watch
+```
+
+```sh
+vmind --json history-watch --config /home/ich/.config/vmind/history.json
+```
+
+Ablauf eines Laufs:
+
+1. Gescannt werden nur die Datumsordner `JJJJ/MM/TT` von heute − `days` bis heute + 1 (UTC;
+   der Tag nach vorn gleicht die lokale Datumsbenennung von Codex aus) und darin nur
+   reguläre, unkomprimierte `rollout-*.jsonl`. Symbolischen Links wird nie gefolgt, weder bei
+   Dateien noch bei Jahres-, Monats- oder Tagesordnern; ist die Wurzel selbst ein Link, bricht
+   der Lauf ab. `.jsonl.zst`, andere Namen und Unterordner zählen als `ignored`. Fehlt die
+   Wurzel, wird nichts gelesen (`root_missing`).
+2. Je Datei wird nur die erste Zeile gelesen und der Bereich aus `session_meta.payload.cwd`
+   bestimmt: Komponentenweise gewinnt das **längste passende Präfix**; `/a/project-extra`
+   gehört nicht zu `/a/project`. Derselbe Pfad mit zwei verschiedenen Bereichen ist eine
+   mehrdeutige Konfiguration und wird abgelehnt; derselbe Pfad mit demselben Bereich ist
+   erlaubt. Es gibt **keinen Ausweichbereich**, auch nicht `global`: Nicht zugeordnete
+   Dateien (auch relative `cwd` oder solche mit `..`) werden nur als `unassigned` gezählt und
+   nicht importiert. Ist die erste Zeile noch unvollständig, wartet die Datei (`skipped`).
+3. Zugeordnete Dateien laufen durch den inkrementellen Codex-Import (wie `history-import
+   --tool codex`), also ohne Duplikate bei Wiederholung. Ein Fehler einer Quelle zählt als
+   `failed`, steht mit Pfad in der Zusammenfassung (höchstens 50, nie mit Zeileninhalt) und
+   bei zugeordneten Quellen zusätzlich in `history-status` des Bereichs; die übrigen Quellen
+   laufen weiter. Kann der Bereich nicht bestimmt werden (erste Zeile kein JSON oder keine
+   `session_meta`), steht der Fehler nur in der Zusammenfassung.
+
+Zusammenfassung (Text oder JSON): `sources`, `imported` (Quellen mit neuen Nachrichten),
+`added` (neue Nachrichten), `skipped`, `unassigned`, `failed`, `ignored`, `errors`. Der Lauf
+endet mit Exit 0, auch wenn einzelne Quellen fehlschlagen; Exit 1 nur bei unbrauchbarer
+Konfiguration, Wurzel oder Datenbank. Der globale `--scope` wird hier nicht verwendet.
+
+**Parallelität:** Ein Lauf hält eine Betriebssystem-Dateisperre (`flock`) auf der
+Konfigurationsdatei. Ein zweiter gleichzeitiger Lauf endet sofort mit `locked` (Exit 0) und
+liest nichts. Die Sperre hängt am Dateihandle; nach einem Absturz gibt das System sie frei, es
+bleibt keine Sperrdatei zurück. Läufe mit verschiedenen Konfigurationsdateien sind nicht
+gegeneinander gesperrt; der Import selbst bleibt dank Byte-Stand und Nachrichtenkennung
+dennoch frei von Duplikaten.
+
+**Timer erzeugen, nicht installieren:**
+
+```sh
+vmind history-watch-units --interval 15
+```
+
+gibt eine systemd-User-Service-Unit (`vmind-history-watch.service`, `Type=oneshot`,
+`ExecStart` mit absolutem Programmpfad und `--config`) und eine Timer-Unit
+(`vmind-history-watch.timer`, `OnBootSec=2min`, `OnUnitActiveSec=15min`) aus. Mit
+`--output ORDNER` werden beide Dateien dort neu angelegt; vorhandene werden nie
+überschrieben. `--vmind PFAD` setzt den Programmpfad (Standard: das laufende Programm),
+`--config` den Konfigurationspfad (Standard wie oben, als absoluter Pfad eingesetzt),
+`--interval` 1 bis 1440 Minuten (Standard 15). Der Befehl ruft kein `systemctl` auf und
+schreibt nichts unter `~/.config/systemd`. Manuelle Aktivierung, wenn gewünscht:
+
+```sh
+vmind history-watch-units --output ~/.config/systemd/user
+```
+
+```sh
+systemctl --user daemon-reload
+```
+
+```sh
+systemctl --user enable --now vmind-history-watch.timer
+```
+
+Prüfen mit `systemctl --user list-timers` und `journalctl --user -u
+vmind-history-watch.service`; abschalten mit `systemctl --user disable --now
+vmind-history-watch.timer`. Ohne Anmeldung laufen User-Timer nur mit `loginctl
+enable-linger`.
+
+**Grenzen:** Nur mit synthetischen Sitzungsbäumen und synthetischen Unit-Dateien getestet,
+nicht mit echten Codex-Sitzungen und nicht mit einem echten systemd. Zwischen Scan und Öffnen
+kann eine Datei theoretisch durch einen Link ersetzt werden; dagegen schützt nur, dass
+`~/.codex` allein dem Nutzer gehört. Ältere Sitzungen außerhalb des Fensters, die noch
+wachsen, werden erst wieder erfasst, wenn das Fenster sie einschließt; einmalig hilft
+`history-import` oder ein größeres `days`. Die erste Zeile wird bei jedem Lauf erneut gelesen
+(bis 16 MiB).
 
 **Was gespeichert wird:** je Nachricht Bereich, Sitzungs-ID, Nachrichten-UUID, Rolle (`user`
 oder `assistant`), Text und Zeitpunkt, je Datei Pfad, Lesestand, letzte Fehlermeldung und

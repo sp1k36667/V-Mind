@@ -9,8 +9,14 @@
 //! `<system-reminder>`-Blöcke werden vorher entfernt. Verlauf ist kein Prüfnachweis.
 mod codex;
 mod note;
+mod watch;
+mod watch_config;
+mod watch_scan;
 
 use note::ImportNote;
+pub use watch::{WatchProblem, WatchReport, try_watch_lock};
+pub use watch_config::WatchConfig;
+pub use watch_scan::CivilDate;
 
 use crate::{MemoryStore, invalid, is_busy, retry_busy, search_terms, secrets};
 use rusqlite::{OptionalExtension, Result, Transaction, TransactionBehavior, params};

@@ -4,7 +4,10 @@ mod check_evidence;
 mod checks;
 mod history;
 pub use check_evidence::{CheckEvidence, CheckState, CheckVerdict};
-pub use history::{HistoryHit, HistoryImport, HistorySource, HistoryStatus, HistoryTool};
+pub use history::{
+    CivilDate, HistoryHit, HistoryImport, HistorySource, HistoryStatus, HistoryTool, WatchConfig,
+    WatchProblem, WatchReport, try_watch_lock,
+};
 mod maintenance;
 pub use maintenance::{
     BackupReport, DoctorReport, JournalModeReport, backup_database, inspect_database,
