@@ -480,8 +480,9 @@ vmind --scope v-mind history-status vmind.db
 nur für den genannten Bereich (ohne `global`), alle Wörter müssen als ganze Wörter vorkommen
 (Groß-/Kleinschreibung und Akzente zählen nicht), relevanteste und bei gleicher Relevanz
 neueste zuerst; Limit 1 bis 20, Standard 5. Ab 0.3.0-rc.16 (Schema 8) nennt jeder Treffer
-`tool` (`claude-code` oder `codex`) und `model` (sonst `null`); `--tool NAME` schränkt die
-Suche auf ein Werkzeug ein, ohne Angabe bleibt sie wie bisher. `history-import DB DATEI` ist
+`tool` (`claude-code` oder `codex`, ab 0.3.0-rc.18 auch `opencode`) und `model` (sonst
+`null`); `--tool NAME` schränkt die Suche auf ein Werkzeug ein, ohne Angabe bleibt sie wie
+bisher. `history-import DB DATEI` ist
 ein Test- und Reparaturwerkzeug und meldet Fehler mit Exit 1; ohne `--tool` gilt
 `claude-code`.
 
@@ -525,6 +526,70 @@ Datei wie beim Claude-Import an, beschädigte vollständige Zeilen werden gezäh
 Für Claude Code steht das Modell nur, wenn die Assistentenzeile selbst ein gültiges
 `message.model` enthält (nicht `<synthetic>`); Nutzerzeilen haben `null`. Nur mit
 synthetischen Dateien getestet, nicht mit echten Codex-Verläufen.
+
+#### OpenCode-Verlauf aus einem SQLite-Snapshot importieren (ab 0.3.0-rc.18, Schema 9)
+
+```sh
+sqlite3 -readonly ~/.local/share/opencode/opencode.db ".backup /tmp/opencode-snapshot.db"
+```
+
+```sh
+vmind --scope v-mind history-import vmind.db /tmp/opencode-snapshot.db --tool opencode
+```
+
+OpenCode 1.18.15 speichert Sitzungen in SQLite (`opencode.db`, WAL-Betrieb). V-Mind liest
+nur einen **eigenständigen Snapshot**, den der Nutzer selbst erzeugt, etwa mit `sqlite3
+.backup` wie oben, am besten bei beendetem OpenCode (Beispiel; mit einer echten
+OpenCode-Datenbank nicht geprüft). V-Mind sucht keine OpenCode-Dateien,
+ruft kein `opencode` auf (`opencode export` schreibt in die Werkzeugdatenbank) und richtet
+keinen Hook und keinen Timer ein. Der Bereich muss ausdrücklich angegeben werden.
+`--session ID` übernimmt nur diese Sitzung.
+
+Sicherheitsgrenzen:
+
+- Die Quelle wird nur über die URI `file:PFAD?mode=ro&immutable=1` geöffnet (Pfad
+  prozentkodiert); SQLite legt dabei weder `-wal` noch `-shm` an und schreibt nichts.
+- Liegt neben der Quelle eine nicht leere `-wal`- oder eine `-journal`-Datei, bricht der
+  Import vor dem Öffnen ab („Aktive WAL-Datei …; bitte konsistenten eigenständigen Snapshot
+  übergeben“): `immutable` sähe deren Inhalt nicht.
+- Ist die Quelle die V-Mind-Datenbank selbst (gleicher kanonischer Pfad, symbolischer oder
+  harter Link; Dateiidentität über die Crate `same-file`: Unix Gerät und Inode, Windows
+  Volume-Seriennummer und Dateiindex), bricht der Import ab, **bevor** die Datenbank geöffnet
+  wird: keine Migration, kein Importstand, kein Fehlereintrag, die Datei bleibt byte-gleich.
+  Lässt sich die Identität bei vorhandener Datenbank nicht feststellen, bricht der Import
+  ebenso ohne Schreibzugriff ab. Unter Windows wird der Pfad zusätzlich ohne
+  Groß-/Kleinschreibung verglichen.
+- Unter Windows wird aus dem kanonischen Pfad (`\\?\C:\…`, `\\?\UNC\…`) eine URI
+  `file:/C:/…` bzw. `file:////server/freigabe/…` mit `/` statt `\`.
+- Erwartet werden die Tabellen `session` (`id`, `parent_id`), `message` (`id`, `session_id`,
+  `time_created`, `data`) und `part` (`id`, `message_id`, `session_id`, `data`); weitere
+  Spalten sind erlaubt. Fehlt eine davon, ist `data` kein JSON-Objekt oder ist eine Rolle
+  unbekannt, wird nichts übernommen und der Fehler mit Tabellen-, Spalten- oder ID-Namen
+  gemeldet (Exit 1, Eintrag in `history-status`).
+
+Übernommen werden nur Teile vom Typ `text` von Nutzer- und Assistentennachrichten einer
+Wurzelsitzung, je Nachricht mit Zeilenumbruch verbunden; ein Teil gehört nur dann zu einer
+Nachricht, wenn `part.session_id` und `part.message_id` beide passen. Entfallen: Textteile mit
+`synthetic` oder `ignored`, alle anderen Teiltypen (`reasoning`, `tool` samt Ein- und
+Ausgaben, `file`, `agent`, `subtask`, `snapshot`, `patch`, `step-start`, `step-finish`,
+`retry`, unbekannte), der Systemtext `system`, Nutzernachrichten mit Teil `compaction`,
+Zusammenfassungen (`summary: true`), noch nicht abgeschlossene Assistentennachrichten (ohne
+`time.completed`; sie folgen mit einem späteren Snapshot) und Kindsitzungen mit `parent_id`
+(etwa Unteragenten, deren „Nutzertext“ vom Agenten stammt). Bekannte Geheimnisformate werden
+wie bei den anderen Werkzeugen ersetzt.
+
+Schlüssel ist `opencode:SITZUNG:NACHRICHT`; ein wiederholter Import desselben oder eines
+neueren Snapshots übernimmt nur neue Nachrichten, bekannte bleiben unverändert. `created_at`
+stammt aus `message.time_created` (Millisekunden seit 1970, als UTC
+`JJJJ-MM-TTTHH:MM:SS.mmmZ`). `model` ist `anbieter/modell`, nur wenn die Nachricht selbst
+beide Angaben enthält (Assistent `providerID`/`modelID`, Nutzer `model.providerID`/
+`model.modelID`), sonst `null`. Im Importstand steht der Snapshot-Pfad mit Byte-Stand 0.
+
+Schema 9 erlaubt die Herkunft `opencode`; die Migration 0009 baut beide Verlaufstabellen
+wie 0008 neu auf, behält IDs, Suchindex, Warnungen und Importstände und läuft nach der
+geprüften Sicherung. Aufbau von `data` und die Millisekunden in `time_created` sind aus dem
+Exportformat abgeleitet, nicht an einer echten Datenbank belegt; nur mit synthetischen
+Snapshots getestet.
 
 #### Codex-Verlauf automatisch per Konfiguration (`history-watch`, ab 0.3.0-rc.17)
 

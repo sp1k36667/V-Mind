@@ -75,7 +75,7 @@ fn partial_index_follows_updates_after_withdrawal() {
     let id = validated(&s, "global", "Schemamigration");
     s.invalidate(id, "Prüfer", "falsch").unwrap();
     assert!(s.recall("Migration", "global", 5).unwrap().is_empty());
-    assert_eq!(s.stats("global").unwrap().schema_version, 8);
+    assert_eq!(s.stats("global").unwrap().schema_version, 9);
 }
 
 fn ids(s: &MemoryStore, query: &str, scope: &str, limit: usize) -> Vec<i64> {

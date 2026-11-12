@@ -6,7 +6,7 @@ mod history;
 pub use check_evidence::{CheckEvidence, CheckState, CheckVerdict};
 pub use history::{
     CivilDate, HistoryHit, HistoryImport, HistorySource, HistoryStatus, HistoryTool, WatchConfig,
-    WatchProblem, WatchReport, try_watch_lock,
+    WatchProblem, WatchReport, check_opencode_source, try_watch_lock,
 };
 mod maintenance;
 pub use maintenance::{
@@ -27,7 +27,7 @@ pub use project::{
 pub use repairs::{OpenRepairs, Repair};
 pub use secrets::SecretKind;
 
-const SCHEMA_VERSION: i64 = 8;
+const SCHEMA_VERSION: i64 = 9;
 
 // Persistentes, modellunabhängiges Gedächtnis mit nachvollziehbarer Validierung.
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Result, params};
@@ -381,6 +381,12 @@ impl MemoryStore {
         }
         if version == 7 {
             tx.execute_batch(include_str!("../../../migrations/0008_history_origin.sql"))?;
+            version = 8;
+        }
+        if version == 8 {
+            tx.execute_batch(include_str!(
+                "../../../migrations/0009_history_opencode.sql"
+            ))?;
         }
         tx.pragma_update(None, "user_version", SCHEMA_VERSION)?;
         tx.commit()?;

@@ -4,7 +4,9 @@
 use crate::{Result, emit, search_limit};
 use serde_json::{Value, json};
 use std::{io, io::Read, path::Path};
-use vmind_core::{HistoryHit, HistoryImport, HistoryStatus, HistoryTool, MemoryStore};
+use vmind_core::{
+    HistoryHit, HistoryImport, HistoryStatus, HistoryTool, MemoryStore, check_opencode_source,
+};
 
 const MAX_INPUT_BYTES: u64 = 1024 * 1024;
 const EVENTS: [&str; 2] = ["Stop", "PreCompact"];
@@ -88,24 +90,43 @@ fn usage(message: &str) -> Box<dyn std::error::Error> {
     io::Error::other(message.to_owned()).into()
 }
 
-/// Liest `--tool` eines Imports. Codex nur mit ausdrücklichem Bereich: Es gibt keine
-/// Zuordnung von Arbeitsordnern zu Bereichen, und `global` soll nicht still entstehen.
-pub fn import_tool(options: &[String], explicit_scope: bool) -> Result<HistoryTool> {
-    let tool = match options {
-        [] => HistoryTool::ClaudeCode,
-        [flag, name] if flag == "--tool" => HistoryTool::parse(name)?,
-        _ => {
-            return Err(usage(
-                "Aufruf: history-import DB DATEI [--tool claude-code|codex]",
-            ));
+const IMPORT_USAGE: &str =
+    "Aufruf: history-import DB DATEI [--tool claude-code|codex|opencode] [--session ID]";
+
+/// Werkzeug und optionale Sitzung eines Imports.
+pub struct ImportTarget {
+    pub tool: HistoryTool,
+    /// Nur für OpenCode: nur diese Sitzung des Snapshots.
+    pub session: Option<String>,
+}
+
+/// Liest `--tool` und `--session` eines Imports in beliebiger Reihenfolge. Codex und OpenCode
+/// nur mit ausdrücklichem Bereich: Es gibt keine Zuordnung von Arbeitsordnern zu Bereichen,
+/// und `global` soll nicht still entstehen.
+pub fn import_tool(options: &[String], explicit_scope: bool) -> Result<ImportTarget> {
+    let (mut tool, mut session) = (None, None);
+    let mut rest = options;
+    while let [flag, value, tail @ ..] = rest {
+        match flag.as_str() {
+            "--tool" if tool.is_none() => tool = Some(HistoryTool::parse(value)?),
+            "--session" if session.is_none() => session = Some(value.clone()),
+            _ => break,
         }
-    };
-    if tool == HistoryTool::Codex && !explicit_scope {
+        rest = tail;
+    }
+    if !rest.is_empty() {
+        return Err(usage(IMPORT_USAGE));
+    }
+    let tool = tool.unwrap_or(HistoryTool::ClaudeCode);
+    if session.is_some() && tool != HistoryTool::OpenCode {
+        return Err(usage("--session gilt nur für --tool opencode"));
+    }
+    if tool != HistoryTool::ClaudeCode && !explicit_scope {
         return Err(usage(
-            "Codex-Import braucht einen ausdrücklichen Bereich (--scope oder VMIND_SCOPE)",
+            "Codex- und OpenCode-Import brauchen einen ausdrücklichen Bereich (--scope oder VMIND_SCOPE)",
         ));
     }
-    Ok(tool)
+    Ok(ImportTarget { tool, session })
 }
 
 /// Liest `--limit` und `--tool` in beliebiger Reihenfolge, bevor die Datenbank geöffnet wird.
@@ -122,7 +143,7 @@ pub fn search_options(options: &[String]) -> Result<(usize, Option<HistoryTool>)
     }
     if !rest.is_empty() {
         return Err(usage(
-            "Aufruf: history-search DB SUCHTEXT [--limit N] [--tool claude-code|codex]",
+            "Aufruf: history-search DB SUCHTEXT [--limit N] [--tool claude-code|codex|opencode]",
         ));
     }
     Ok((limit.unwrap_or(DEFAULT_LIMIT), tool))
@@ -133,6 +154,10 @@ fn import_text(report: &HistoryImport) -> String {
         Some(error) => format!(
             "Nicht importiert ({}): {} ({error})",
             report.tool, report.source
+        ),
+        None if report.tool == HistoryTool::OpenCode.as_str() => format!(
+            "{} neue Nachrichten ({}) aus Snapshot {}.",
+            report.added, report.tool, report.source
         ),
         None => format!(
             "{} neue Nachrichten ({}) aus {} (Stand: Byte {}{}).",
@@ -153,15 +178,28 @@ fn import_text(report: &HistoryImport) -> String {
     )
 }
 
-pub fn import(db: &str, scope: &str, file: &str, tool: HistoryTool, json_mode: bool) -> Result<()> {
+pub fn import(
+    db: &str,
+    scope: &str,
+    file: &str,
+    target: ImportTarget,
+    json_mode: bool,
+) -> Result<()> {
     let path = Path::new(file);
     let fallback = path
         .file_stem()
         .map_or_else(|| "unbekannt".into(), |s| s.to_string_lossy());
+    // Vor dem Öffnen: Die eigene Datenbank als Quelle darf nicht einmal geöffnet werden.
+    if target.tool == HistoryTool::OpenCode {
+        check_opencode_source(path, Path::new(db))?;
+    }
     let store = MemoryStore::open_current(db)?;
-    let report = match tool {
+    let report = match target.tool {
         HistoryTool::ClaudeCode => store.import_history_file(scope, path, &fallback)?,
         HistoryTool::Codex => store.import_codex_history_file(scope, path)?,
+        HistoryTool::OpenCode => {
+            store.import_opencode_snapshot(scope, path, target.session.as_deref())?
+        }
     };
     let failed = report.error.is_some();
     let text = import_text(&report);

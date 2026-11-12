@@ -186,7 +186,7 @@ After each turn and before each compaction, `history-hook` reads the `transcript
 file into the scope of `--scope`. The first run reads the whole file, so the example
 allows 60 seconds. Search with `history_search` (MCP/JSONL) or
 `vmind --scope my-project history-search vmind.db 'words'`; from 0.3.0-rc.16 (schema 8) each
-hit names `tool` (`claude-code` or `codex`) and `model` (`null` unless the assistant line
+hit names `tool` (`claude-code` or `codex`; from 0.3.0-rc.18 also `opencode`) and `model` (`null` unless the assistant line
 itself carries a valid `message.model`), and `--tool` (JSONL/MCP `tool`) filters by tool; check for trouble with
 `vmind --scope my-project history-status vmind.db`.
 
@@ -225,6 +225,17 @@ Codex rollouts are not imported by this hook. From 0.3.0-rc.16, one uncompressed
 `vmind --scope my-project history-import vmind.db FILE --tool codex` (details in
 [cli.md](cli.md), German). The Claude Code import and this hook are unchanged; its messages
 and import positions are kept apart from Codex ones.
+
+From 0.3.0-rc.18 (schema 9), OpenCode history can be imported by hand from a standalone
+SQLite snapshot of `opencode.db` that you create yourself (for example with `sqlite3 -readonly
+… ".backup SNAPSHOT"`): `vmind --scope my-project history-import vmind.db SNAPSHOT --tool
+opencode [--session ID]`. V-Mind opens the snapshot only as `file:…?mode=ro&immutable=1`,
+refuses it while a non-empty `-wal` or a `-journal` file lies next to it, refuses its own
+database as source and an unknown table layout, and never runs `opencode` or searches for its
+files. Only observed user and assistant text parts of root sessions are kept (no synthetic or
+ignored parts, tools, reasoning, files, summaries or sub-agent sessions); the key is
+`opencode:SESSION:MESSAGE`, so repeated or newer snapshots add only new messages. Details in
+[cli.md](cli.md) (German).
 
 From 0.3.0-rc.17, `vmind history-watch` imports Codex rollouts automatically, but only as
 configured in `$XDG_CONFIG_HOME/vmind/history.json` (or `~/.config/vmind/history.json`, or

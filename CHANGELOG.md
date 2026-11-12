@@ -1,23 +1,60 @@
 # Changelog
 
-## Unreleased: candidate 0.3.0-rc.17 (on `main`)
+## Unreleased: candidate 0.3.0-rc.18 (on `main`)
 
-Not released yet. The source now reports version `0.3.0-rc.17` (`vmind --version`, MCP
+Not released yet. The source now reports version `0.3.0-rc.18` (`vmind --version`, MCP
 server info); there is no tag, no published download and no installation of it. The
-earlier candidates `0.3.0-rc.1` to `0.3.0-rc.16` did not yet contain all changes below
+earlier candidates `0.3.0-rc.1` to `0.3.0-rc.17` did not yet contain all changes below
 (rc.1 lacked #40, #42, #43; rc.2 lacked #44; rc.3 lacked #46; rc.4 lacked #47; rc.5 lacked
 #48; rc.6 lacked #53; rc.7 lacked #54; rc.8 lacked the stale-task and open-hint warnings;
 rc.9 lacked the journal search; rc.10 lacked retrieval with all terms of long queries;
 rc.11 lacked the `nudge` hook; rc.12 lacked the automatic conversation history; rc.13
 stored `<system-reminder>` blocks as part of imported user text; rc.14 stopped a history
 import permanently at a complete line with invalid JSON; rc.15 lacked the Codex import and
-the origin of history messages; rc.16 lacked the configured automatic Codex import).
+the origin of history messages; rc.16 lacked the configured automatic Codex import; rc.17
+lacked the OpenCode snapshot import and schema 9).
 Development builds made before this change still report `0.2.0` but are not the
 released 0.2.0; identify them by commit or SHA-256, not by `--version`.
 
-The next version requires a database migration to schema 8 (from 5, 6 or 7, step by step);
+The next version requires a database migration to schema 9 (from 5, 6, 7 or 8, step by step);
 the automatic verified backup from #10 runs first (see "Upgrading" below). Release
 acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (German).
+
+### Added in rc.18
+
+- **OpenCode history import from a SQLite snapshot (schema 9):** `vmind --scope NAME
+  history-import DB SNAPSHOT --tool opencode [--session ID]` reads a standalone SQLite
+  snapshot of OpenCode's `opencode.db` (OpenCode 1.18.15) that the user created; the scope must
+  be given explicitly, and `--session` limits the import to one session. V-Mind never searches
+  for OpenCode files and never runs `opencode` (`opencode export` writes to the tool database);
+  no hook, no timer. The source is opened only as `file:PATH?mode=ro&immutable=1` (path
+  percent-encoded), so SQLite creates no `-wal`/`-shm` and writes nothing; a non-empty `-wal`
+  or any `-journal` next to the snapshot is refused before opening ("active WAL/journal file,
+  please pass a consistent standalone snapshot, e.g. sqlite3 .backup"). The V-Mind database
+  itself as source (same canonical path, symlink or hard link; file identity via the
+  `same-file` crate: device/inode on Unix, volume serial/file index on Windows) is refused
+  before the database is opened, so nothing is migrated, recorded or written; if identity
+  cannot be determined for an existing database, the import also stops without writing.
+  New dependency `same-file` 1.0.6 (no own `unsafe`).
+  Windows paths (`\\?\C:\…`, `\\?\UNC\…`) become `file:/C:/…` or `file:////server/…`.
+  Required tables and columns are checked
+  (`session.id/parent_id`, `message.id/session_id/time_created/data`,
+  `part.id/message_id/session_id/data`); a missing one, non-JSON `data` or an unknown role
+  imports nothing and names the table, column or id (exit 1, recorded in `history-status`).
+  Only `text` parts of user and assistant messages in root sessions are kept (a part belongs
+  to a message only when both `session_id` and `message_id` match); `synthetic` and
+  `ignored` text parts, all other part types (reasoning, tool calls and results, files,
+  snapshots, patches, steps, compaction, unknown), the `system` text, compaction summaries
+  (`summary: true`), unfinished assistant messages (no `time.completed`) and child sessions
+  (`parent_id`, e.g. sub-agents) are skipped. Key `opencode:SESSION:MESSAGE`; repeating the
+  same or a newer snapshot adds only new messages. `created_at` from `message.time_created`
+  (milliseconds → UTC ISO with milliseconds); `model` = `provider/model` only when the
+  message itself names both, else `null`; `tool` = `opencode`. Secrets are redacted as before.
+  `history-search` (CLI `--tool`, JSONL/MCP `tool`) accepts `opencode`. Migration 0009 rebuilds
+  both history tables only to allow the new tool name; ids, search index, warnings and import
+  state are kept, after the verified backup. Tested with synthetic snapshots only; the layout of
+  `data` and the millisecond unit of `time_created` are derived from the export format, not
+  confirmed against a real database. Hermes is not included.
 
 ### Added in rc.17
 
@@ -242,12 +279,12 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
 
 1. Stop all clients that use the database (MCP server, `serve`, hooks, scripts).
 2. Install the new binary. The first command that opens the database normally (for
-   example `stats`, `resume` or `add`) migrates to schema 8 and first writes a verified
+   example `stats`, `resume` or `add`) migrates to schema 9 and first writes a verified
    backup next to the file (or in `VMIND_BACKUP_DIR`); without a verified backup there is
    no migration. `doctor` and `report` only read and never migrate; the `observe` and
    `history-hook` hooks refuse an old schema instead of upgrading it.
-3. Confirm with `vmind doctor vmind.db` that `schema_version` is 8 and the database is
-   healthy. Older binaries refuse a schema 8 database.
+3. Confirm with `vmind doctor vmind.db` that `schema_version` is 9 and the database is
+   healthy. Older binaries refuse a schema 9 database.
 4. Restart MCP clients so they use the new binary.
 
 ## 0.2.0 – 2026-11-01

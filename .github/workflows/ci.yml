@@ -46,3 +46,9 @@ jobs:
         run: cargo build --workspace --locked
       - name: Backup and database filename runtime tests
         run: cargo test --locked -p vmind-cli --test backup_paths
+      - name: OpenCode snapshot import tests (core)
+        run: cargo test --locked -p vmind-core --test history_opencode
+      - name: OpenCode URI unit tests
+        run: cargo test --locked -p vmind-core --lib history::opencode
+      - name: OpenCode snapshot import tests (CLI)
+        run: cargo test --locked -p vmind-cli --test history opencode

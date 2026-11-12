@@ -78,7 +78,7 @@ enum Operation {
         query: String,
         #[serde(default = "five")]
         limit: usize,
-        /// Optional nur dieses Werkzeug: `claude-code` oder `codex`.
+        /// Optional nur dieses Werkzeug: `claude-code`, `codex` oder `opencode`.
         #[serde(default)]
         tool: Option<String>,
     },

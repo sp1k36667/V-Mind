@@ -137,7 +137,7 @@ optional `id` matches the response to the request.
 - `journal_search`: `scope`, `query`, optional `limit` (default 5, 1–20); read-only,
   exactly this scope without `global`, every word must occur, newest first.
 - `history_search`: `scope`, `query`, optional `limit` (default 5, 1–20) and `tool`
-  (`claude-code` or `codex`); read-only, exactly this scope without `global`, unverified
+  (`claude-code`, `codex` or `opencode`); read-only, exactly this scope without `global`, unverified
   conversation history; each hit names `tool` and, if known, `model`.
 - `log`: `scope`, `kind`, `body`, `source`; only for `kind: task` also give `task_key`
   and `task_status`. No task fields for other kinds.

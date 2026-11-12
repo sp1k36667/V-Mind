@@ -7,12 +7,16 @@ use std::{
     process::{Command, Output, Stdio},
 };
 
+static NEXT_TEMP: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 struct Temp(PathBuf);
 impl Temp {
     fn new() -> Self {
         let path = std::env::temp_dir().join(format!(
-            "vmind-cli-history-{}-{}",
+            "vmind-cli-history-{}-{}-{}",
             std::process::id(),
+            // Grobe Uhren (macOS) liefern bei parallelen Tests sonst denselben Namen.
+            NEXT_TEMP.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
@@ -518,4 +522,188 @@ fn hits_show_tool_and_model_and_can_be_filtered_everywhere() {
     assert_eq!(hits.len(), 1);
     assert_eq!(hits[0]["tool"], "claude-code");
     assert_eq!(hits[0]["model"], Value::Null);
+}
+
+/// Synthetischer OpenCode-Snapshot (Schema laut Formatbefund) mit einer Sitzung.
+fn opencode_snapshot(path: &str, text: &str) {
+    let c = rusqlite::Connection::open(path).unwrap();
+    c.pragma_update(None, "journal_mode", "WAL").unwrap();
+    c.execute_batch(
+        "CREATE TABLE session(id TEXT PRIMARY KEY, parent_id TEXT, directory TEXT);
+         CREATE TABLE message(id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER,
+             time_updated INTEGER, data TEXT);
+         CREATE TABLE part(id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT,
+             time_created INTEGER, time_updated INTEGER, data TEXT);
+         INSERT INTO session VALUES('ses_cli', NULL, '/beispiel');",
+    )
+    .unwrap();
+    let data = json!({"role":"assistant","time":{"created":1767323047000_i64,
+        "completed":1767323050000_i64},"providerID":"anbieter-a","modelID":"modell-a"});
+    c.execute(
+        "INSERT INTO message VALUES('msg_cli', 'ses_cli', 1767323047000, 1767323047000, ?1)",
+        [data.to_string()],
+    )
+    .unwrap();
+    for (id, part) in [
+        ("prt_1", json!({"type":"text","text":text})),
+        (
+            "prt_2",
+            json!({"type":"reasoning","text":"Gedanke Tintenfisch"}),
+        ),
+    ] {
+        c.execute(
+            "INSERT INTO part VALUES(?1, 'msg_cli', 'ses_cli', 0, 0, ?2)",
+            [id, &part.to_string()],
+        )
+        .unwrap();
+    }
+    c.close().unwrap();
+}
+
+#[test]
+fn opencode_import_reads_a_snapshot_and_is_searchable_everywhere() {
+    let t = Temp::new();
+    let (db, snap) = (t.path("v.db"), t.path("opencode snapshot.db"));
+    init(&db);
+    opencode_snapshot(&snap, "Tintenfisch aus OpenCode");
+    let before = fs::read(&snap).unwrap();
+    let import = |extra: &[&str]| {
+        let mut args = vec!["--scope", "p", "history-import", &db, &snap];
+        args.extend(extra);
+        args.iter().map(|a| a.to_string()).collect::<Vec<_>>()
+    };
+
+    let without = run_without_scope_env(&["history-import", &db, &snap, "--tool", "opencode"]);
+    assert!(!without.status.success());
+    assert!(String::from_utf8_lossy(&without.stderr).contains("--scope"));
+    let session_for_codex = run(
+        &[
+            "--scope",
+            "p",
+            "history-import",
+            &db,
+            &snap,
+            "--session",
+            "ses_cli",
+        ],
+        "",
+    );
+    assert!(!session_for_codex.status.success());
+    assert!(String::from_utf8_lossy(&session_for_codex.stderr).contains("--session"));
+
+    let args = import(&["--tool", "opencode", "--session", "ses_cli"]);
+    let refs: Vec<&str> = args.iter().map(String::as_str).collect();
+    let report = json_of(&refs);
+    assert_eq!(
+        (report["added"].clone(), report["tool"].clone()),
+        (json!(1), json!("opencode"))
+    );
+    assert_eq!(report["error"], Value::Null);
+    let again = json_of(&refs);
+    assert_eq!(again["added"], 0, "dedupliziert");
+    assert_eq!(status(&db)["sources"][0]["tool"], "opencode");
+    let human = run(&refs, "");
+    assert!(String::from_utf8_lossy(&human.stdout).contains("Snapshot"));
+
+    let only = json_of(&[
+        "--scope",
+        "p",
+        "history-search",
+        &db,
+        "tintenfisch",
+        "--tool",
+        "opencode",
+    ]);
+    let hits = only["hits"].as_array().unwrap();
+    assert_eq!(hits.len(), 1, "Reasoning nicht übernommen");
+    assert_eq!(hits[0]["model"], "anbieter-a/modell-a");
+    assert_eq!(hits[0]["created_at"], "2026-01-02T03:04:07.000Z");
+    assert_eq!(hits[0]["uuid"], "opencode:ses_cli:msg_cli");
+
+    let jsonl = run(
+        &["serve", &db],
+        &format!(
+            "{}\n",
+            json!({"id":1,"op":"history_search","scope":"p","query":"tintenfisch","tool":"opencode"})
+        ),
+    );
+    let line: Value = serde_json::from_slice(&jsonl.stdout).unwrap();
+    assert_eq!(line["data"]["hits"][0]["tool"], "opencode");
+    let call = json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
+        "name":"history_search","arguments":{"query":"tintenfisch","tool":"opencode"}}});
+    let mcp = run(&["--scope", "p", "mcp", &db], &format!("{call}\n"));
+    let line: Value = serde_json::from_slice(&mcp.stdout).unwrap();
+    let payload: Value =
+        serde_json::from_str(line["result"]["content"][0]["text"].as_str().unwrap()).unwrap();
+    assert_eq!(payload["hits"][0]["tool"], "opencode");
+
+    assert_eq!(fs::read(&snap).unwrap(), before, "Quelle unverändert");
+    for suffix in ["-wal", "-shm", "-journal"] {
+        assert!(!Path::new(&format!("{snap}{suffix}")).exists(), "{suffix}");
+    }
+    fs::write(format!("{snap}-wal"), b"aktiv").unwrap();
+    let blocked = run(&refs, "");
+    assert!(!blocked.status.success());
+    assert!(String::from_utf8_lossy(&blocked.stdout).contains("WAL"));
+}
+
+/// Harter Link auf die Datenbank auf allen Plattformen; symbolischer Link nur unter Unix
+/// (unter Windows nur mit Sonderrechten anlegbar).
+fn link_aliases(t: &Temp, db: &str) -> Vec<String> {
+    let hard = t.path("hart.db");
+    fs::hard_link(db, &hard).unwrap();
+    #[cfg(unix)]
+    {
+        let link = t.path("verweis.db");
+        std::os::unix::fs::symlink(db, &link).unwrap();
+        vec![hard, link]
+    }
+    #[cfg(not(unix))]
+    vec![hard]
+}
+
+/// Die eigene Datenbank als Quelle: Exit 1, Datei byte-gleich, keine Sidecars, kein
+/// Fehlereintrag; auch über Pfadumweg, symbolischen und harten Link.
+#[test]
+fn opencode_import_of_the_database_itself_changes_nothing() {
+    let t = Temp::new();
+    let db = t.path("v.db");
+    init(&db);
+    let aliases = [
+        vec![
+            db.clone(),
+            t.0.join(".").join("v.db").to_str().unwrap().to_owned(),
+        ],
+        link_aliases(&t, &db),
+    ]
+    .concat();
+    let before = fs::read(&db).unwrap();
+    for source in &aliases {
+        let out = run(
+            &[
+                "--scope",
+                "p",
+                "history-import",
+                &db,
+                source,
+                "--tool",
+                "opencode",
+            ],
+            "",
+        );
+        assert!(!out.status.success(), "{source}");
+        assert!(
+            String::from_utf8_lossy(&out.stderr).contains("V-Mind-Datenbank"),
+            "{source}"
+        );
+        assert_eq!(
+            fs::read(&db).unwrap(),
+            before,
+            "Ziel verändert über {source}"
+        );
+        for suffix in ["-wal", "-shm", "-journal"] {
+            assert!(!Path::new(&format!("{db}{suffix}")).exists(), "{suffix}");
+        }
+    }
+    assert_eq!(status(&db)["failed"], 0, "kein Fehlereintrag");
 }

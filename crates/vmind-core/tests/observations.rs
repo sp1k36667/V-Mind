@@ -141,7 +141,7 @@ fn schema_5_upgrade_keeps_all_data_and_makes_a_verified_backup_first() {
     // A hook must never trigger the upgrade.
     assert!(MemoryStore::open_current(&path).is_err());
     let s = MemoryStore::open_existing(&path).unwrap();
-    assert_eq!(s.stats("global").unwrap().schema_version, 8);
+    assert_eq!(s.stats("global").unwrap().schema_version, 9);
     assert_eq!(s.get(1).unwrap().unwrap().problem, "alt");
     assert_eq!(s.resume("p", None).unwrap().decisions[0].body, "bleibt");
     assert!(
@@ -151,7 +151,7 @@ fn schema_5_upgrade_keeps_all_data_and_makes_a_verified_backup_first() {
     let snapshots: Vec<_> = std::fs::read_dir(&dir)
         .unwrap()
         .map(|e| e.unwrap().path())
-        .filter(|p| p.to_string_lossy().contains("before-schema-8"))
+        .filter(|p| p.to_string_lossy().contains("before-schema-9"))
         .collect();
     assert_eq!(snapshots.len(), 1);
     let old = vmind_core::inspect_database(&snapshots[0]).unwrap();

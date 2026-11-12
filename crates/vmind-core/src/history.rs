@@ -1,5 +1,6 @@
 //! Automatisch übernommener Gesprächsverlauf einer KI aus den JSONL-Dateien von Claude Code
-//! und, nur per ausdrücklichem Import, von Codex (`history/codex.rs`). Dieses Format ist keine offizielle Schnittstelle: Eine unbekannte Struktur
+//! und, nur per ausdrücklichem Import, von Codex (`history/codex.rs`) sowie aus einem
+//! SQLite-Snapshot von OpenCode (`history/opencode.rs`). Dieses Format ist keine offizielle Schnittstelle: Eine unbekannte Struktur
 //! wird als Fehler im Importstand festgehalten, statt still übersprungen zu werden. Nur eine
 //! abgeschlossene Zeile mit ungültigem JSON wird übersprungen und als Warnung gezählt.
 //!
@@ -9,6 +10,7 @@
 //! `<system-reminder>`-Blöcke werden vorher entfernt. Verlauf ist kein Prüfnachweis.
 mod codex;
 mod note;
+mod opencode;
 mod watch;
 mod watch_config;
 mod watch_scan;
@@ -58,6 +60,7 @@ const SKIP_FLAGS: [&str; 5] = [
 
 const CLAUDE_CODE: &str = "claude-code";
 const CODEX: &str = "codex";
+const OPENCODE: &str = "opencode";
 /// Kein echtes Modell: So kennzeichnet Claude Code selbst erzeugte Zeilen.
 const SYNTHETIC_MODEL: &str = "<synthetic>";
 
@@ -66,6 +69,7 @@ const SYNTHETIC_MODEL: &str = "<synthetic>";
 pub enum HistoryTool {
     ClaudeCode,
     Codex,
+    OpenCode,
 }
 
 impl HistoryTool {
@@ -73,8 +77,9 @@ impl HistoryTool {
         match name {
             CLAUDE_CODE => Ok(Self::ClaudeCode),
             CODEX => Ok(Self::Codex),
+            OPENCODE => Ok(Self::OpenCode),
             _ => Err(invalid(
-                "Unbekanntes Werkzeug: erlaubt sind claude-code und codex",
+                "Unbekanntes Werkzeug: erlaubt sind claude-code, codex und opencode",
             )),
         }
     }
@@ -83,6 +88,7 @@ impl HistoryTool {
         match self {
             Self::ClaudeCode => CLAUDE_CODE,
             Self::Codex => CODEX,
+            Self::OpenCode => OPENCODE,
         }
     }
 }
@@ -474,6 +480,21 @@ fn read_new_lines(
     })
 }
 
+/// Fehler, wenn der OpenCode-Snapshot dieselbe Datei wie die V-Mind-Datenbank ist (gleicher
+/// kanonischer Pfad, symbolischer oder harter Link, auf allen Plattformen) oder wenn sich das
+/// bei vorhandener Datenbank nicht feststellen lässt (fail closed). Schreibt nichts und öffnet
+/// keine SQLite-Verbindung; daher vor dem Öffnen der Datenbank aufzurufen. Eine noch nicht
+/// vorhandene Datenbank ist keine Kollision.
+pub fn check_opencode_source(snapshot: &Path, database: &Path) -> Result<()> {
+    match opencode::is_same_file(snapshot, database) {
+        Ok(false) => Ok(()),
+        Ok(true) => Err(invalid(
+            "Quelle ist die V-Mind-Datenbank selbst; nichts geöffnet oder geschrieben",
+        )),
+        Err(message) => Err(invalid(&message)),
+    }
+}
+
 fn clipped(text: &str, max: usize) -> String {
     text.chars().take(max).collect()
 }
@@ -641,6 +662,71 @@ impl MemoryStore {
                 progress.model.clone(),
             ))
         })
+    }
+
+    /// Übernimmt Nutzer- und Assistententext aus einem eigenständigen SQLite-Snapshot von
+    /// OpenCode, optional nur einer Sitzung. Die Quelle wird nur unveränderlich gelesen
+    /// (`mode=ro&immutable=1`); ein Snapshot mit aktiver WAL- oder Journaldatei, eine
+    /// unbekannte Struktur oder die eigene Datenbank als Quelle werden abgelehnt. Bekannte
+    /// Nachrichten bleiben über ihren Schlüssel unverändert; ein neuerer Snapshot ergänzt.
+    pub fn import_opencode_snapshot(
+        &self,
+        scope: &str,
+        snapshot: &Path,
+        session: Option<&str>,
+    ) -> Result<HistoryImport> {
+        let tool = HistoryTool::OpenCode;
+        check_scope(scope)?;
+        if session.is_some_and(|s| !bounded_id(s, MAX_ID_CHARS)) {
+            return Err(invalid("Ungültige Sitzungskennung"));
+        }
+        let source = snapshot.to_string_lossy().into_owned();
+        if source.chars().count() > MAX_PATH_CHARS {
+            return Err(invalid("Quellpfad zu lang"));
+        }
+        // Vor jedem Schreibzugriff: Ist die Quelle diese Datenbank, bleibt alles unberührt.
+        if let Some(target) = self.conn.path().filter(|p| !p.is_empty()) {
+            check_opencode_source(snapshot, Path::new(target))?;
+        }
+        let report = |added, error, note: ImportNote| HistoryImport {
+            tool: tool.as_str().to_owned(),
+            source: source.clone(),
+            added,
+            offset: 0,
+            restarted: false,
+            error,
+            corrupt_lines: note.corrupt_lines,
+            warning: note.warning,
+            unkeyed_lines: 0,
+        };
+        let messages = match opencode::read_snapshot(snapshot, session) {
+            Ok(messages) => messages,
+            Err(message) => {
+                self.record_tool_error(tool, scope, &source, &message)?;
+                let note = self.history_note(tool, scope, &source)?;
+                return Ok(report(0, Some(message), note));
+            }
+        };
+        // Ein Snapshot ist ein Gesamtzustand: kein Byte-Stand, jeder Lauf liest von vorn.
+        let batch = Batch {
+            messages,
+            end: 0,
+            restarted: true,
+            corrupt: None,
+            unkeyed: 0,
+            cursor: None,
+        };
+        match self.commit_history(tool, scope, &source, 0, &batch) {
+            Ok(Some((added, note, _))) => Ok(report(added, None, note)),
+            Ok(None) => Ok(report(0, None, self.history_note(tool, scope, &source)?)),
+            Err(error) => {
+                if !is_busy(&error) {
+                    let message = "Datenbankfehler beim Speichern; nichts übernommen";
+                    let _ = self.record_tool_error(tool, scope, &source, message);
+                }
+                Err(error)
+            }
+        }
     }
 
     fn import_source<'a>(
