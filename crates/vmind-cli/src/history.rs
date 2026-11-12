@@ -4,7 +4,9 @@
 use crate::{Result, emit, search_limit};
 use serde_json::{Value, json};
 use std::{io, io::Read, path::Path};
-use vmind_core::{HistoryHit, HistoryImport, HistoryStatus, HistoryTool, MemoryStore};
+use vmind_core::{
+    HistoryHit, HistoryImport, HistoryStatus, HistoryTool, MemoryStore, check_opencode_source,
+};
 
 const MAX_INPUT_BYTES: u64 = 1024 * 1024;
 const EVENTS: [&str; 2] = ["Stop", "PreCompact"];
@@ -187,6 +189,10 @@ pub fn import(
     let fallback = path
         .file_stem()
         .map_or_else(|| "unbekannt".into(), |s| s.to_string_lossy());
+    // Vor dem Öffnen: Die eigene Datenbank als Quelle darf nicht einmal geöffnet werden.
+    if target.tool == HistoryTool::OpenCode {
+        check_opencode_source(path, Path::new(db))?;
+    }
     let store = MemoryStore::open_current(db)?;
     let report = match target.tool {
         HistoryTool::ClaudeCode => store.import_history_file(scope, path, &fallback)?,

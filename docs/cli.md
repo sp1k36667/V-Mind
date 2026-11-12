@@ -552,8 +552,14 @@ Sicherheitsgrenzen:
 - Liegt neben der Quelle eine nicht leere `-wal`- oder eine `-journal`-Datei, bricht der
   Import vor dem Öffnen ab („Aktive WAL-Datei …; bitte konsistenten eigenständigen Snapshot
   übergeben“): `immutable` sähe deren Inhalt nicht.
-- Ist die Quelle die V-Mind-Datenbank selbst (auch über Verweis oder harten Link), bricht
-  der Import ab.
+- Ist die Quelle die V-Mind-Datenbank selbst (gleicher kanonischer Pfad, auch über
+  symbolischen Link; unter Unix auch harter Link), bricht der Import ab, **bevor** die
+  Datenbank geöffnet wird: keine Migration, kein Importstand, kein Fehlereintrag, die Datei
+  bleibt byte-gleich. Unter Windows wird der Pfad ohne Groß-/Kleinschreibung verglichen; ein
+  harter Link wird dort nicht erkannt (keine stabile Dateikennung in Rust), das ist eine
+  bekannte Grenze.
+- Unter Windows wird aus dem kanonischen Pfad (`\\?\C:\…`, `\\?\UNC\…`) eine URI
+  `file:/C:/…` bzw. `file:////server/freigabe/…` mit `/` statt `\`.
 - Erwartet werden die Tabellen `session` (`id`, `parent_id`), `message` (`id`, `session_id`,
   `time_created`, `data`) und `part` (`id`, `message_id`, `session_id`, `data`); weitere
   Spalten sind erlaubt. Fehlt eine davon, ist `data` kein JSON-Objekt oder ist eine Rolle
@@ -561,7 +567,8 @@ Sicherheitsgrenzen:
   gemeldet (Exit 1, Eintrag in `history-status`).
 
 Übernommen werden nur Teile vom Typ `text` von Nutzer- und Assistentennachrichten einer
-Wurzelsitzung, je Nachricht mit Zeilenumbruch verbunden. Entfallen: Textteile mit
+Wurzelsitzung, je Nachricht mit Zeilenumbruch verbunden; ein Teil gehört nur dann zu einer
+Nachricht, wenn `part.session_id` und `part.message_id` beide passen. Entfallen: Textteile mit
 `synthetic` oder `ignored`, alle anderen Teiltypen (`reasoning`, `tool` samt Ein- und
 Ausgaben, `file`, `agent`, `subtask`, `snapshot`, `patch`, `step-start`, `step-finish`,
 `retry`, unbekannte), der Systemtext `system`, Nutzernachrichten mit Teil `compaction`,

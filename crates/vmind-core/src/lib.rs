@@ -6,7 +6,7 @@ mod history;
 pub use check_evidence::{CheckEvidence, CheckState, CheckVerdict};
 pub use history::{
     CivilDate, HistoryHit, HistoryImport, HistorySource, HistoryStatus, HistoryTool, WatchConfig,
-    WatchProblem, WatchReport, try_watch_lock,
+    WatchProblem, WatchReport, check_opencode_source, try_watch_lock,
 };
 mod maintenance;
 pub use maintenance::{

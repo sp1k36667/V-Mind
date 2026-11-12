@@ -641,17 +641,54 @@ fn opencode_import_reads_a_snapshot_and_is_searchable_everywhere() {
     let blocked = run(&refs, "");
     assert!(!blocked.status.success());
     assert!(String::from_utf8_lossy(&blocked.stdout).contains("WAL"));
-    let self_import = run(
-        &[
-            "--scope",
-            "p",
-            "history-import",
-            &db,
-            &db,
-            "--tool",
-            "opencode",
-        ],
-        "",
-    );
-    assert!(!self_import.status.success());
+}
+
+/// Die eigene Datenbank als Quelle: Exit 1, Datei byte-gleich, keine Sidecars, kein
+/// Fehlereintrag; auch über Pfadumweg, symbolischen und harten Link.
+#[test]
+fn opencode_import_of_the_database_itself_changes_nothing() {
+    let t = Temp::new();
+    let db = t.path("v.db");
+    init(&db);
+    let mut aliases = vec![
+        db.clone(),
+        t.0.join(".").join("v.db").to_str().unwrap().to_owned(),
+    ];
+    #[cfg(unix)]
+    {
+        let link = t.path("verweis.db");
+        std::os::unix::fs::symlink(&db, &link).unwrap();
+        let hard = t.path("hart.db");
+        fs::hard_link(&db, &hard).unwrap();
+        aliases.extend([link, hard]);
+    }
+    let before = fs::read(&db).unwrap();
+    for source in &aliases {
+        let out = run(
+            &[
+                "--scope",
+                "p",
+                "history-import",
+                &db,
+                source,
+                "--tool",
+                "opencode",
+            ],
+            "",
+        );
+        assert!(!out.status.success(), "{source}");
+        assert!(
+            String::from_utf8_lossy(&out.stderr).contains("V-Mind-Datenbank"),
+            "{source}"
+        );
+        assert_eq!(
+            fs::read(&db).unwrap(),
+            before,
+            "Ziel verändert über {source}"
+        );
+        for suffix in ["-wal", "-shm", "-journal"] {
+            assert!(!Path::new(&format!("{db}{suffix}")).exists(), "{suffix}");
+        }
+    }
+    assert_eq!(status(&db)["failed"], 0, "kein Fehlereintrag");
 }

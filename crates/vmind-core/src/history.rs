@@ -480,6 +480,19 @@ fn read_new_lines(
     })
 }
 
+/// Fehler, wenn der OpenCode-Snapshot dieselbe Datei wie die V-Mind-Datenbank ist (gleicher
+/// kanonischer Pfad, auch über symbolische Links; unter Unix auch harter Link). Liest nur
+/// Metadaten und öffnet keine der Dateien; daher vor dem Öffnen der Datenbank aufrufbar.
+/// Unter Windows wird ein harter Link nicht erkannt (keine stabile Dateikennung).
+pub fn check_opencode_source(snapshot: &Path, database: &Path) -> Result<()> {
+    if opencode::is_same_file(snapshot, database) {
+        return Err(invalid(
+            "Quelle ist die V-Mind-Datenbank selbst; nichts geöffnet oder geschrieben",
+        ));
+    }
+    Ok(())
+}
+
 fn clipped(text: &str, max: usize) -> String {
     text.chars().take(max).collect()
 }
@@ -669,7 +682,10 @@ impl MemoryStore {
         if source.chars().count() > MAX_PATH_CHARS {
             return Err(invalid("Quellpfad zu lang"));
         }
-        let target = self.conn.path().filter(|p| !p.is_empty()).map(Path::new);
+        // Vor jedem Schreibzugriff: Ist die Quelle diese Datenbank, bleibt alles unberührt.
+        if let Some(target) = self.conn.path().filter(|p| !p.is_empty()) {
+            check_opencode_source(snapshot, Path::new(target))?;
+        }
         let report = |added, error, note: ImportNote| HistoryImport {
             tool: tool.as_str().to_owned(),
             source: source.clone(),
@@ -681,7 +697,7 @@ impl MemoryStore {
             warning: note.warning,
             unkeyed_lines: 0,
         };
-        let messages = match opencode::read_snapshot(snapshot, target, session) {
+        let messages = match opencode::read_snapshot(snapshot, session) {
             Ok(messages) => messages,
             Err(message) => {
                 self.record_tool_error(tool, scope, &source, &message)?;

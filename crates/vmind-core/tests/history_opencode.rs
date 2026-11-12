@@ -539,14 +539,49 @@ fn source_stays_byte_identical_and_gets_no_sidecars() {
 #[test]
 fn path_with_uri_characters_is_read() {
     let t = Temp::new();
-    let odd = t.0.join("ordner mit %20 ? und #");
+    // `?` ist unter Windows in Dateinamen nicht erlaubt.
+    let (folder, file) = if cfg!(windows) {
+        ("ordner mit %20 und #", "snap 1%#ä.db")
+    } else {
+        ("ordner mit %20 ? und #", "snap 1%?#ä:.db")
+    };
+    let odd = t.0.join(folder);
     fs::create_dir(&odd).unwrap();
-    let source = odd.join("snap 1%?#.db");
+    let source = odd.join(file);
     example(&source);
     let store = t.store();
     let report = import(&store, "p", &source, None);
     assert_eq!((report.added, report.error), (4, None));
     assert!(sidecars(&source).is_empty());
+}
+
+#[test]
+fn parts_only_belong_to_a_message_of_the_same_session() {
+    let t = Temp::new();
+    let s = Source::create(&t.source());
+    s.session("ses_fremd", None);
+    s.message("msg_m", SESSION, 1000, user_data(1000, None));
+    s.part("prt_eigen", "msg_m", SESSION, text("Eigener Teil Ananas"));
+    s.part(
+        "prt_fremd",
+        "msg_m",
+        "ses_fremd",
+        text("Fremder Teil Mango"),
+    );
+    s.message("msg_n", SESSION, 2000, user_data(2000, None));
+    s.part(
+        "prt_nur_fremd",
+        "msg_n",
+        "ses_fremd",
+        text("Nur fremd Papaya"),
+    );
+    s.close();
+    let store = t.store();
+    assert_eq!(import(&store, "p", &t.source(), None).added, 1);
+    assert_eq!(hits(&store, "Ananas", None).len(), 1);
+    assert_eq!(hits(&store, "Ananas", None)[0].text, "Eigener Teil Ananas");
+    assert!(hits(&store, "Mango", None).is_empty());
+    assert!(hits(&store, "Papaya", None).is_empty());
 }
 
 fn failed(store: &MemoryStore, path: &Path) -> String {
@@ -582,23 +617,48 @@ fn active_wal_or_journal_is_rejected_before_opening() {
     assert_eq!(status.messages, 4);
 }
 
+/// Alle Schreibwege des Imports müssen im Gleichheitsfall ausbleiben.
+fn assert_rejected_without_writing(store: &MemoryStore, db: &Path, source: &Path) {
+    let before = fs::read(db).unwrap();
+    let error = store
+        .import_opencode_snapshot("p", source, None)
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("V-Mind-Datenbank"), "{error}");
+    assert!(vmind_core::check_opencode_source(source, db).is_err());
+    assert_eq!(
+        fs::read(db).unwrap(),
+        before,
+        "Ziel verändert über {source:?}"
+    );
+    assert!(sidecars(db).is_empty(), "{:?}", sidecars(db));
+}
+
 #[test]
-fn source_equal_to_target_is_rejected() {
+fn source_equal_to_target_is_rejected_without_any_write() {
     let t = Temp::new();
+    example(&t.source());
     let store = t.store();
-    assert!(failed(&store, &t.db()).contains("V-Mind-Datenbank"));
-    let indirect = t.0.join(".").join("v.db");
-    assert!(failed(&store, &indirect).contains("V-Mind-Datenbank"));
+    import(&store, "p", &t.source(), None);
+    assert!(sidecars(&t.db()).is_empty());
+    assert_rejected_without_writing(&store, &t.db(), &t.db());
+    assert_rejected_without_writing(&store, &t.db(), &t.0.join(".").join("v.db"));
     #[cfg(unix)]
     {
         let link = t.0.join("verweis.db");
         std::os::unix::fs::symlink(t.db(), &link).unwrap();
-        assert!(failed(&store, &link).contains("V-Mind-Datenbank"));
+        assert_rejected_without_writing(&store, &t.db(), &link);
         let hard = t.0.join("hart.db");
         fs::hard_link(t.db(), &hard).unwrap();
-        assert!(failed(&store, &hard).contains("V-Mind-Datenbank"));
+        assert_rejected_without_writing(&store, &t.db(), &hard);
     }
-    assert_eq!(rows(&t.db()).len(), 0);
+    let status = store.history_status("p").unwrap();
+    assert_eq!(
+        (status.failed, status.messages),
+        (0, 4),
+        "kein Fehlereintrag"
+    );
+    assert!(vmind_core::check_opencode_source(&t.source(), &t.db()).is_ok());
 }
 
 #[test]

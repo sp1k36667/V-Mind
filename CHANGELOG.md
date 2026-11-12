@@ -30,12 +30,17 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
   no hook, no timer. The source is opened only as `file:PATH?mode=ro&immutable=1` (path
   percent-encoded), so SQLite creates no `-wal`/`-shm` and writes nothing; a non-empty `-wal`
   or any `-journal` next to the snapshot is refused before opening ("active WAL/journal file,
-  please pass a consistent standalone snapshot, e.g. sqlite3 .backup"), as is the V-Mind
-  database itself (canonical path or same inode). Required tables and columns are checked
+  please pass a consistent standalone snapshot, e.g. sqlite3 .backup"). The V-Mind database
+  itself as source (same canonical path, also via symlink; on Unix also a hard link) is
+  refused before the database is opened, so nothing is migrated, recorded or written; on
+  Windows paths compare case-insensitively and hard links are not detected (known limit).
+  Windows paths (`\\?\C:\…`, `\\?\UNC\…`) become `file:/C:/…` or `file:////server/…`.
+  Required tables and columns are checked
   (`session.id/parent_id`, `message.id/session_id/time_created/data`,
   `part.id/message_id/session_id/data`); a missing one, non-JSON `data` or an unknown role
   imports nothing and names the table, column or id (exit 1, recorded in `history-status`).
-  Only `text` parts of user and assistant messages in root sessions are kept; `synthetic` and
+  Only `text` parts of user and assistant messages in root sessions are kept (a part belongs
+  to a message only when both `session_id` and `message_id` match); `synthetic` and
   `ignored` text parts, all other part types (reasoning, tool calls and results, files,
   snapshots, patches, steps, compaction, unknown), the `system` text, compaction summaries
   (`summary: true`), unfinished assistant messages (no `time.completed`) and child sessions
