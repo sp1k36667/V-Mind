@@ -500,10 +500,13 @@ automatischer Codex-Import ist ein späterer Schritt. `.jsonl.zst`-Dateien werde
 Übernommen wird nur `event_msg` mit `item_completed`:
 
 - `UserMessage` nur mit nichtleerer `client_id`, Text aus Blöcken vom Typ `text` (Bilder und
-  andere Blöcke nie). Vollständige bekannte Hüllen von Codex oder Apps
-  (`<environment_context>`, `<user_instructions>`, `<user_shell_command>`, `<turn_aborted>`,
-  `<subagent_notification>`, `<app-context>`) werden entfernt; andere Tags und einzelne,
-  nicht geschlossene Tags bleiben stehen. Es gibt keinen pauschalen Filter auf führendes `<`.
+  andere Blöcke nie). Belegte Kontexthüllen (`<app-context>` und
+  `<in-app-browser-context …>`, auch mit Attributen im öffnenden Tag) werden samt allen
+  Teilinhalten entfernt; Verschachtelung wird je Tagname gezählt, erst der passende äußere
+  Abschluss beendet den Block. Bleibt eine Hülle offen oder ist ihr Tag unvollständig, fällt
+  der Text ab diesem Tag weg, der Text davor bleibt. Andere Tags, ähnlich benannte Tags,
+  schließende Tags ohne Anfang und normaler Text bleiben stehen. Es gibt keinen pauschalen
+  Filter auf führendes `<`.
 - `AgentMessage` nur synchron (ohne `delivery` oder `sync`) und mit Phase `final_answer`,
   Text aus Blöcken vom Typ `Text` (Großschreibung).
 - Übersprungen werden Zwischentexte (`commentary`), asynchrone Nachrichten,

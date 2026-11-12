@@ -355,37 +355,95 @@ fn user_messages_need_a_non_empty_client_id_but_may_start_with_a_bracket() {
     assert_eq!(one_message(message(Some(json!("c")))), 1);
 }
 
-#[test]
-fn known_app_envelopes_are_not_user_text_but_other_tags_stay() {
+/// Importiert genau eine Nutzernachricht und liefert den gespeicherten Text, falls einer bleibt.
+fn stored_user_text(text: &str) -> (Temp, Option<String>) {
     let t = Temp::new();
     let store = t.store();
-    write(
-        &t.file(),
-        &[
-            meta(),
-            user("u1", "<environment_context>HUELLE</environment_context>"),
-            user(
-                "u2",
-                "Vorher Ingwer\n<user_instructions>HUELLE</user_instructions>\nNachher",
-            ),
-            user("u3", "<eigenes>Ingwer bleibt</eigenes>"),
-            user("u4", "Was ist <turn_aborted> Ingwer ohne Ende?"),
-        ],
-    );
+    write(&t.file(), &[meta(), user("u1", text)]);
     let report = import(&store, &t.file());
-    assert_eq!(report.added, 3);
-    let mut found: Vec<String> = hits(&store, "Ingwer").into_iter().map(|h| h.text).collect();
-    found.sort();
-    assert_eq!(
-        found,
-        [
-            "<eigenes>Ingwer bleibt</eigenes>",
-            "Vorher Ingwer\n\nNachher",
-            "Was ist <turn_aborted> Ingwer ohne Ende?",
-        ]
-    );
+    assert_eq!(report.error, None);
+    let stored = Connection::open(t.db())
+        .unwrap()
+        .query_row("SELECT text FROM history_messages", [], |r| r.get(0))
+        .ok();
+    (t, stored)
+}
+
+/// Prüft gespeicherten Text, Suchindex und Datenbank-Bytes einer bereinigten Nachricht.
+fn assert_envelope_removed(text: &str, expected: &str, inner: &[&str]) {
+    let (t, stored) = stored_user_text(text);
+    assert_eq!(stored.as_deref(), Some(expected), "{text}");
+    let store = t.store();
+    assert_eq!(hits(&store, "Nutzerfrage").len(), 1, "{text}");
+    for word in inner {
+        assert!(hits(&store, word).is_empty(), "Suchindex findet {word}");
+    }
     drop(store);
-    assert!(!db_contains(&t.db(), "HUELLE"));
+    for word in inner {
+        assert!(!db_contains(&t.db(), word), "{word} gespeichert");
+    }
+}
+
+#[test]
+fn nested_app_context_is_removed_as_one_outer_block() {
+    let text =
+        "Nutzerfrage <app-context><app-context>innen</app-context>internerprobe</app-context> Ende";
+    assert_envelope_removed(text, "Nutzerfrage  Ende", &["innen", "internerprobe"]);
+    let (t, _) = stored_user_text(text);
+    assert_eq!(hits(&t.store(), "Ende").len(), 1);
+}
+
+#[test]
+fn browser_context_with_attributes_is_removed() {
+    assert_envelope_removed(
+        "Nutzerfrage <in-app-browser-context source=\"seite\">browserinhalt</in-app-browser-context> Ende",
+        "Nutzerfrage  Ende",
+        &["browserinhalt", "seite"],
+    );
+    assert_envelope_removed(
+        "Nutzerfrage <in-app-browser-context source=\"a\"><app-context>gemischt</app-context>restinhalt</in-app-browser-context> Ende",
+        "Nutzerfrage  Ende",
+        &["gemischt", "restinhalt"],
+    );
+}
+
+#[test]
+fn unterminated_envelope_drops_everything_from_its_tag_on() {
+    assert_envelope_removed(
+        "Nutzerfrage Ende <app-context>offeninhalt ohne Abschluss",
+        "Nutzerfrage Ende",
+        &["offeninhalt"],
+    );
+    assert_envelope_removed(
+        "Nutzerfrage Ende <app-context><app-context>tiefinhalt</app-context>halbinhalt",
+        "Nutzerfrage Ende",
+        &["tiefinhalt", "halbinhalt"],
+    );
+    assert_envelope_removed(
+        "Nutzerfrage Ende <in-app-browser-context source=\"kaputtinhalt",
+        "Nutzerfrage Ende",
+        &["kaputtinhalt"],
+    );
+}
+
+#[test]
+fn an_envelope_alone_leaves_no_message() {
+    let (_t, stored) = stored_user_text("<app-context>nurhuelle</app-context>");
+    assert_eq!(stored, None);
+}
+
+#[test]
+fn unknown_tags_similar_names_and_plain_text_stay() {
+    for text in [
+        "<eigenes>Ingwer bleibt</eigenes>",
+        "Was ist <environment_context> Ingwer?",
+        "Ingwer <app-contextual>bleibt</app-contextual>",
+        "Ingwer mit </app-context> ohne Anfang",
+        "  Ingwer mit Rand  ",
+    ] {
+        let (_t, stored) = stored_user_text(text);
+        assert_eq!(stored.as_deref(), Some(text));
+    }
 }
 
 #[test]

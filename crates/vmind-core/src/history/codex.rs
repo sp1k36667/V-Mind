@@ -8,16 +8,10 @@ use super::{
 use serde_json::Value;
 use std::{borrow::Cow, collections::HashMap};
 
-/// Vollständige Hüllen dieser Tags stammen von Codex oder einer App, nicht vom Nutzer. Die
-/// Liste ist bewusst eng; andere Tags und einzelne, nicht geschlossene Tags bleiben Text.
-const APP_ENVELOPES: [&str; 6] = [
-    "environment_context",
-    "user_instructions",
-    "user_shell_command",
-    "turn_aborted",
-    "subagent_notification",
-    "app-context",
-];
+/// Kontexthüllen, die Codex oder eine App in Nutzertext einbettet; nur belegte Tagnamen.
+/// Der öffnende Tag darf Attribute tragen (`<in-app-browser-context source="…">`). Andere
+/// Tags bleiben Text, auch ähnlich benannte.
+const APP_ENVELOPES: [&str; 2] = ["app-context", "in-app-browser-context"];
 
 /// Sitzung und Turn-Zuordnung. Ein Lauf ab Byte-Stand beginnt mit dem gespeicherten Stand.
 #[derive(Default)]
@@ -224,20 +218,91 @@ fn agent_text(item: &Value) -> Result<Option<String>, &'static str> {
     blocks_text(&item["content"], "Text").map(Some)
 }
 
-/// Entfernt vollständige bekannte Hüllen und trimmt dann den Rand; sonst bleibt der Text exakt.
-fn without_envelopes(text: &str) -> Cow<'_, str> {
-    let mut kept = Cow::Borrowed(text);
-    for tag in APP_ENVELOPES {
-        let (open, close) = (format!("<{tag}>"), format!("</{tag}>"));
-        while let Some(start) = kept.find(&open)
-            && let Some(length) = kept[start..].find(&close)
+/// Art eines Tags an einer Textstelle.
+enum Tag {
+    /// Öffnender Hüllentag mit Namen und Länge; ohne `>` ist er unvollständig (`None`).
+    Open(&'static str, Option<usize>),
+    Close(&'static str, usize),
+}
+
+/// Erkennt einen Hüllentag am Anfang von `rest`. Nach dem Namen muss `>` oder ein Leerraum
+/// folgen, damit `<app-contextual>` kein Treffer ist.
+fn envelope_tag(rest: &str) -> Option<Tag> {
+    for name in APP_ENVELOPES {
+        if let Some(after) = rest
+            .strip_prefix("</")
+            .and_then(|r| r.strip_prefix(name))
+            .and_then(|r| r.strip_prefix('>'))
         {
-            let end = start + length + close.len();
-            kept = Cow::Owned(format!("{}{}", &kept[..start], &kept[end..]));
+            return Some(Tag::Close(name, rest.len() - after.len()));
+        }
+        let Some(after) = rest.strip_prefix('<').and_then(|r| r.strip_prefix(name)) else {
+            continue;
+        };
+        if after.starts_with('>') || after.starts_with(char::is_whitespace) {
+            let length = after
+                .find('>')
+                .map(|end| rest.len() - after.len() + end + 1);
+            return Some(Tag::Open(name, length));
         }
     }
-    match kept {
-        Cow::Borrowed(_) => kept,
-        Cow::Owned(rest) => Cow::Owned(rest.trim().to_owned()),
+    None
+}
+
+/// Entfernt Hüllen samt allen Teilinhalten und trimmt dann den Rand; ohne Hülle bleibt der
+/// Text exakt. Verschachtelung zählt je Tagname: Erst der zum äußeren Tag passende schließende
+/// Tag beendet den Block. Bleibt ein Block offen oder ist sein Tag unvollständig, fällt alles
+/// ab diesem Tag weg. Ein schließender Tag ohne Anfang bleibt Text.
+fn without_envelopes(text: &str) -> Cow<'_, str> {
+    let mut kept = String::new();
+    let mut copied_to = 0;
+    let mut outer: Option<(&str, usize)> = None;
+    let mut skip_to = 0;
+    let mut changed = false;
+    for (at, _) in text.match_indices('<') {
+        if at < skip_to {
+            continue;
+        }
+        let Some(tag) = envelope_tag(&text[at..]) else {
+            continue;
+        };
+        match (tag, &mut outer) {
+            (Tag::Open(_, None), _) => {
+                // Unvollständiger Tag: nichts dahinter ist sicher Nutzertext.
+                if outer.is_none() {
+                    kept.push_str(&text[copied_to..at]);
+                }
+                return Cow::Owned(kept.trim().to_owned());
+            }
+            (Tag::Open(name, Some(length)), None) => {
+                kept.push_str(&text[copied_to..at]);
+                outer = Some((name, 1));
+                changed = true;
+                skip_to = at + length;
+            }
+            (Tag::Open(name, Some(length)), Some((outer_name, depth))) => {
+                if name == *outer_name {
+                    *depth += 1;
+                }
+                skip_to = at + length;
+            }
+            (Tag::Close(name, length), Some((outer_name, depth))) if name == *outer_name => {
+                *depth -= 1;
+                skip_to = at + length;
+                if *depth == 0 {
+                    outer = None;
+                    copied_to = at + length;
+                }
+            }
+            (Tag::Close(..), _) => {}
+        }
     }
+    if outer.is_some() {
+        return Cow::Owned(kept.trim().to_owned());
+    }
+    if !changed {
+        return Cow::Borrowed(text);
+    }
+    kept.push_str(&text[copied_to..]);
+    Cow::Owned(kept.trim().to_owned())
 }

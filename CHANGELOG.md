@@ -25,8 +25,10 @@ acceptance steps: [docs/release-0.3-abnahme.md](docs/release-0.3-abnahme.md) (Ge
   history-import DB FILE --tool codex` imports exactly one uncompressed Codex rollout
   `.jsonl` file incrementally; the scope must be given explicitly (`--scope` or
   `VMIND_SCOPE`). Only `event_msg/item_completed` is read: `UserMessage` with a non-empty
-  `client_id` (text blocks only, complete known app envelopes such as
-  `<environment_context>` removed, no general filter on a leading `<`) and synchronous
+  `client_id` (text blocks only; the documented context envelopes `<app-context>` and
+  `<in-app-browser-context …>`, also with attributes, are removed with all nested content,
+  counting nesting per tag name; an unterminated envelope drops the text from its tag on;
+  other tags stay; no general filter on a leading `<`) and synchronous
   `AgentMessage` with phase `final_answer` (`Text` blocks). Commentary, async messages,
   `response_item`, tools, context and compaction are skipped. The session comes from
   `session_meta`; the key is `item.id`, `ordinal` only as a separate fallback, and messages
