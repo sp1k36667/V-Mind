@@ -133,7 +133,7 @@ fn tools() -> Vec<Value> {
              optional. Für geprüftes Wissen `recall`, für Entscheidungen `journal_search`.",
             json!({"query":{"type":"string"},"scope":scope,
                 "limit":{"type":"integer","minimum":1,"maximum":20,"default":5},
-                "tool":{"type":"string","enum":["claude-code","codex"]}}),
+                "tool":{"type":"string","enum":["claude-code","codex","opencode"]}}),
             &["query"],
         ),
         tool(

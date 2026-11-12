@@ -1,4 +1,4 @@
-//! Codex-Verlaufsimport und Herkunft (Schema 8): nur synthetische JSONL-Dateien.
+//! Codex-Verlaufsimport und Herkunft (ab Schema 8): nur synthetische JSONL-Dateien.
 use rusqlite::Connection;
 use serde_json::{Value, json};
 use std::{
@@ -703,7 +703,7 @@ fn schema_seven(path: &Path) {
 }
 
 #[test]
-fn migration_seven_to_eight_keeps_ids_search_and_warnings_and_backs_up() {
+fn migration_seven_to_current_keeps_ids_search_and_warnings_and_backs_up() {
     let t = Temp::new();
     schema_seven(&t.db());
     assert!(
@@ -711,7 +711,7 @@ fn migration_seven_to_eight_keeps_ids_search_and_warnings_and_backs_up() {
         "kein Hook-Upgrade"
     );
     let store = MemoryStore::open_existing(t.db()).unwrap();
-    assert_eq!(store.stats("global").unwrap().schema_version, 8);
+    assert_eq!(store.stats("global").unwrap().schema_version, 9);
 
     let old = hits(&store, "Rhabarber");
     assert_eq!(old.len(), 1, "Suche nach der Migration");
@@ -738,7 +738,7 @@ fn migration_seven_to_eight_keeps_ids_search_and_warnings_and_backs_up() {
     let snapshots: Vec<_> = fs::read_dir(&t.0)
         .unwrap()
         .map(|e| e.unwrap().path())
-        .filter(|p| p.to_string_lossy().contains("before-schema-8"))
+        .filter(|p| p.to_string_lossy().contains("before-schema-9"))
         .collect();
     assert_eq!(snapshots.len(), 1);
     let backup = vmind_core::inspect_database(&snapshots[0]).unwrap();

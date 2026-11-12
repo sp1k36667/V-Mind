@@ -27,7 +27,7 @@ pub use project::{
 pub use repairs::{OpenRepairs, Repair};
 pub use secrets::SecretKind;
 
-const SCHEMA_VERSION: i64 = 8;
+const SCHEMA_VERSION: i64 = 9;
 
 // Persistentes, modellunabhängiges Gedächtnis mit nachvollziehbarer Validierung.
 use rusqlite::{Connection, OpenFlags, OptionalExtension, Result, params};
@@ -381,6 +381,12 @@ impl MemoryStore {
         }
         if version == 7 {
             tx.execute_batch(include_str!("../../../migrations/0008_history_origin.sql"))?;
+            version = 8;
+        }
+        if version == 8 {
+            tx.execute_batch(include_str!(
+                "../../../migrations/0009_history_opencode.sql"
+            ))?;
         }
         tx.pragma_update(None, "user_version", SCHEMA_VERSION)?;
         tx.commit()?;

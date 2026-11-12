@@ -548,7 +548,7 @@ fn report_prints_markdown_and_leaves_the_database_unchanged() {
     assert!(text.contains("- **blocked** docs: Doku fehlt"));
     assert_eq!(
         cli(&["--scope", "p", "report", db])["stats"]["schema_version"],
-        8
+        9
     );
     assert_eq!(std::fs::read(&path).unwrap(), before);
 }

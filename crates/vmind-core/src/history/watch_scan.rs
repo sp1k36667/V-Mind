@@ -45,6 +45,30 @@ fn civil_from_days(days: i64) -> CivilDate {
     CivilDate { year, month, day }
 }
 
+/// Höchster darstellbarer Zeitpunkt: 9999-12-31T23:59:59.999Z.
+const MAX_MILLIS: i64 = 253_402_300_799_999;
+
+/// Millisekunden seit 1970 als UTC-Zeit im Format `JJJJ-MM-TTTHH:MM:SS.mmmZ`; `None` außerhalb
+/// der Jahre 1970 bis 9999.
+pub(super) fn iso_from_millis(millis: i64) -> Option<String> {
+    if !(0..=MAX_MILLIS).contains(&millis) {
+        return None;
+    }
+    let ms_per_day = SECONDS_PER_DAY as i64 * 1000;
+    let date = civil_from_days(millis / ms_per_day);
+    let in_day = millis % ms_per_day;
+    let (seconds, ms) = (in_day / 1000, in_day % 1000);
+    Some(format!(
+        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{ms:03}Z",
+        date.year,
+        date.month,
+        date.day,
+        seconds / 3600,
+        seconds / 60 % 60,
+        seconds % 60
+    ))
+}
+
 impl CivilDate {
     /// `None` für ein ungültiges Datum wie den 30. Februar.
     pub fn new(year: i64, month: u32, day: u32) -> Option<Self> {

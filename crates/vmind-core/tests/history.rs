@@ -483,7 +483,7 @@ fn migration_six_to_current_keeps_data_and_writes_a_verified_backup() {
         "kein Hook-Upgrade"
     );
     let store = MemoryStore::open_existing(t.db()).unwrap();
-    assert_eq!(store.stats("global").unwrap().schema_version, 8);
+    assert_eq!(store.stats("global").unwrap().schema_version, 9);
     assert_eq!(store.get(1).unwrap().unwrap().problem, "alt");
     assert_eq!(store.resume("p", None).unwrap().decisions[0].body, "bleibt");
     write(&t.file(), &[row("user", "u1", json!("nach Migration"))]);
@@ -493,7 +493,7 @@ fn migration_six_to_current_keeps_data_and_writes_a_verified_backup() {
     let snapshots: Vec<_> = fs::read_dir(&t.0)
         .unwrap()
         .map(|e| e.unwrap().path())
-        .filter(|p| p.to_string_lossy().contains("before-schema-8"))
+        .filter(|p| p.to_string_lossy().contains("before-schema-9"))
         .collect();
     assert_eq!(snapshots.len(), 1);
     let old = vmind_core::inspect_database(&snapshots[0]).unwrap();

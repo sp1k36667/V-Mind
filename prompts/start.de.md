@@ -143,7 +143,7 @@ es unterstützt. Eine optionale `id` ordnet die Antwort der Anfrage zu.
 - `journal_search`: `scope`, `query`, optional `limit` (Standard 5, 1–20); nur lesend,
   exakt dieser Bereich ohne `global`, alle Wörter müssen vorkommen, neueste zuerst.
 - `history_search`: `scope`, `query`, optional `limit` (Standard 5, 1–20) und `tool`
-  (`claude-code` oder `codex`); nur lesend, exakt dieser Bereich ohne `global`,
+  (`claude-code`, `codex` oder `opencode`); nur lesend, exakt dieser Bereich ohne `global`,
   unverifizierter Gesprächsverlauf; jeder Treffer nennt `tool` und, falls belegt, `model`.
 - `log`: `scope`, `kind`, `body`, `source`; nur bei `kind: task` zusätzlich
   `task_key` und `task_status` angeben. Keine Aufgabenfelder bei anderen Typen.

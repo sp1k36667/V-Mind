@@ -60,15 +60,17 @@ Aufruf: vmind [--json] [--scope BEREICH] BEFEHL ...
                                  offenen Stand, nur lesend, speichert nichts)
   history-hook DB                (Claude-Code-Hook Stop/PreCompact: Gesprächsverlauf inkrementell
                                  übernehmen; keine Ausgabe, Fehler im Importstand)
-  history-import DB DATEI [--tool claude-code|codex]
+  history-import DB DATEI [--tool claude-code|codex|opencode] [--session ID]
                                 (genau eine unkomprimierte JSONL-Datei inkrementell
-                                 übernehmen; Standard claude-code, codex nur mit --scope)
+                                 übernehmen; Standard claude-code, codex nur mit --scope;
+                                 opencode: eigenständiger SQLite-Snapshot, nur mit --scope,
+                                 unveränderlich gelesen, --session nur eine Sitzung)
   history-status DB             (nur lesen: Importstand mit Fehlern)
   history-watch [--config PFAD] (Codex-Verlauf laut Konfiguration einmal übernehmen; ohne
                                  Konfiguration wird nichts gelesen; Bereich aus der Konfiguration)
   history-watch-units [--config PFAD] [--interval MINUTEN] [--output ORDNER] [--vmind PFAD]
                                 (systemd-User-Service und -Timer als Text; installiert nichts)
-  history-search DB SUCHTEXT [--limit N] [--tool claude-code|codex]
+  history-search DB SUCHTEXT [--limit N] [--tool claude-code|codex|opencode]
                                 (unverifizierter Verlauf nur dieses Bereichs, nur lesend;
                                  alle Wörter müssen vorkommen; N 1 bis 20, sonst 5)
   sessions DB
@@ -429,8 +431,8 @@ fn run() -> Result<()> {
         [cmd, db] if cmd == "nudge" => nudge::run(db, &scope)?,
         [cmd, db] if cmd == "history-hook" => history::hook(db, &scope),
         [cmd, db, file, options @ ..] if cmd == "history-import" => {
-            let tool = history::import_tool(options, explicit_scope.is_some())?;
-            history::import(db, &scope, file, tool, json_mode)?
+            let target = history::import_tool(options, explicit_scope.is_some())?;
+            history::import(db, &scope, file, target, json_mode)?
         }
         [cmd, options @ ..] if cmd == "history-watch" => history_watch::run(options, json_mode)?,
         [cmd, options @ ..] if cmd == "history-watch-units" => {

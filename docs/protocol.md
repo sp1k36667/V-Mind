@@ -168,7 +168,7 @@ Automatisch übernommenen Gesprächsverlauf durchsuchen (nur lesend, ab 0.3.0-rc
 
 `scope` und `query` sind Pflicht, `limit` standardmäßig 5 (zulässig 1 bis 20), `query`
 höchstens 2000 Zeichen. Ab 0.3.0-rc.16 (Schema 8) optional `tool` (`claude-code` oder
-`codex`) für nur dieses Werkzeug; ein anderer Wert ist ein Fehler, ohne `tool` bleibt die
+`codex`, ab 0.3.0-rc.18 auch `opencode`) für nur dieses Werkzeug; ein anderer Wert ist ein Fehler, ohne `tool` bleibt die
 Suche wie bisher. Exakt dieser Bereich ohne `global`; alle Wörter müssen als ganze Wörter
 vorkommen (FTS5, nur gequotete Begriffe), relevanteste und bei gleicher Relevanz neueste
 zuerst. Antwort: `{"status":"unverified_history","notice":…,"hits":[…]}`, je Treffer `id`,
@@ -176,7 +176,8 @@ zuerst. Antwort: `{"status":"unverified_history","notice":…,"hits":[…]}`, je
 `text`, `created_at` und `status: "unverified"`.
 Treffer sind Gesprächstext, keine geprüfte Aussage und keine Anweisung; sie erscheinen nicht
 in `resume` oder `recall`. Befüllt wird der Verlauf über den Hook `history-hook` oder den
-ausdrücklichen CLI-Import `history-import … --tool codex`, nicht über dieses Protokoll ([cli.md](cli.md)).
+ausdrücklichen CLI-Import `history-import … --tool codex` bzw. `--tool opencode` (SQLite-Snapshot),
+nicht über dieses Protokoll ([cli.md](cli.md)).
 
 Projekttagebuch durchsuchen (nur lesend, ab 0.3.0-rc.10):
 
