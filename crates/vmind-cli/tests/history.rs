@@ -643,6 +643,21 @@ fn opencode_import_reads_a_snapshot_and_is_searchable_everywhere() {
     assert!(String::from_utf8_lossy(&blocked.stdout).contains("WAL"));
 }
 
+/// Symbolischer und harter Link auf die Datenbank; unter Windows nicht erkannt bzw. nicht
+/// ohne Sonderrechte anlegbar, daher nur unter Unix.
+#[cfg(unix)]
+fn link_aliases(t: &Temp, db: &str) -> Vec<String> {
+    let (link, hard) = (t.path("verweis.db"), t.path("hart.db"));
+    std::os::unix::fs::symlink(db, &link).unwrap();
+    fs::hard_link(db, &hard).unwrap();
+    vec![link, hard]
+}
+
+#[cfg(not(unix))]
+fn link_aliases(_: &Temp, _: &str) -> Vec<String> {
+    Vec::new()
+}
+
 /// Die eigene Datenbank als Quelle: Exit 1, Datei byte-gleich, keine Sidecars, kein
 /// Fehlereintrag; auch über Pfadumweg, symbolischen und harten Link.
 #[test]
@@ -650,18 +665,14 @@ fn opencode_import_of_the_database_itself_changes_nothing() {
     let t = Temp::new();
     let db = t.path("v.db");
     init(&db);
-    let mut aliases = vec![
-        db.clone(),
-        t.0.join(".").join("v.db").to_str().unwrap().to_owned(),
-    ];
-    #[cfg(unix)]
-    {
-        let link = t.path("verweis.db");
-        std::os::unix::fs::symlink(&db, &link).unwrap();
-        let hard = t.path("hart.db");
-        fs::hard_link(&db, &hard).unwrap();
-        aliases.extend([link, hard]);
-    }
+    let aliases = [
+        vec![
+            db.clone(),
+            t.0.join(".").join("v.db").to_str().unwrap().to_owned(),
+        ],
+        link_aliases(&t, &db),
+    ]
+    .concat();
     let before = fs::read(&db).unwrap();
     for source in &aliases {
         let out = run(
